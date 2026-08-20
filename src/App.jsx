@@ -14,6 +14,7 @@ import DailyChallengesPage from './loginProject/DailyChallengesPage';
 import TournamentsPage from './loginProject/TournamentsPage';
 import GruposPage from './loginProject/GruposPage';
 import HomePage from './loginProject/HomePage';
+import DashboardLayout from './loginProject/DashboardLayout';
 import './App.css';
 
 // 'loading' | 'unauthenticated' | 'incomplete' | 'complete'
@@ -77,14 +78,19 @@ function App() {
         <Route path="/register" element={<PublicOnlyRoute element={<RegisterPage />} />} />
         <Route path="/recover"  element={<PublicOnlyRoute element={<RecoverPage />} />} />
 
-        {/* Rutas protegidas: redirigen al login si no hay sesión */}
-        <Route path="/dashboard"          element={<ProtectedRoute element={<DashboardPage />} />} />
-        <Route path="/dashboard/retos"    element={<ProtectedRoute element={<DailyChallengesPage />} />} />
-        <Route path="/dashboard/torneos"  element={<ProtectedRoute element={<TournamentsPage />} />} />
-        <Route path="/dashboard/grupos"   element={<ProtectedRoute element={<GruposPage />} />} />
-        <Route path="/historial-usuarios" element={<ProtectedRoute element={<UserHistoryPage />} />} />
-        <Route path="/reset"              element={<ProtectedRoute element={<ResetPage />} />} />
-        <Route path="/complete-profile"   element={<CompleteProfileRoute element={<CompleteProfilePage />} />} />
+        {/* Rutas protegidas con layout compartido */}
+        <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
+          <Route path="/dashboard"          element={<DashboardPage />} />
+          <Route path="/dashboard/retos"    element={<DailyChallengesPage />} />
+          <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
+          <Route path="/dashboard/grupos"   element={<GruposPage />} />
+          <Route path="/historial-usuarios" element={<UserHistoryPage />} />
+        </Route>
+
+        {/* ResetPage tiene su propio layout simple — fuera del DashboardLayout */}
+        <Route path="/reset" element={<ProtectedRoute element={<ResetPage />} />} />
+
+        <Route path="/complete-profile" element={<CompleteProfileRoute element={<CompleteProfilePage />} />} />
       </Routes>
     </Router>
   );
