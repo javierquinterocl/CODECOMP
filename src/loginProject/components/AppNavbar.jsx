@@ -1,45 +1,48 @@
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import Avatar from './Avatar';
-import { AIIcon, BellIcon, LogoutIcon } from './icons';
+
+/** Avatar cuadrado del dashboard: foto si existe, inicial si no. */
+const DashAvatar = ({ user, photoURL }) => {
+  const [imgError, setImgError] = useState(false);
+  const initial = (user?.displayName || user?.email || '?')[0].toUpperCase();
+  const src = photoURL || user?.photoURL || null;
+
+  return (
+    <div className="nb-dash-avatar">
+      {src && !imgError
+        ? <img src={src} alt={user?.displayName || 'Avatar'} onError={() => setImgError(true)} />
+        : initial}
+    </div>
+  );
+};
 
 const AppNavbar = () => {
   const { user, codigoEstudiante, storedPhotoURL, displayName, isLoggingOut, handleLogout } = useAuth();
 
   return (
-    <header className="fixed left-0 right-0 top-0 z-50 hidden h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 shadow-sm backdrop-blur-xl md:flex">
-      <span className="font-['Space_Grotesk'] text-2xl font-black bg-gradient-to-r from-blue-700 to-blue-500 bg-clip-text text-transparent">
-        CODECOMP
-      </span>
+    <header className="nb-dash-header">
+      <span className="nb-dash-brand">CODECOMP</span>
 
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 rounded-full border border-blue-100 bg-gradient-to-r from-blue-50 to-violet-50 px-3 py-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gradient-to-br from-blue-600 to-violet-500">
-            <AIIcon />
-          </span>
-          <span className="font-['Space_Grotesk'] text-sm font-bold text-blue-700">Asistente IA</span>
-        </div>
-        <button className="flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
-          <BellIcon />
-        </button>
-        <div className="flex items-center gap-2">
-          <div className="relative rounded-full p-0.5 bg-gradient-to-tr from-blue-700 to-blue-400">
-            <Avatar user={user} photoURL={storedPhotoURL} size="sm" />
+      <div className="nb-dash-headright">
+        <div className="nb-dash-streak">
+          <span className="nb-dash-streak-icon">🔥</span>
+          <div className="nb-dash-usertext">
+            <span className="nb-dash-username">5 días</span>
+            <span className="nb-dash-userrole">Racha</span>
           </div>
-          <div className="hidden lg:flex lg:flex-col">
-            <span className="font-['Space_Grotesk'] text-sm font-bold leading-tight text-slate-900">{displayName}</span>
-            <span className="font-['Space_Grotesk'] text-[10px] font-bold uppercase tracking-wider text-slate-400">
+        </div>
+
+        <div className="nb-dash-user">
+          <DashAvatar user={user} photoURL={storedPhotoURL} />
+          <div className="nb-dash-usertext">
+            <span className="nb-dash-username">{displayName}</span>
+            <span className="nb-dash-userrole">
               Estudiante{codigoEstudiante ? ` / ${codigoEstudiante}` : ''}
             </span>
-            <span className="font-['Inter'] text-[10px] text-slate-400">{user?.email}</span>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 font-['Space_Grotesk'] text-xs font-bold text-slate-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          <LogoutIcon />
+
+        <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="nb-dash-logout">
           {isLoggingOut ? '...' : 'Salir'}
         </button>
       </div>

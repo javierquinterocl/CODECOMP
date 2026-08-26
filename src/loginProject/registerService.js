@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, where, updateDoc } from 'firebase/firestore';
 import { auth, db, hasFirebaseConfig } from '../firebase/firebaseConfig';
 
 const USERS_COLLECTION = 'usuarios_registrados';
@@ -145,6 +145,25 @@ export const getSessionsHistory = async () => {
   }
 };
 
+/**
+ * Sesiones de un solo usuario. getSessionsHistory() trae las de todos y
+ * queda reservada al panel de administración: usar esta en los flujos
+ * normales evita exponer el historial ajeno.
+ */
+export const getUserSessions = async (uid) => {
+  if (!hasFirebaseConfig || !db || !uid) return [];
+
+  try {
+    const snap = await getDocs(query(collection(db, SESSIONS_COLLECTION), where('uid', '==', uid)));
+    const sessions = [];
+    snap.forEach((d) => sessions.push({ id: d.id, ...d.data() }));
+    return sessions.sort((a, b) => (b.entryTime || 0) - (a.entryTime || 0));
+  } catch (error) {
+    console.error('Error al obtener sesiones del usuario:', error.message);
+    return [];
+  }
+};
+
 export const updateSessionExit = async (sessionId, exitTime) => {
   if (!hasFirebaseConfig || !db) {
     throw new Error('La configuracion del proyecto no es valida.');
@@ -170,8 +189,8 @@ export const updateSessionExit = async (sessionId, exitTime) => {
 export const updateActiveSessionsCodigo = async (uid, codigo) => {
   if (!hasFirebaseConfig || !db) return;
   try {
-    const sessions = await getSessionsHistory();
-    const active = sessions.filter((s) => s.uid === uid && s.status === 'activo');
+    const sessions = await getUserSessions(uid);
+    const active = sessions.filter((s) => s.status === 'activo');
     await Promise.all(
       active.map((s) => updateDoc(doc(db, SESSIONS_COLLECTION, s.id), { codigo }))
     );
@@ -186,8 +205,8 @@ export const finalizeLatestActiveSession = async (uid, exitTime) => {
   }
 
   try {
-    const sessions = await getSessionsHistory();
-    const activeSession = sessions.find((session) => session.uid === uid && session.status === 'activo');
+    const sessions = await getUserSessions(uid);
+    const activeSession = sessions.find((session) => session.status === 'activo');
 
     if (activeSession) {
       await updateSessionExit(activeSession.id, exitTime);

@@ -90,6 +90,7 @@ const RecoverPage = () => {
                 subtitle="Te enviaremos un enlace por correo"
                 action={{ to: '/register', label: 'Registrarse', variant: 'blue' }}
                 maxWidth={480}
+                decorated
             >
                 <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                     <div className="nb-field">

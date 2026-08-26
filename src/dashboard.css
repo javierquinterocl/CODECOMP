@@ -1,0 +1,216 @@
+/* ============================================================
+   Dashboard — Neubrutalismo
+   Depende de las variables y animaciones de neubrutalism.css
+
+   Escala fluida: todo el tamaño (texto, cajas, espaciado) sale de las
+   variables de abajo, que crecen con el ancho de la ventana. Así un
+   portátil de 1366px y un monitor 2K ven proporciones parecidas en vez
+   de texto diminuto perdido en un mar de espacio.
+   ============================================================ */
+
+.nb-dash {
+  /* Tipografía */
+  --fs-xs:    clamp(9.5px, 0.12vw + 8.4px, 12.5px);   /* etiquetas mono */
+  --fs-sm:    clamp(12.5px, 0.2vw + 11px, 16px);      /* texto secundario */
+  --fs-base:  clamp(14px, 0.3vw + 12px, 19px);        /* cuerpo */
+  --fs-lg:    clamp(17px, 0.45vw + 14px, 26px);       /* títulos de tarjeta */
+  --fs-xl:    clamp(22px, 1vw + 17px, 42px);          /* título de sección */
+  --fs-num:   clamp(26px, 0.9vw + 20px, 46px);        /* cifras grandes */
+
+  /* Espaciado */
+  --sp-card:  clamp(18px, 1vw + 12px, 40px);          /* relleno de tarjetas */
+  --sp-gap:   clamp(14px, 0.8vw + 9px, 32px);         /* separación entre tarjetas */
+  --sp-main:  clamp(16px, 1.6vw + 8px, 56px);         /* márgenes del área central */
+
+  /* Piezas */
+  --side-w:   clamp(216px, 15vw, 320px);
+  --header-h: clamp(58px, 1.5vw + 50px, 84px);
+
+  background: #E9EDFB;
+  font-family: 'Space Grotesk', Helvetica, sans-serif;
+  color: #000;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.nb-dash a { text-decoration: none; }
+/* Solo los enlaces sin clase propia heredan el negro: si no, `.nb-dash a`
+   (0,1,1) le gana a cualquier `.nb-dash-*` (0,1,0) y pisa su color. */
+.nb-dash a:not([class]) { color: #000; }
+
+.nb-mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ---------- Cabecera ---------- */
+.nb-dash-header { position: sticky; top: 0; z-index: 50; background: #fff; border-bottom: 3px solid #000; display: flex; align-items: center; justify-content: space-between; gap: clamp(10px,1vw,24px); padding: clamp(10px,0.7vw,18px) var(--sp-main); min-height: var(--header-h); }
+.nb-dash-brand { font-family: 'Press Start 2P', monospace; font-size: clamp(12px, 0.5vw + 9px, 22px); color: #000; letter-spacing: 1px; }
+.nb-dash-headright { display: flex; align-items: center; gap: clamp(8px,0.7vw,16px); }
+.nb-dash-streak { display: flex; align-items: center; gap: 8px; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(5px,0.4vw,9px) clamp(9px,0.7vw,16px); }
+.nb-dash-streak-icon { font-size: var(--fs-base); line-height: 1; }
+.nb-dash-user { display: flex; align-items: center; gap: 10px; }
+.nb-dash-avatar { width: clamp(32px, 2vw + 22px, 52px); height: clamp(32px, 2vw + 22px, 52px); flex: 0 0 auto; aspect-ratio: 1; background: var(--nb-blue); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-lg); color: #fff; overflow: hidden; }
+.nb-dash-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.nb-dash-usertext { display: flex; flex-direction: column; gap: 1px; }
+.nb-dash-username { font-weight: 700; font-size: var(--fs-sm); line-height: 1.2; }
+.nb-dash-userrole { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
+.nb-dash-logout { background: #000; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); padding: clamp(8px,0.6vw,14px) clamp(11px,0.9vw,20px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; font-family: inherit; transition: all 0.1s; }
+.nb-dash-logout:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--nb-blue); color: #fff; }
+.nb-dash-logout:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ---------- Cuerpo y barra lateral ---------- */
+.nb-dash-body { display: flex; align-items: flex-start; flex: 1 1 auto; }
+/* z-index: sin esto, cualquier tarjeta con position:relative posterior en
+   el DOM le pinta encima a la barra (ambas quedan en z-index auto). */
+.nb-dash-side { position: sticky; top: var(--header-h); z-index: 40; width: var(--side-w); flex: 0 0 var(--side-w); align-self: flex-start; background: #fff; border-right: 2px solid #000; display: flex; flex-direction: column; min-height: calc(100vh - var(--header-h)); }
+.nb-dash-side-head { padding: clamp(14px,1vw,24px) clamp(14px,1vw,22px); border-bottom: 2px solid #000; font-size: var(--fs-xs); font-weight: 700; line-height: 1.5; color: #5A6070; }
+.nb-dash-nav { display: flex; flex-direction: column; border-bottom: 2px solid #000; }
+.nb-dash-navitem { display: flex; align-items: center; gap: 12px; border-left: 4px solid transparent; border-bottom: 1px solid #000; padding: clamp(16px,1.2vw,28px) clamp(14px,1vw,22px); font-weight: 600; font-size: var(--fs-sm); color: #000; }
+.nb-dash-navitem:hover { background: #F2F4FD; color: var(--nb-blue); }
+.nb-dash-navitem.is-active { background: #E4E9FD; border-left-color: var(--nb-blue); font-weight: 700; color: var(--nb-blue); }
+.nb-dash-side-foot { margin-top: auto; padding: clamp(12px,1vw,22px); display: flex; flex-direction: column; gap: 10px; }
+.nb-dash-tutorial { background: var(--nb-blue); border: 2px solid #000; padding: clamp(10px,0.8vw,16px); text-align: center; color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.06em; }
+.nb-dash-tutorial:hover { color: #fff; opacity: 0.9; }
+
+/* Marcadores sin ruta todavía */
+.nb-dash-soon { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: calc(var(--fs-xs) * 0.85); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid currentColor; padding: 3px 6px; opacity: 0.65; }
+.nb-dash-navitem.is-soon { color: #5A6070; cursor: default; }
+.nb-dash-navitem.is-soon:hover { background: transparent; color: #5A6070; }
+.nb-dash-tutorial.is-soon { cursor: default; opacity: 0.75; }
+.nb-dash-tutorial.is-soon:hover { opacity: 0.75; }
+
+/* Área central: se limita el ancho para que en monitores anchos las líneas
+   no se estiren tanto que cueste seguirlas. */
+.nb-dash-main { flex: 1 1 auto; min-width: 0; padding: var(--sp-main) var(--sp-main) calc(var(--sp-main) * 1.6); }
+.nb-dash-inner { width: 100%; max-width: 1680px; margin: 0 auto; }
+.nb-dash-stack { display: flex; flex-direction: column; gap: var(--sp-gap); }
+
+/* ---------- Banner de bienvenida ---------- */
+.nb-dash-hero { position: relative; overflow: hidden; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: var(--sp-card); margin-bottom: var(--sp-gap); background: var(--nb-blue); }
+.nb-dash-hero-deco { position: absolute; inset: 0; pointer-events: none; }
+.nb-dash-hero-inner { position: relative; width: min(660px, 58%); }
+.nb-dash-hero-kicker { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: #fff; opacity: 0.85; margin-bottom: 12px; }
+/* En Press Start 2P la coma ocupa una casilla entera con el glifo pegado a
+   la izquierda: coma + espacio abren un hueco de casi dos caracteres.
+   Por eso el nombre va sin espacio literal y con un margen medido. */
+.nb-dash-hero-name { margin-left: 0.4em; }
+.nb-dash-hero-title { font-family: 'Press Start 2P', monospace; font-size: clamp(15px, 1.1vw + 8px, 34px); line-height: 1.6; color: #fff; margin: 0 0 14px; }
+.nb-dash-hero-text { margin: 0; color: #fff; font-size: var(--fs-base); font-weight: 500; max-width: 40em; line-height: 1.55; }
+.nb-dash-code-float { position: absolute; background: rgba(255,255,255,0.12); border: 2px solid rgba(255,255,255,0.45); box-shadow: 6px 6px 0px rgba(255,255,255,0.14); }
+.nb-dash-code-float pre { margin: 0; padding: 9px 10px; font-family: 'JetBrains Mono', monospace; font-size: clamp(8px,0.55vw,13px); line-height: 1.6; color: rgba(255,255,255,0.72); white-space: pre; }
+.nb-dash-float-text { position: absolute; font-family: 'JetBrains Mono', monospace; font-weight: 700; white-space: nowrap; }
+
+/* ---------- Piezas reutilizables ---------- */
+.nb-dash-card { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
+.nb-dash-pad { padding: var(--sp-card); }
+.nb-dash-link-card { transition: all 0.1s; }
+.nb-dash-link-card:hover { transform: translate(3px, 3px); box-shadow: 5px 5px 0px #000; color: #000; }
+.nb-dash-kicker { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--nb-blue); margin-bottom: 6px; }
+.nb-dash-h3 { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); line-height: 1.4; margin: 0; }
+.nb-dash-body-text { margin: 0; font-size: var(--fs-sm); line-height: 1.55; font-weight: 500; }
+.nb-dash-icon { width: clamp(48px, 3.2vw + 30px, 86px); aspect-ratio: 1; flex: 0 0 auto; background: var(--nb-blue); border: 2px solid #000; display: flex; align-items: center; justify-content: center; color: #fff; }
+.nb-dash-icon svg { width: 52%; height: 52%; }
+.nb-dash-chip { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border: 2px solid #000; padding: 4px 8px; }
+.nb-dash-tag { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; background: #000; color: #fff; padding: 4px 8px; }
+.nb-dash-row { display: flex; flex-wrap: wrap; gap: var(--sp-gap); align-items: stretch; }
+.nb-dash-col { display: flex; flex-direction: column; gap: var(--sp-gap); min-width: 0; }
+.nb-dash-stat { border: 2px solid #000; padding: clamp(7px,0.5vw,14px) clamp(10px,0.8vw,18px); }
+.nb-dash-stat-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-dash-stat-value { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); margin-top: 5px; }
+.nb-dash-metric { flex: 1; border: 2px solid #000; padding: clamp(9px,0.7vw,18px) clamp(12px,1vw,22px); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nb-dash-metric-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--nb-blue); }
+.nb-dash-metric-value { font-family: 'Press Start 2P', monospace; font-size: clamp(17px, 0.55vw + 14px, 30px); line-height: 1; }
+.nb-dash-danger { margin-top: auto; width: 100%; text-align: center; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); padding: clamp(11px,0.8vw,18px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; background: #000; cursor: pointer; font-family: inherit; transition: all 0.1s; }
+.nb-dash-danger:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #fff; background: #B23129; }
+.nb-dash-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ---------- Tarjeta de perfil ---------- */
+.nb-dash-photo { flex: 0 0 clamp(96px, 7vw + 40px, 190px); border: 2px solid #000; display: flex; align-items: center; justify-content: center; padding: 8px; background: #425CCA; }
+.nb-dash-photo img { width: 100%; height: auto; }
+.nb-dash-name { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-base); line-height: 1.3; margin: 0 0 6px; }
+.nb-dash-email { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: #000; word-break: break-word; }
+.nb-dash-edit { flex: 0 0 clamp(48px,3.4vw,74px); border-left: 2px solid #000; display: flex; align-items: center; justify-content: center; color: #000; }
+.nb-dash-edit svg { width: 42%; height: auto; }
+.nb-dash-edit:hover { background: var(--nb-blue); color: #fff; }
+.nb-dash-title-card { position: relative; overflow: hidden; flex: 1 1 190px; min-width: 0; border: 2px solid #000; background: var(--nb-blue); padding: clamp(11px,0.9vw,20px) clamp(12px,1vw,22px); display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.nb-dash-title-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fff; opacity: 0.85; }
+.nb-dash-title-value { font-weight: 700; font-size: var(--fs-sm); line-height: 1.35; color: #fff; }
+
+/* ---------- Nivel en progreso ---------- */
+.nb-dash-badge { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: #fff; background: var(--nb-blue); border: 2px solid #000; display: inline-block; padding: 5px 10px; margin-bottom: 14px; }
+.nb-dash-level-title { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-xl); line-height: 1.25; margin: 0 0 12px; }
+.nb-dash-progress { border: 2px solid #000; height: clamp(18px,1.2vw,32px); padding: 3px; margin-bottom: 18px; }
+.nb-dash-progress > div { height: 100%; background: var(--nb-blue); }
+.nb-dash-cta { background: var(--nb-blue); border: 2px solid #000; padding: clamp(11px,0.8vw,18px) clamp(18px,1.4vw,32px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; display: inline-flex; align-items: center; gap: 10px; transition: all 0.1s; }
+.nb-dash-cta:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; color: #fff; }
+.nb-dash-terminal { flex: 0 1 clamp(240px, 22vw, 420px); min-width: 200px; border: 2px solid #000; box-shadow: 6px 6px 0px var(--nb-blue); padding: clamp(12px,0.9vw,22px); font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.7; color: #fff; background: #000; }
+.nb-dash-terminal pre { margin: 0; white-space: pre; color: #fff; font-size: inherit; }
+
+/* ---------- Secciones y eventos ---------- */
+.nb-dash-section-title { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); line-height: 1.4; margin: 0 0 8px; }
+.nb-dash-section-sub { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
+.nb-dash-event { border: 2px solid #000; padding: clamp(11px,0.9vw,20px); display: flex; gap: clamp(11px,0.9vw,20px); }
+.nb-dash-date { flex: 0 0 clamp(56px,4vw,92px); background: var(--nb-blue); border: 2px solid #000; color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 0; }
+.nb-dash-date.is-past { background: #000; }
+.nb-dash-date-m { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.nb-dash-date-d { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); margin-top: 4px; }
+.nb-dash-event-title { font-weight: 700; font-size: var(--fs-sm); }
+.nb-dash-event-when { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); margin-bottom: 5px; }
+.nb-dash-outline { border: 2px solid #000; padding: clamp(7px,0.6vw,14px) clamp(11px,0.9vw,20px); font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; transition: all 0.1s; }
+.nb-dash-outline:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #000; }
+
+/* ---------- Grupo estable ---------- */
+.nb-dash-member { display: flex; flex-wrap: wrap; align-items: center; gap: clamp(9px,0.8vw,18px); border: 2px solid #000; background: #fff; padding: clamp(10px,0.8vw,18px) clamp(12px,1vw,20px); }
+.nb-dash-member.is-me { box-shadow: 4px 4px 0px var(--nb-blue); background: var(--nb-blue); color: #fff; }
+.nb-dash-member-pos { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-base); width: 2em; }
+.nb-dash-member-av { width: clamp(30px,2vw + 20px,50px); aspect-ratio: 1; flex: 0 0 auto; background: var(--nb-blue); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-sm); color: #fff; overflow: hidden; }
+.nb-dash-member.is-me .nb-dash-member-av { background: #fff; color: #000; }
+.nb-dash-member-main { flex: 1 1 160px; min-width: 130px; }
+.nb-dash-member-name { font-weight: 700; font-size: var(--fs-sm); }
+.nb-dash-member-code { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); }
+.nb-dash-member-field { flex: 0 0 clamp(90px,7vw,150px); min-width: 84px; }
+.nb-dash-member-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-dash-member.is-me .nb-dash-member-label { color: rgba(255,255,255,0.85); }
+.nb-dash-member-value { font-weight: 700; font-size: var(--fs-sm); }
+.nb-dash-member-points { flex: 0 0 clamp(76px,5vw,120px); min-width: 70px; text-align: right; }
+.nb-dash-member-points-value { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); margin-top: 4px; }
+
+.nb-dash-footer { background: #000; border-top: 3px solid #000; padding: var(--sp-card) var(--sp-main); }
+.nb-dash-footer-brand { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); color: #fff; margin-bottom: 8px; }
+.nb-dash-footer-note { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: #fff; opacity: 0.7; }
+.nb-dash-footer-text { margin: 0; color: #fff; font-size: var(--fs-sm); font-weight: 500; max-width: 44em; line-height: 1.55; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+@media (max-width: 900px) {
+  /* La barra lateral se convierte en una fila de pestañas bajo la cabecera */
+  .nb-dash-body { flex-direction: column; }
+  .nb-dash-side {
+    top: var(--header-h); width: 100%; flex: none; min-height: 0;
+    flex-direction: row; align-items: stretch; overflow-x: auto;
+    border-right: none; border-bottom: 3px solid #000;
+  }
+  .nb-dash-side-head { display: none; }
+  .nb-dash-nav { flex-direction: row; border-bottom: none; }
+  .nb-dash-navitem {
+    border-left: none; border-bottom: none; border-top: 4px solid transparent;
+    border-right: 1px solid #000; padding: 14px 16px; white-space: nowrap;
+  }
+  .nb-dash-navitem.is-active { border-left: none; border-top-color: var(--nb-blue); }
+  .nb-dash-side-foot { margin-top: 0; margin-left: auto; padding: 8px 12px; flex-direction: row; align-items: center; }
+  .nb-dash-tutorial { padding: 9px 14px; white-space: nowrap; }
+
+  /* El texto del banner se limita al 58% para dejar sitio a la decoración;
+     sin ella puede ocupar todo el ancho. */
+  .nb-dash-hero-inner { width: 100%; }
+  .nb-dash-hero-deco { display: none; }
+}
+
+@media (max-width: 640px) {
+  .nb-dash-header { gap: 10px; }
+  /* La racha y el nombre no caben junto al botón de salir */
+  .nb-dash-streak, .nb-dash-usertext { display: none; }
+  .nb-dash-card { box-shadow: 3px 3px 0px #000; }
+  .nb-dash-terminal { flex-basis: 100%; }
+  .nb-dash-photo { flex-basis: 84px; }
+  .nb-dash-member-field, .nb-dash-member-points { flex: 1 1 90px; min-width: 0; text-align: left; }
+}

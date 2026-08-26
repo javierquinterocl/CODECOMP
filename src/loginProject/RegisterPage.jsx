@@ -117,6 +117,7 @@ const RegisterPage = () => {
       subtitle="Construye tu futuro, línea por línea"
       action={{ to: '/', label: 'Volver al inicio' }}
       maxWidth={620}
+      decorated
     >
       <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         <div className="nb-row">

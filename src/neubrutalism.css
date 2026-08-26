@@ -49,6 +49,38 @@
 .nb-nav-inner { max-width: 1280px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .nb-nav-links { display: flex; gap: 22px; }
 
+/* ---- Hero ---- */
+.nb-hero-wrap { height: 100dvh; display: flex; flex-direction: column; }
+.nb-hero { background: var(--nb-blue); border-bottom: 3px solid #000; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.nb-hero-grid { position: absolute; inset: 0; pointer-events: none; background-image:
+  repeating-linear-gradient(0deg,  rgba(255,255,255,0.16) 0 1px, transparent 1px 56px),
+  repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 56px); }
+.nb-hero-deco { position: absolute; inset: 0; pointer-events: none; }
+.nb-hero-title {
+  font-family: 'Press Start 2P', monospace;
+  color: #fff;
+  text-shadow: 0.07em 0.07em 0px #3A1FE8;
+  font-size: clamp(20px, 7.8vw, 140px);
+  line-height: 1;
+  margin: 0 0 clamp(18px,3vh,38px);
+  display: inline-block;
+  overflow: hidden;
+  border-right: 0.09em solid #fff;
+  width: 9.2ch;
+  white-space: nowrap;
+  animation: om-type 1.9s steps(9,end) 0.35s both, om-caret 0.75s steps(1) 2.4s infinite;
+}
+.nb-hero-inner { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; padding: clamp(28px,5vh,72px) clamp(16px,3vw,32px); text-align: center; }
+.nb-hero-actions { display: flex; flex-wrap: wrap; gap: clamp(12px,1.4vw,20px); justify-content: center; margin-bottom: clamp(20px,3.4vh,38px); }
+.nb-terminal { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; background: #000; border: 2px solid #000; box-shadow: 5px 5px 0px var(--nb-blue); padding: clamp(8px,1.1vw,14px) clamp(12px,1.6vw,22px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: clamp(11px,1.05vw,16px); color: #fff; }
+.nb-stats { display: flex; flex-wrap: wrap; gap: clamp(10px,1.4vw,20px); justify-content: center; margin-top: clamp(18px,3.2vh,36px); }
+
+/* FAQ: se expande a la altura real del texto en vez de un máximo fijo,
+   que en móvil recortaba las respuestas largas. */
+.nb-faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms ease-out; }
+.nb-faq-body.is-open { grid-template-rows: 1fr; }
+.nb-faq-body > div { overflow: hidden; }
+
 /* ---------- Modal de inicio de sesión ---------- */
 .nb-modal-close { width: 32px; height: 32px; flex: 0 0 32px; border: 2px solid #000; background: #fff; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; color: #000; cursor: pointer; }
 .nb-modal-close:hover { background: #000; color: #fff; }
@@ -69,9 +101,36 @@
 .nb-authnav { background: #fff; border-bottom: 3px solid #000; flex: 0 0 auto; position: sticky; top: 0; z-index: 50; }
 .nb-authnav-inner { max-width: 1280px; margin: 0 auto; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
 .nb-brand { font-family: 'Press Start 2P', monospace; font-size: 15px; color: #000; letter-spacing: 1px; }
-.nb-brand:hover { color: var(--nb-blue); }
+a.nb-brand:hover { color: var(--nb-blue); }
 
 .nb-auth-main { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: clamp(28px,5vh,64px) clamp(16px,4vw,28px); }
+
+/* ---- Decoración: cuadrícula y fragmentos de código ----
+   Versión clara de la del hero (allá es blanco sobre azul). */
+.nb-auth-main.is-decorated {
+  position: relative;
+  overflow: hidden;
+  background-image:
+    repeating-linear-gradient(0deg,  rgba(7,54,254,0.09) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(90deg, rgba(7,54,254,0.09) 0 1px, transparent 1px 56px);
+}
+
+.nb-auth-deco { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+/* Se esconde cuando ya no hay margen libre a los lados del formulario */
+@media (max-width: 1040px) { .nb-auth-deco { display: none; } }
+
+.nb-deco-card { position: absolute; background: #fff; border: 2px solid rgba(0,0,0,0.6); box-shadow: 5px 5px 0px rgba(7,54,254,0.18); overflow: hidden; }
+.nb-deco-bar { display: flex; align-items: center; gap: 6px; background: rgba(7,54,254,0.10); padding: 5px 8px; border-bottom: 1px solid rgba(0,0,0,0.3); }
+.nb-deco-dot { width: 7px; height: 7px; display: block; background: rgba(0,0,0,0.35); }
+.nb-deco-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.55); letter-spacing: 0.1em; margin-left: auto; }
+.nb-deco-code { margin: 0; padding: 9px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.65; color: rgba(0,0,0,0.5); white-space: pre; }
+.nb-deco-kw { color: var(--nb-blue); font-weight: 700; }
+.nb-deco-text { position: absolute; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; color: rgba(7,54,254,0.22); }
+
+/* Respeta a quien pidió menos movimiento en el sistema */
+@media (prefers-reduced-motion: reduce) {
+  .nb-deco-card, .nb-deco-text { animation: none !important; }
+}
 
 /* Tarjeta blanca del formulario */
 .nb-panel { width: 100%; background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000; }
@@ -118,3 +177,74 @@
 .nb-dialog-title { font-family: 'Press Start 2P', monospace; font-size: 13px; line-height: 1.6; color: #fff; text-shadow: 2px 2px 0px #000; margin: 0; }
 .nb-dialog-body { padding: 20px 22px; font-size: 14px; line-height: 1.6; font-weight: 500; color: #000; }
 .nb-dialog-foot { padding: 0 22px 22px; display: flex; justify-content: flex-end; }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+/* --- Tablet: el navbar aprieta los enlaces antes de esconderlos --- */
+@media (max-width: 900px) and (min-width: 641px) {
+  .nb-nav-links { gap: 14px; }
+  .nb-nav-link  { font-size: 13px; }
+  .nb-nav-inner { padding: 14px 20px; }
+}
+
+/* --- La decoración flotante estorba en cuanto se estrecha el hero --- */
+@media (max-width: 900px) {
+  /* El hero crece con su contenido en vez de recortarlo a 100dvh.
+     La decoración sigue recortada al hero (overflow:hidden), así que
+     no se derrama sobre la sección siguiente. */
+  .nb-hero-wrap { height: auto; min-height: 100dvh; }
+
+  /* Un título que imponga: ocupa casi todo el ancho disponible */
+  .nb-hero-title { font-size: clamp(30px, 9.6vw, 78px); }
+
+  /* La decoración se queda, pero como textura de fondo: más tenue,
+     más pequeña y arrinconada en las bandas vacías de arriba y abajo. */
+  .nb-hero-deco { opacity: 0.55; }
+  .nb-hero-text.hide-sm { display: none; }
+
+  .nb-hero-card { width: 106px !important; }
+  .nb-hero-card-1 { top: 1.5% !important; right: 2% !important; }
+  .nb-hero-card-2 { top: 1.5% !important; left: 2% !important; }
+  .nb-hero-card-3 { bottom: 1.5% !important; right: 2% !important; }
+  .nb-hero-card-4 { bottom: 1.5% !important; left: 2% !important; }
+}
+
+/* --- Móvil --- */
+@media (max-width: 640px) {
+  .nb-nav-links { display: none; }
+  .nb-nav-inner { padding: 14px 16px; gap: 12px; flex-wrap: wrap; }
+  .nb-btn-white,
+  .nb-btn-blue { padding: 8px 12px; font-size: 12px; box-shadow: 3px 3px 0px #000; letter-spacing: 0.03em; }
+
+  .nb-authnav-inner { padding: 14px 16px; gap: 12px; flex-wrap: wrap; }
+
+  /* Botones del hero a ancho completo: en fila quedaban demasiado juntos */
+  .nb-hero-actions { flex-direction: column; align-items: stretch; }
+  .nb-hero-actions .nb-hero-btn-white,
+  .nb-hero-actions .nb-hero-btn-blue { width: 100%; justify-content: center; text-align: center; }
+  .nb-hero-cat { align-self: center !important; width: 64px !important; }
+
+  .nb-terminal { flex-wrap: wrap; justify-content: center; word-break: break-word; font-size: 11px; }
+
+  /* Rejilla de 2 columnas: con flex-wrap quedaban filas desparejas */
+  .nb-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .nb-stats > div { box-shadow: 3px 3px 0px #000 !important; }
+
+  .nb-panel { box-shadow: 5px 5px 0px #000; }
+  .nb-panel-head { padding: 16px 18px; gap: 12px; }
+  .nb-dialog { box-shadow: 5px 5px 0px #000; }
+}
+
+/* --- Pantallas muy angostas: el nombre y los botones ya no caben juntos --- */
+@media (max-width: 460px) {
+  .nb-nav-inner > div:first-child { gap: 0; }
+  .nb-brand { font-size: 12px; }
+  .nb-btn-white,
+  .nb-btn-blue { padding: 7px 10px; font-size: 11px; }
+  .nb-authnav-inner { gap: 8px; }
+  .nb-panel-head img { width: 44px !important; }
+  .nb-panel-body { padding: 18px 16px; }
+  .nb-hero-inner { padding: 24px 14px; }
+}

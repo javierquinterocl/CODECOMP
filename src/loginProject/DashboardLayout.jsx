@@ -6,12 +6,14 @@ import AppFooter from './components/AppFooter';
 
 const DashboardLayout = () => (
   <AuthProvider>
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-200">
+    <div className="nb-dash">
       <AppNavbar />
-      <AppSidebar />
-      <main className="min-h-screen px-4 pb-16 pt-24 md:pl-72 md:pr-8">
-        <Outlet />
-      </main>
+      <div className="nb-dash-body">
+        <AppSidebar />
+        <main className="nb-dash-main">
+          <Outlet />
+        </main>
+      </div>
       <AppFooter />
     </div>
   </AuthProvider>

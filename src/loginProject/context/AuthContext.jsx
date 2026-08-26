@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase/firebaseConfig';
 import { ADMIN_EMAILS } from '../../config';
-import { getSessionsHistory, updateSessionExit } from '../registerService';
+import { getUserSessions, updateSessionExit } from '../registerService';
 
 const AuthContext = createContext(null);
 
@@ -50,8 +50,8 @@ export const AuthProvider = ({ children }) => {
     setIsLoggingOut(true);
     try {
       if (user) {
-        const sessions = await getSessionsHistory();
-        const activeSessions = sessions.filter((s) => s.uid === user.uid && s.status === 'activo');
+        const sessions = await getUserSessions(user.uid);
+        const activeSessions = sessions.filter((s) => s.status === 'activo');
         await Promise.all(activeSessions.map((s) => updateSessionExit(s.id, Date.now())));
       }
       await signOut(auth);
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
-  const firstName = displayName.split(' ')[0];
+  const firstName = displayName.trim().split(/\s+/)[0];
 
   const value = {
     user,
