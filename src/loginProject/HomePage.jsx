@@ -1,566 +1,370 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-const useTyper = (text, speed = 90, startDelay = 800) => {
-  const [displayed, setDisplayed] = useState('');
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    let i = 0;
-    setDisplayed('');
-    setDone(false);
-    const timeout = setTimeout(() => {
-      const interval = setInterval(() => {
-        i += 1;
-        setDisplayed(text.slice(0, i));
-        if (i >= text.length) {
-          clearInterval(interval);
-          setDone(true);
-        }
-      }, speed);
-      return () => clearInterval(interval);
-    }, startDelay);
-    return () => clearTimeout(timeout);
-  }, [text, speed, startDelay]);
-
-  return { displayed, done };
-};
-
-const GRAD = 'linear-gradient(105deg, #0a6bff 0%, #0040d6 52%, #001f7a 100%)';
-const gradText = { background: GRAD, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' };
-const liftSm = { boxShadow: '0 1px 2px rgba(19,27,46,0.04), 0 12px 32px -16px rgba(19,27,46,0.12)' };
-const lift = { boxShadow: '0 1px 2px rgba(19,27,46,0.04), 0 24px 60px -28px rgba(0,62,199,0.22)' };
-const ideShadow = { boxShadow: '0 2px 4px rgba(19,27,46,0.06), 0 50px 110px -30px rgba(0,62,199,0.30)' };
-const hairline = { border: '1px solid rgba(19,27,46,0.08)' };
-const btnPrimary = {
-  background: '#0052ff',
-  
-};
-
-const GridBg = () => (
-  <div
-    className="absolute inset-0 pointer-events-none"
-    style={{
-      backgroundImage:
-        'linear-gradient(rgba(15,23,42,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.035) 1px, transparent 1px)',
-      backgroundSize: '56px 56px',
-      WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 30%, #000 0%, transparent 75%)',
-      maskImage: 'radial-gradient(ellipse 80% 60% at 50% 30%, #000 0%, transparent 75%)',
-    }}
-  />
-);
-
-const IDEMockup = () => (
-  <div
-    className="relative rounded-2xl overflow-hidden text-left"
-    style={{ background: '#0a0e1a', ...hairline}}
-  >
-    <div
-      className="flex items-center justify-between px-4 py-3 border-b border-white/[0.07]"
-      style={{ background: '#0d1322' }}
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex gap-1.5">
-          <span className="w-3 h-3 rounded-full bg-[#ff5f56]" />
-          <span className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
-          <span className="w-3 h-3 rounded-full bg-[#27c93f]" />
-        </div>
-        <div className="hidden sm:flex items-center gap-1 ml-3">
-          <span
-            className="px-3 py-1 rounded-t-md font-mono text-[11px] text-white/80 border-t border-x border-white/10"
-            style={{ background: '#0a0e1a' }}
-          >
-            solution.js
-          </span>
-          <span className="px-3 py-1 font-mono text-[11px] text-white/35">input.txt</span>
-        </div>
-      </div>
-      <div className="flex items-center gap-3 text-white/30">
-        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M8 9l3 3-3 3m5 0h3" />
-        </svg>
-        <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2" />
-        </svg>
-      </div>
-    </div>
-
-    <div className="flex font-mono text-[13.5px]" style={{ minHeight: '380px' }}>
-      <div className="py-4 pr-3 pl-4 text-right text-white/20 select-none border-r border-white/[0.06] leading-[1.7]">
-        {Array.from({ length: 12 }, (_, i) => <div key={i}>{i + 1}</div>)}
-      </div>
-
-      <div className="flex-1 p-4 overflow-x-auto leading-[1.7] text-white/90">
-        <div><span className="text-purple-400">#include</span> <span className="text-green-300">&lt;iostream&gt;</span></div>
-        <div><span className="text-purple-400">#include</span> <span className="text-green-300">&lt;vector&gt;</span></div>
-        <div><span className="text-purple-400">using namespace</span> <span className="text-white/90"> std</span>;</div>
-        <div>&nbsp;</div>
-        <div>
-          <span className="text-sky-300">int</span>{' '}
-          <span className="text-blue-300">solve</span>
-          <span className="text-cyan-300">(</span>
-          <span className="text-sky-300">vector</span>
-          <span className="text-cyan-300">&lt;</span>
-          <span className="text-sky-300">int</span>
-          <span className="text-cyan-300">&gt;&amp;</span>{' '}
-          <span className="text-white/90">nums</span>
-          <span className="text-cyan-300">)</span>{' '}
-          <span className="text-cyan-300">{'{'}</span>
-        </div>
-        <div
-          className="-mx-4 px-4 border-l-2 border-cyan-400/50"
-          style={{ background: 'rgba(76,214,255,0.055)' }}
-        >
-          <span className="text-slate-500 italic">&nbsp;&nbsp;{'// CodeComp AI: estrategia óptima O(N log N)'}</span>
-        </div>
-        <div className="ml-4">
-          <span className="text-purple-400">for</span>{' '}
-          <span className="text-cyan-300">(</span>
-          <span className="text-sky-300">int</span>{' '}
-          <span className="text-white/90">i</span> ={' '}
-          <span className="text-orange-400">0</span>;{' '}
-          <span className="text-white/90">i</span> &lt;{' '}
-          <span className="text-white/90">nums</span>.
-          <span className="text-blue-300">size</span>
-          <span className="text-cyan-300">()</span>; ++
-          <span className="text-white/90">i</span>
-          <span className="text-cyan-300">)</span>{' '}
-          <span className="text-cyan-300">{'{'}</span>
-        </div>
-        <div className="ml-8">
-          <span className="text-purple-400">if</span>{' '}
-          <span className="text-cyan-300">(</span>
-          <span className="text-white/90">nums</span>
-          <span className="text-cyan-300">[</span>
-          <span className="text-white/90">i</span>
-          <span className="text-cyan-300">]</span> &gt;{' '}
-          <span className="text-orange-400">0</span>
-          <span className="text-cyan-300">)</span>{' '}
-          <span className="text-cyan-300">{'{'}</span>
-        </div>
-        <div className="ml-12">
-          <span className="text-blue-300">process_element</span>
-          <span className="text-cyan-300">(</span>
-          <span className="text-white/90">nums</span>
-          <span className="text-cyan-300">[</span>
-          <span className="text-white/90">i</span>
-          <span className="text-cyan-300">]);</span>
-        </div>
-        <div className="ml-8"><span className="text-cyan-300">{'}'}</span></div>
-        <div className="ml-4"><span className="text-cyan-300">{'}'}</span></div>
-        <div className="ml-4"><span className="text-purple-400">return</span> <span className="text-orange-400">0</span>;</div>
-        <div><span className="text-cyan-300">{'}'}</span><span className="animate-pulse text-cyan-300/70">▋</span></div>
-      </div>
-
-      <div
-        className="absolute right-5 top-1/2 -translate-y-1/2 w-64 p-5 rounded-2xl border border-white/10"
-        style={{ background: 'rgba(17,23,41,0.92)', backdropFilter: 'blur(12px)' }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-cyan-300"
-            
-          />
-          <span
-            className="font-mono text-[10px] uppercase tracking-wider"
-            style={{ background: GRAD, WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}
-          >
-            AI Assistant
-          </span>
-        </div>
-        <p className="text-white/80 text-[12.5px] leading-relaxed mb-4">
-          Detecté un posible cuello de botella en tu bucle. ¿Aplico la optimización{' '}
-          ?
-        </p>
-        <div className="flex gap-2">
-          <button className="flex-1 text-white py-2 rounded-lg text-[12px] font-semibold bg-blue-600">Aplicar</button>
-          <button className="px-3 py-2 border border-white/15 rounded-lg text-white/60 text-[12px]">Ignorar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const TerminalSnippet = ({ filename, lines }) => (
-  <div className="rounded-2xl overflow-hidden" style={{ background: '#0a0e1a', ...hairline }}>
-    <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/10">
-      <div className="flex gap-1.5">
-        <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]" />
-        <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]" />
-        <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f]" />
-      </div>
-      <span className="font-mono text-[10px] text-white/40 ml-1">{filename}</span>
-    </div>
-    <div className="px-4 py-3.5 font-mono text-[12px] leading-relaxed">
-      {lines.map((line, i) => (
-        <div key={i} className={i > 0 ? 'mt-1' : ''}>{line}</div>
-      ))}
-    </div>
-  </div>
-);
-
-const FAQItem = ({ q, a }) => {
-  const [open, setOpen] = useState(false);
-  return (
-    <div
-      className="rounded-2xl overflow-hidden transition-all duration-200 bg-white"
-      style={{ ...hairline}}
-    >
-      <button
-        className="w-full flex items-center justify-between gap-4 text-left px-6 py-5"
-        onClick={() => setOpen((o) => !o)}
-      >
-        <span className="font-['Space_Grotesk'] text-[18px] font-semibold text-slate-900">{q}</span>
-        <span
-          className="grid place-items-center w-8 h-8 rounded-full bg-slate-100 text-blue-700 shrink-0 transition-transform duration-300"
-          style={{ transform: open ? 'rotate(45deg)' : 'rotate(0deg)' }}
-        >
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </span>
-      </button>
-      <div
-        className="overflow-hidden transition-all duration-300 ease-out"
-        style={{ maxHeight: open ? '200px' : '0px' }}
-      >
-        <p className="px-6 pb-5 text-slate-600">{a}</p>
-      </div>
-    </div>
-  );
-};
-
 const FAQS = [
-  { q: '¿Qué es CodeComp?', a: 'Una plataforma de programación competitiva que agiliza el flujo de trabajo con herramientas de IA e integraciones sin fricción, diseñada para la UFPSO.' },
-  { q: '¿CodeComp es gratis?', a: 'Sí, el acceso base es gratuito para todos los estudiantes. Módulos adicionales se activan en eventos como la feria de proyectos.' },
-  { q: '¿Qué integraciones tiene?', a: 'Soportamos autenticación con Google, GitHub y Facebook de forma nativa, con historial de sesiones y perfiles de estudiante.' },
-  { q: '¿Es seguro?', a: 'Usamos Firebase Auth con múltiples proveedores OAuth y almacenamiento seguro en Firestore con reglas de acceso por usuario.' },
-  { q: '¿Qué tan rápida es la IA?', a: 'El asistente IA está diseñado para dar retroalimentación en tiempo real mientras resuelves problemas del módulo de Problemas.' },
-  { q: '¿Es multi-lenguaje?', a: 'El módulo de problemas soporta múltiples lenguajes de programación competitiva, incluyendo C++, Python y Java.' },
+  {
+    q: '¿Cuál es la pregunta de investigación?',
+    a: '¿De qué manera una plataforma de aprendizaje con retroalimentación automatizada contribuye a mantener la continuidad y el mejoramiento de las habilidades algorítmicas de los estudiantes del grupo de maratón de programación en Ingeniería de Sistemas de la Universidad Francisco de Paula Santander Ocaña?',
+  },
+  {
+    q: '¿A quién está dirigida la plataforma?',
+    a: 'A los estudiantes de Ingeniería de Sistemas de la UFPS Ocaña que hacen parte del grupo estable de maratón de programación. Se excluye a quienes pertenezcan a otros programas académicos o carezcan de bases en programación.',
+  },
+  {
+    q: '¿Qué objetivos específicos tiene el proyecto?',
+    a: 'Analizar el desempeño actual y los factores de discontinuidad; diseñar la arquitectura del sistema por módulos; construir la plataforma priorizando el rendimiento de la retroalimentación automatizada; y medir su funcionalidad en sesiones de prueba con el grupo.',
+  },
+  {
+    q: '¿Reemplaza al docente?',
+    a: 'No. La retroalimentación automática acorta la espera y conserva el historial más allá del cambio de instructores, mientras el docente asume su rol de guía con un acompañamiento informado.',
+  },
+  {
+    q: '¿Qué mide el seguimiento?',
+    a: 'Intentos, veredictos, tiempos y temas trabajados por estudiante, para identificar bajo desempeño e intervenir antes de que se produzca el abandono del grupo.',
+  },
+  {
+    q: '¿Cuánto dura el desarrollo?',
+    a: 'Ocho semanas una vez aprobado el anteproyecto. El proyecto se desarrolla en Ocaña, Norte de Santander, dentro de la Universidad Francisco de Paula Santander Ocaña.',
+  },
 ];
 
-const HomePage = () => {
-  const { displayed, done } = useTyper('Potenciada por IA', 120, 800);
-  return (
-  <div className="bg-[#f8fafc] text-slate-900 overflow-x-hidden selection:bg-blue-200 antialiased">
+const animCSS = `
+  @keyframes om-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @keyframes om-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+  @keyframes om-type { from { width: 0; } to { width: 9.2ch; } }
+  @keyframes om-caret { 0%,49% { border-color: #fff; } 50%,100% { border-color: transparent; } }
+  @keyframes om-float-a { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-22px) rotate(-6deg); } }
+  @keyframes om-float-b { 0%,100% { transform: translateY(0) rotate(8deg); } 50% { transform: translateY(-16px) rotate(8deg); } }
+  @keyframes om-float-c { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-28px) rotate(-3deg); } }
+  .nb-page { background:#fff; font-family:'Space Grotesk',Helvetica,sans-serif; color:#000; min-height:100vh; overflow-x:hidden; }
+  .nb-page a { text-decoration:none; }
+  .nb-nav-link { color:#000; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; padding:4px 2px; border-bottom:2px solid transparent; }
+  .nb-nav-link:hover { color:#0736FE; }
+  .nb-btn-white { background:#fff; border:2px solid #000; box-shadow:4px 4px 0px #000; padding:9px 18px; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#000; display:inline-block; transition:all 0.1s; }
+  .nb-btn-white:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000; color:#000; }
+  .nb-btn-blue { background:#0736FE; border:2px solid #000; box-shadow:4px 4px 0px #000; padding:9px 18px; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#fff; display:inline-block; transition:all 0.1s; }
+  .nb-btn-blue:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000; color:#fff; }
+  .nb-hero-btn-white { background:#fff; border:2px solid #000; box-shadow:5px 5px 0px #000; padding:clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight:700; font-size:clamp(13px,1.25vw,19px); text-transform:uppercase; letter-spacing:0.06em; color:#000; display:inline-flex; align-items:center; gap:10px; transition:all 0.1s; }
+  .nb-hero-btn-white:hover { transform:translate(2px,2px); box-shadow:3px 3px 0px #000; color:#000; }
+  .nb-hero-btn-blue { background:#0736FE; border:2px solid #000; box-shadow:5px 5px 0px #000; padding:clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight:700; font-size:clamp(13px,1.25vw,19px); text-transform:uppercase; letter-spacing:0.06em; color:#fff; display:inline-block; transition:all 0.1s; }
+  .nb-hero-btn-blue:hover { transform:translate(2px,2px); box-shadow:3px 3px 0px #000; color:#fff; }
+  .nb-card { transition:all 0.1s; }
+  .nb-card:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000 !important; }
+  .nb-footer-link { color:#DDE3FF; }
+  .nb-footer-link:hover { color:#fff; }
+  .nb-social-btn { width:44px; height:44px; background:#fff; border:2px solid #000; display:grid; place-items:center; font-family:'JetBrains Mono',monospace; font-weight:700; color:#0736FE; }
+  .nb-social-btn:hover { background:#0428C9; color:#fff; }
+  .nb-nav-inner { max-width:1280px; margin:0 auto; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
+  .nb-nav-links { display:flex; gap:22px; }
+  @media (max-width:640px) {
+    .nb-nav-links { display:none; }
+    .nb-nav-inner { padding:14px 16px; }
+    .nb-btn-white { padding:8px 12px; font-size:12px; box-shadow:3px 3px 0px #000; letter-spacing:0.03em; }
+    .nb-btn-blue  { padding:8px 12px; font-size:12px; box-shadow:3px 3px 0px #000; letter-spacing:0.03em; }
+  }
+  @media (max-width:900px) and (min-width:641px) {
+    .nb-nav-links { gap:14px; }
+    .nb-nav-link  { font-size:13px; }
+    .nb-nav-inner { padding:14px 20px; }
+  }
+`;
 
-    <nav
-      className="fixed top-0 w-full z-50 backdrop-blur-xl border-b"
-      style={{ background: '#f8fafc', borderColor: 'rgba(19,27,46,0.06)' }}
-    >
-      <div className="flex justify-between items-center max-w-7xl mx-auto px-5 md:px-20 py-4">
-        <div className="flex items-center gap-10">
-          <Link to="/" className="flex items-center gap-2.5">
-            
-            <span className="font-['Space_Grotesk'] text-[22px] font-bold tracking-tight text-slate-900">CODECOMP</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-7 text-[15px] font-medium">
-            {['Producto', 'Retos', 'Hooks', 'Recursos'].map((label) => (
-              <span key={label} className="text-slate-500 hover:text-slate-900 transition-colors cursor-pointer font-['Space_Grotesk']">{label}</span>
-            ))}
-          </div>
-        </div>
-        <div className="flex items-center gap-5">
-          <Link
-            to="/login"
-            className="hidden md:block text-slate-900 font-['Space_Grotesk'] font-medium text-[15px] hover:text-blue-700 transition-colors"
-          >
-            Iniciar sesión
-          </Link>
-          <Link
-            to="/register"
-            className="text-white px-5 py-2.5 rounded-xl font-['Space_Grotesk'] font-medium text-[13px] tracking-wide transition-all hover:-translate-y-0.5"
-            style={btnPrimary}
-          >
-            Registrarse
-          </Link>
-        </div>
-      </div>
-    </nav>
+const mono = "'JetBrains Mono',monospace";
+const press = "'Press Start 2P',monospace";
+const grotesk = "'Space Grotesk',sans-serif";
 
-    <section className="relative pt-[150px] pb-28 overflow-hidden">
-      <GridBg />
-
-      <div className="relative max-w-7xl mx-auto px-5 md:px-20 text-center">
-
-        <div
-          className="inline-flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-white mb-9"
-          style={{ ...hairline }}
-        >
-          <span
-            className="w-1.5 h-1.5 rounded-full bg-teal-400"
-            
-          />
-          <span className="font-mono text-slate-500 text-[11px] uppercase tracking-[0.18em]">
-            Impulsado por IA de nueva generación
-          </span>
-        </div>
-
-        <h1
-          className="font-['Sans Serif'] font-extrabold text-slate-900 max-w-5xl mx-auto mb-7 leading-[1.04] tracking-[-0.035em]"
-          style={{ fontSize: 'clamp(40px,7vw,82px)' }}
-        >
-          Programación Competitiva{' '}
-          <span style={gradText}>
-            {displayed}
-            <span
-              className="inline-block w-[3px] h-[0.85em] align-middle ml-0.5 rounded-sm"
-              style={{ background: GRAD, animation: 'blink 1.1s steps(1) infinite' }}
-            />
-          </span>
-        </h1>
-
-        <p className="font-['Inter'] text-[18px] leading-relaxed text-slate-500 max-w-2xl mx-auto mb-10">
-          Eficiencia y precisión sin igual gracias a herramientas inteligentes diseñadas para acelerar tu flujo,
-          potenciar la creatividad y redefinir tu codigo.
-        </p>
-
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-16">
-          <Link
-            to="/login"
-            className="text-white px-7 py-3.5 rounded-xl font-['Space_Grotesk'] font-semibold text-[15px] flex items-center gap-2 transition-all hover:-translate-y-0.5"
-            style={btnPrimary}
-          >
-            Empieza ahora
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-            </svg>
-          </Link>
-        </div>
-
-        <div className="relative max-w-5xl mx-auto">
-          <IDEMockup />
-        </div>
-      </div>
-    </section>
-
-    <section className="relative py-24 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-5 md:px-20">
-        <div className="flex items-center gap-4 mb-10">
-          <span className="font-mono text-[13px] uppercase tracking-[0.18em] text-blue-700">01 — Por qué CODECOMP</span>
-          <span className="flex-1 h-px bg-slate-900/10" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div
-            className="md:col-span-2 bg-white rounded-3xl p-8 flex flex-col justify-between hover:shadow-lg transition-shadow duration-300"
-            style={{ ...hairline }}
-          >
-            <div>
-              <div className="grid place-items-center w-12 h-12 rounded-xl mb-6 text-blue-700" style={{ ...hairline }}>
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <h3 className="font-['Space_Grotesk'] text-[30px] font-semibold text-slate-900 mb-2 tracking-tight">99.9% de precisión</h3>
-              <p className="text-slate-500 max-w-sm font-['Inter']">Modelos afinados con datos de programación competitiva de alta calidad, para una precisión inigualable.</p>
-            </div>
-            <div className="mt-8 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: '99.9%', background: GRAD, boxShadow: '0 0 10px rgba(0,82,255,0.5)' }} />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-3xl p-8 hover:shadow-lg transition-shadow duration-300" style={{ ...hairline}}>
-            <div className="grid place-items-center w-12 h-12 rounded-xl bg-white mb-6" style={hairline}>
-              <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />
-              </svg>
-            </div>
-            <div className="font-['Space_Grotesk'] text-[44px] font-bold text-slate-900 leading-none mb-3">UFPSO</div>
-            <p className="text-slate-900 font-['Space_Grotesk'] font-semibold mb-1">Estudiantes </p>
-            <p className="text-slate-500 text-sm font-['Inter']">Un espacio para estudiantes de programación competitiva.</p>
-          </div>
-
-          <div className="bg-white rounded-3xl p-8 hover:shadow-lg transition-shadow duration-300" style={{ ...hairline,  }}>
-            <div className="grid place-items-center w-12 h-12 rounded-xl bg-white mb-6" style={hairline}>
-              <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
-            </div>
-            <div className="font-['Space_Grotesk'] text-[44px] font-bold text-slate-900 leading-none mb-3">&lt;100ms</div>
-            <p className="text-slate-900 font-['Space_Grotesk'] font-semibold mb-1">Latencia de sugerencia</p>
-            <p className="text-slate-500 text-sm font-['Inter']">Asistencia en tiempo real que sigue el ritmo de tu escritura.</p>
-          </div>
-
-          <div className="md:col-span-4 bg-white rounded-3xl p-8 flex flex-col md:flex-row items-center justify-between gap-8" style={{ ...hairline }}>
-            <div className="max-w-md">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-full mb-4">
-                <svg className="w-4 h-4 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
-                </svg>
-                <span className="font-mono text-blue-700 text-[11px] uppercase tracking-[0.18em]">Soporte universal</span>
-              </div>
-              <h3 className="font-['Space_Grotesk'] text-[30px] font-semibold text-slate-900 mb-2 tracking-tight">40+ lenguajes</h3>
-              <p className="text-slate-500 font-['Inter']">De C++ y Python a Rust y Haskell: CODECOMP entiende los matices de cada paradigma.</p>
-            </div>
-            <div className="flex flex-wrap gap-2.5 justify-center md:justify-end">
-              {['C++', 'Python', 'Rust', 'Go', 'Java', 'TypeScript'].map((lang) => (
-                <span
-                  key={lang}
-                  className="px-4 py-2 rounded-lg font-mono text-sm text-slate-500"
-                  style={{ background: '#f2f3ff', ...hairline }}
-                >
-                  {lang}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section className="py-40">
-      <div className="max-w-7xl mx-auto px-5 md:px-20">
-        <div className="flex items-center gap-4 mb-12">
-          <span className="font-mono text-[13px] uppercase tracking-[0.18em] text-blue-700">02 — Herramientas</span>
-          <span className="flex-1 h-px bg-slate-900/10" />
-        </div>
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8">
-          <h2
-            className="font-['Space_Grotesk'] font-semibold tracking-tight text-slate-900 max-w-2xl"
-            style={{ fontSize: 'clamp(32px,4.4vw,48px)' }}
-          >
-            Herramientas <span style={gradText}>pensadas para ganar</span>
-          </h2>
-          <p className="font-['Inter'] text-[18px] leading-relaxed text-slate-500 max-w-md">
-            Diseña y lanza algoritmos en pocos clics. Un flujo de trabajo hecho para la creatividad y la eficiencia.
-          </p>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="group p-8 rounded-3xl bg-white hover:shadow-lg transition-all duration-300 flex flex-col" style={hairline}>
-            <div className="grid place-items-center w-14 h-14 rounded-2xl mb-7 bg-white" style={hairline}>
-              <svg className="w-7 h-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-              </svg>
-            </div>
-            <h3 className="font-['Space_Grotesk'] text-[22px] font-semibold text-slate-900 mb-3">Ejecucion segura de Jueza</h3>
-            <p className="text-slate-500 mb-6 flex-1 font-['Inter']">Herramientas para optimizar tu código a nivel competitivo.</p>
-            <TerminalSnippet filename="auth.sh" lines={[
-              <><span className="text-cyan-300">$</span> <span className="text-white/80"> Ejecutando Ejercicio</span> <span className="text-white/60">--rotate</span></>,
-              <><span className="text-green-400">✓</span> <span className="text-white/60"> Tiempo de ejecucion: 2.34s</span></>,
-              <><span className="text-cyan-300">$</span> <span className="text-green-300"> "Operacion completada"</span></>,
-            ]} />
-          </div>
-
-          <div className="group p-8 rounded-3xl bg-white hover:shadow-lg transition-all duration-300 flex flex-col" style={hairline}>
-            <div className="grid place-items-center w-14 h-14 rounded-2xl mb-7 bg-white" style={hairline}>
-              <svg className="w-7 h-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 3.75H6.912a2.25 2.25 0 00-2.15 1.588L2.35 13.177a2.25 2.25 0 00-.1.661V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18v-4.162c0-.224-.034-.447-.1-.661L19.24 5.338a2.25 2.25 0 00-2.15-1.588H15M2.25 13.5h3.86a2.25 2.25 0 012.012 1.244l.256.512a2.25 2.25 0 002.013 1.244h3.218a2.25 2.25 0 002.013-1.244l.256-.512a2.25 2.25 0 012.013-1.244h3.859M12 3v8.25m0 0l-3-3m3 3l3-3" />
-              </svg>
-            </div>
-            <h3 className="font-['Space_Grotesk'] text-[22px] font-semibold text-slate-900 mb-3">Integración en Torneos</h3>
-            <p className="text-slate-500 mb-6 flex-1 font-['Inter']">Participa en torneos de programación y mejora tu rendimiento con herramientas que te permiten competir al máximo nivel.</p>
-            <TerminalSnippet filename="ejercicio.sh" lines={[
-              <><span className="text-cyan-300">$</span> <span className="text-white/80"> Se ha analizado el ejercicio</span> </>,
-              <><span className="text-cyan-300">$</span> <span className="text-white/80">optimización</span> <span className="text-white/60">-m</span> <span className="text-green-300"> "Auto-optimized"</span></>,
-              <><span className="text-green-400">✓</span> <span className="text-white/60"> 1 archivos, +48 −12</span></>,
-            ]} />
-          </div>
-
-          <div className="group p-8 rounded-3xl bg-white hover:shadow-lg transition-all duration-300 flex flex-col" style={hairline}>
-            <div className="grid place-items-center w-14 h-14 rounded-2xl mb-7 bg-white" style={hairline}>
-              <svg className="w-7 h-7 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-              </svg>
-            </div>
-            <h3 className="font-['Space_Grotesk'] text-[22px] font-semibold text-slate-900 mb-3">Biblioteca actualizada</h3>
-            <p className="text-slate-500 mb-6 flex-1 font-['Inter']">Una enorme biblioteca de ejercicios y aplicaciones para que no salgas del editor a buscar lógica común.</p>
-            <div className="flex flex-wrap gap-2.5 content-start">
-              {['Algoritmos', 'Estructuras', 'Grafos', 'DP', 'Matrices', 'Recursividad'].map((tag) => (
-                <span key={tag} className="px-4 py-2 rounded-xl font-mono text-xs text-slate-500" style={{ background: '#f2f3ff', ...hairline }}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section className="py-40 border-y" style={{ background: '#f8fafc', borderColor: 'rgba(19,27,46,0.06)' }}>
-      <div className="max-w-3xl mx-auto px-5 md:px-20">
-        <div className="text-center mb-14">
-          <span className="font-mono text-[13px] uppercase tracking-[0.18em] text-blue-700 block mb-5">
-            03 — Preguntas frecuentes
-          </span>
-          <h2
-            className="font-['Space_Grotesk'] font-semibold tracking-tight"
-            style={{ fontSize: 'clamp(32px,4.4vw,48px)' }}
-          >
-            Todo lo que necesitas saber
-          </h2>
-        </div>
-        <div className="space-y-3">
-          {FAQS.map((faq) => <FAQItem key={faq.q} {...faq} />)}
-        </div>
-      </div>
-    </section>
-
-    <footer
-      className="text-slate-900 w-full pt-24 pb-10 relative overflow-hidden border-t"
-      style={{ background: '#f8fafc', borderColor: 'rgba(19,27,46,0.06)' }}
-    >
-      <div className="relative max-w-7xl mx-auto px-5 md:px-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-12 mb-16">
-          <div className="lg:col-span-4">
-            <Link to="/" className="flex items-center gap-2.5 mb-6">
-              
-              <span className="font-['Space_Grotesk'] text-[22px] font-bold tracking-tight text-slate-900">CODECOMP</span>
-            </Link>
-            <p className="text-slate-500 max-w-xs mb-8 font-['Inter']">
-              El entorno de programación competitiva de nueva generación, potenciado por modelos de IA de élite.
-            </p>
-            <div className="flex gap-3">
-              {[
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253" />,
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" />,
-                <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772m0 0a3 3 0 00-4.681 2.72 8.986 8.986 0 003.74.477m.94-3.197a5.971 5.971 0 00-.94 3.197M15 6.75a3 3 0 11-6 0 3 3 0 016 0zm6 3a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0zm-13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z" />,
-              ].map((path, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  className="grid place-items-center w-11 h-11 rounded-xl bg-white text-slate-500 hover:text-blue-700 transition-all"
-                  style={{ ...hairline,}}
-                >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    {path}
-                  </svg>
-                </a>
-              ))}
-            </div>
-          </div>
-
-          {[
-            { title: 'Producto', links: ['Características', 'Seguridad', 'Beta', 'Novedades'] },
-            { title: 'Recursos', links: ['Documentación', 'API Reference', 'Comunidad', 'Tutoriales'] },
-            { title: 'Legal', links: ['Términos', 'Privacidad', 'Cookies'] },
-          ].map(({ title, links }) => (
-            <div key={title} className="lg:col-span-2">
-              <h4 className="text-slate-900 font-['Space_Grotesk'] font-semibold mb-5 text-[15px]">{title}</h4>
-              <ul className="space-y-3.5 text-slate-500 text-[15px] font-['Inter']">
-                {links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="hover:text-blue-700 transition-colors">{link}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div
-          className="pt-8 border-t flex flex-col md:flex-row justify-between items-center gap-4"
-          style={{ borderColor: 'rgba(19,27,46,0.10)' }}
-        >
-          <p className="text-slate-400 text-sm font-['Inter']">© 2026 CODECOMP · Universidad Francisco de Paula de Santander</p>
-          <div className="flex gap-8 text-slate-400 text-sm font-['Inter']">
-            <a href="#" className="hover:text-blue-700 transition-colors">Política de privacidad</a>
-            <a href="#" className="hover:text-blue-700 transition-colors">Términos del servicio</a>
-          </div>
-        </div>
-      </div>
-    </footer>
-
+const FloatCard = ({ style, filename, children }) => (
+  <div style={{ position:'absolute', background:'rgba(255,255,255,0.12)', border:'2px solid rgba(255,255,255,0.45)', boxShadow:'6px 6px 0px rgba(255,255,255,0.14)', textAlign:'left', overflow:'hidden', ...style }}>
+    <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.22)', padding:'5px 8px' }}>
+      <span style={{ width:7, height:7, background:'rgba(255,255,255,0.7)', display:'block' }}></span>
+      <span style={{ width:7, height:7, background:'rgba(255,255,255,0.4)', display:'block' }}></span>
+      <span style={{ fontFamily:mono, fontSize:'clamp(7px,0.6vw,10px)', fontWeight:700, color:'rgba(255,255,255,0.8)', letterSpacing:'0.1em', marginLeft:'auto' }}>{filename}</span>
+    </div>
+    <pre style={{ margin:0, padding:'9px 10px', fontFamily:mono, fontSize:'clamp(7px,0.64vw,11px)', lineHeight:1.65, color:'rgba(255,255,255,0.75)', whiteSpace:'pre' }}>{children}</pre>
   </div>
+);
+
+const kw = txt => <span style={{ color:'rgba(255,255,255,0.95)' }}>{txt}</span>;
+
+const SectionTag = ({ n, label }) => (
+  <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:28 }}>
+    <span style={{ fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,0.95vw,15px)', textTransform:'uppercase', letterSpacing:'0.16em', color:'#fff', background:'#0736FE', padding:'6px 12px' }}>{n} — {label}</span>
+    <span style={{ flex:1, height:3, background:'#000', display:'block' }}></span>
+  </div>
+);
+
+const FeatureIcon = ({ children }) => (
+  <div style={{ width:64, height:64, background:'#0736FE', color:'#fff', border:'2px solid #000', display:'grid', placeItems:'center', fontFamily:press, fontSize:18, marginBottom:22 }}>{children}</div>
+);
+
+const TerminalBox = ({ filename, lines }) => (
+  <div style={{ border:'2px solid #000', background:'#000' }}>
+    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderBottom:'2px solid #fff' }}>
+      <span style={{ width:10, height:10, background:'#fff', display:'block' }}></span>
+      <span style={{ fontFamily:mono, fontWeight:700, fontSize:11, color:'#fff' }}>{filename}</span>
+    </div>
+    <div style={{ padding:14, fontFamily:mono, fontSize:12.5, lineHeight:1.8, color:'#fff' }}>
+      {lines.map((l, i) => <div key={i}><span style={{ color:'#fff' }}>{l.prefix}</span> {l.text}</div>)}
+    </div>
+  </div>
+);
+
+const HomePage = () => {
+  const [openFaq, setOpenFaq] = useState(null);
+
+  return (
+    <>
+      <style dangerouslySetInnerHTML={{ __html: animCSS }} />
+      <div className="nb-page">
+
+        {/* ── Navbar + Hero (full viewport height) ── */}
+        <div style={{ height:'100dvh', display:'flex', flexDirection:'column' }}>
+
+          {/* Navbar */}
+          <nav style={{ background:'#fff', borderBottom:'3px solid #000', flex:'0 0 auto', zIndex:50 }}>
+            <div className="nb-nav-inner">
+              <div style={{ display:'flex', alignItems:'center', gap:36 }}>
+                <span style={{ fontFamily:press, fontSize:15, color:'#000', letterSpacing:1 }}>CODECOMP</span>
+                <div className="nb-nav-links">
+                  {['Producto','Retos','Seguridad','Recursos'].map(l => (
+                    <span key={l} className="nb-nav-link">{l}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <Link to="/login"    className="nb-btn-white">Iniciar sesión</Link>
+                <Link to="/register" className="nb-btn-blue">Registrarse</Link>
+              </div>
+            </div>
+          </nav>
+
+          {/* Hero */}
+          <section style={{ background:'#0736FE', borderBottom:'3px solid #000', flex:'1 1 auto', minHeight:0, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', position:'relative' }}>
+            {/* Grid overlay */}
+            <div style={{ position:'absolute', top:0, right:0, bottom:0, left:0, backgroundImage:'repeating-linear-gradient(0deg,rgba(255,255,255,0.16) 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,rgba(255,255,255,0.16) 0 1px,transparent 1px 56px)', pointerEvents:'none' }}></div>
+
+            {/* Floating code cards */}
+            <div style={{ position:'absolute', top:0, right:0, bottom:0, left:0, pointerEvents:'none' }}>
+              <FloatCard filename="main.cpp" style={{ right:'1.5%', top:'6%', width:'clamp(118px,13vw,208px)', animation:'om-float-b 8.5s ease-in-out infinite' }}>
+                {kw('int')}{' main() {\n  '}{kw('int')}{' n;\n  cin >> n;\n  solve(n);\n  '}{kw('return')}{' 0;\n}'}
+              </FloatCard>
+              <FloatCard filename="solve.py" style={{ left:'3%', top:'14%', width:'clamp(120px,13.5vw,214px)', animation:'om-float-a 7.5s ease-in-out infinite' }}>
+                {kw('def')}{' solve(n):\n  dp = [0] * (n+1)\n  '}{kw('for')}{' i '}{kw('in')}{' range(n):\n    dp[i+1] = dp[i] + i\n  '}{kw('return')}{' dp[n]'}
+              </FloatCard>
+              <FloatCard filename="judge.log" style={{ right:'5%', bottom:'8%', width:'clamp(104px,11.5vw,182px)', animation:'om-float-c 9.5s ease-in-out infinite' }}>
+                {kw('AC')}{'  0.42s  12MB\n'}{kw('AC')}{'  0.31s  11MB\nTLE 2.00s  --\n'}{kw('AC')}{'  0.18s  10MB'}
+              </FloatCard>
+              <FloatCard filename="main.rs" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
+                {kw('fn')}{' main() {\n  '}{kw('let')}{' n = read();\n  println!("{}", n);\n}'}
+              </FloatCard>
+
+              {/* Floating text snippets */}
+              {[
+                { t:'#include <bits/stdc++.h>', s:{ left:'23%', top:'8%', animation:'om-float-c 10s ease-in-out infinite', fontSize:'clamp(8px,0.85vw,14px)', color:'rgba(255,255,255,0.34)' } },
+                { t:'O(n log n)',              s:{ right:'24%', top:'9%', animation:'om-float-a 9s ease-in-out infinite', fontSize:'clamp(10px,1.1vw,18px)', color:'rgba(255,255,255,0.4)' } },
+                { t:'while (true)',            s:{ left:'17%', top:'46%', animation:'om-float-b 8.4s ease-in-out infinite', fontSize:'clamp(9px,0.95vw,15px)', color:'rgba(255,255,255,0.3)' } },
+                { t:'git push origin main',    s:{ right:'16%', top:'44%', animation:'om-float-c 9.2s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.3)' } },
+                { t:'{ }',                    s:{ left:'31%', bottom:'6%', animation:'om-float-a 8.6s ease-in-out infinite', fontSize:'clamp(14px,1.8vw,30px)', color:'rgba(255,255,255,0.28)' } },
+                { t:'return 0;',              s:{ right:'31%', bottom:'5%', animation:'om-float-b 7.8s ease-in-out infinite', fontSize:'clamp(9px,0.9vw,15px)', color:'rgba(255,255,255,0.32)' } },
+                { t:'// TODO: optimizar',     s:{ left:'44%', top:'3%', animation:'om-float-c 9.8s ease-in-out infinite', fontSize:'clamp(8px,0.78vw,13px)', color:'rgba(255,255,255,0.28)', fontWeight:400 } },
+                { t:'sizeof(int)',            s:{ right:'3.5%', top:'58%', animation:'om-float-a 10.4s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
+                { t:'npm run judge',          s:{ left:'3.5%', top:'57%', animation:'om-float-b 9.6s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
+              ].map(({ t, s }) => (
+                <span key={t} style={{ position:'absolute', fontFamily:mono, fontWeight:700, letterSpacing:'0.02em', whiteSpace:'nowrap', ...s }}>{t}</span>
+              ))}
+            </div>
+
+            {/* Hero text */}
+            <div style={{ position:'relative', width:'100%', maxWidth:1400, margin:'0 auto', padding:'clamp(28px,5vh,72px) clamp(16px,3vw,32px)', textAlign:'center' }}>
+              <h1 style={{ fontFamily:press, color:'#fff', textShadow:'0.07em 0.07em 0px #3A1FE8', fontSize:'clamp(20px,7.8vw,140px)', lineHeight:1, margin:'0 0 clamp(18px,3vh,38px)', display:'inline-block', overflow:'hidden', borderRight:'0.09em solid #fff', width:'9.2ch', animation:'om-type 1.9s steps(9,end) 0.35s both, om-caret 0.75s steps(1) 2.4s infinite', whiteSpace:'nowrap' }}>CODECOMP</h1>
+              <p style={{ margin:'0 auto clamp(20px,3.6vh,40px)', fontSize:'clamp(15px,1.6vw,24px)', lineHeight:1.6, color:'#fff', fontWeight:500, maxWidth:'min(760px,88%)' }}>Eficiencia y precisión sin igual gracias a herramientas inteligentes diseñadas para acelerar tu flujo, potenciar la creatividad y redefinir tu codigo.</p>
+
+              <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(12px,1.4vw,20px)', justifyContent:'center', marginBottom:'clamp(20px,3.4vh,38px)' }}>
+                <Link to="/login"    className="nb-hero-btn-white">Empieza ahora <span style={{ fontFamily:mono }}>→</span></Link>
+                <Link to="/login"    className="nb-hero-btn-blue">Ver retos</Link>
+                <img src="/cat-pixel.png" alt="" style={{ width:'clamp(46px,4.6vw,78px)', height:'auto', imageRendering:'pixelated', alignSelf:'center', animation:'om-float-b 6s ease-in-out infinite', pointerEvents:'none' }} />
+              </div>
+
+              {/* Terminal */}
+              <div style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#000', border:'2px solid #000', boxShadow:'5px 5px 0px #0736FE', padding:'clamp(8px,1.1vw,14px) clamp(12px,1.6vw,22px)', fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,1.05vw,16px)', color:'#fff' }}>
+                <span>$</span>
+                <span>codecomp run --lang cpp --judge ufpso</span>
+                <span style={{ width:'0.6em', height:'1.1em', background:'#fff', display:'inline-block', animation:'om-blink 1s steps(1) infinite' }}></span>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(10px,1.4vw,20px)', justifyContent:'center', marginTop:'clamp(18px,3.2vh,36px)' }}>
+                {[
+                  { label:'envios hoy', value:'1.240' },
+                  { label:'veredicto',  value:'AC 98%' },
+                  { label:'runtime',    value:'0.42s' },
+                  { label:'ranking',    value:'UFPSO' },
+                ].map(s => (
+                  <div key={s.label} style={{ background:'#fff', border:'2px solid #000', boxShadow:'5px 5px 0px #000', padding:'clamp(8px,1vw,14px) clamp(10px,1.2vw,18px)', textAlign:'left' }}>
+                    <div style={{ fontFamily:mono, fontWeight:700, fontSize:'clamp(8px,0.7vw,11px)', letterSpacing:'0.16em', textTransform:'uppercase', color:'#0736FE', marginBottom:4 }}>{s.label}</div>
+                    <div style={{ fontFamily:press, fontSize:'clamp(10px,1.1vw,17px)', color:'#000' }}>{s.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
+
+        {/* ── 01 Por qué CODECOMP ── */}
+        <section style={{ maxWidth:1120, margin:'0 auto', padding:'72px 28px 84px' }}>
+          <SectionTag n="01" label="Por qué CODECOMP" />
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:24 }}>
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
+              <FeatureIcon>✓</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(22px,2.1vw,34px)', fontWeight:700, margin:'0 0 10px', letterSpacing:'-0.02em' }}>99.9% de precisión</h3>
+              <p style={{ margin:'0 0 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Modelos afinados con datos de programación competitiva de alta calidad, para una precisión inigualable.</p>
+              <div style={{ height:20, border:'2px solid #000', background:'#fff', padding:2 }}>
+                <div style={{ height:'100%', width:'99.9%', background:'#0736FE' }}></div>
+              </div>
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
+              <FeatureIcon>##</FeatureIcon>
+              <div style={{ fontFamily:press, fontSize:'clamp(22px,2.1vw,34px)', lineHeight:1.2, marginBottom:16 }}>UFPSO</div>
+              <p style={{ fontWeight:700, fontSize:'clamp(16px,1.3vw,20px)', margin:'0 0 6px' }}>Estudiantes</p>
+              <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Un espacio para estudiantes de programación competitiva.</p>
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
+              <FeatureIcon>!</FeatureIcon>
+              <div style={{ fontFamily:press, fontSize:'clamp(19px,1.9vw,30px)', lineHeight:1.2, marginBottom:16 }}>&lt;100ms</div>
+              <p style={{ fontWeight:700, fontSize:'clamp(16px,1.3vw,20px)', margin:'0 0 6px' }}>Latencia de sugerencia</p>
+              <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Asistencia en tiempo real que sigue el ritmo de tu escritura.</p>
+            </div>
+          </div>
+
+          {/* Languages banner */}
+          <div style={{ background:'#0736FE', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:32, marginTop:24, display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:28 }}>
+            <div style={{ maxWidth:480 }}>
+              <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:11, textTransform:'uppercase', letterSpacing:'0.16em', background:'#fff', border:'2px solid #000', padding:'6px 12px', marginBottom:16 }}>Soporte universal</span>
+              <h3 style={{ fontFamily:press, fontSize:'clamp(18px,2vw,30px)', color:'#fff', textShadow:'3px 3px 0px #000', margin:'0 0 12px', lineHeight:1.35 }}>40+ lenguajes</h3>
+              <p style={{ margin:0, color:'#fff', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>De C++ y Python a Rust y Haskell: CODECOMP entiende los matices de cada paradigma.</p>
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:12, maxWidth:420 }}>
+              {['C++','Python','Rust','Go','Java','TypeScript'].map(lang => (
+                <span key={lang} style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:'8px 16px', fontFamily:mono, fontWeight:700, fontSize:14 }}>{lang}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── 02 Herramientas ── */}
+        <section style={{ maxWidth:1120, margin:'0 auto', padding:'0 28px 84px' }}>
+          <SectionTag n="02" label="Herramientas" />
+          <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-end', justifyContent:'space-between', gap:24, marginBottom:36 }}>
+            <h2 style={{ fontFamily:press, fontSize:'clamp(20px,3.4vw,46px)', color:'#000', textShadow:'3px 3px 0px #0736FE,-2px -2px 0px #0736FE,2px -2px 0px #0736FE,-2px 2px 0px #0736FE,5px 5px 0px #000', margin:0, lineHeight:1.35, maxWidth:620 }}>Herramientas pensadas para ganar</h2>
+            <p style={{ maxWidth:380, margin:0, fontWeight:500, fontSize:'clamp(14px,1.2vw,18px)', lineHeight:1.6 }}>Diseña y lanza algoritmos en pocos clics. Un flujo de trabajo hecho para la creatividad y la eficiencia.</p>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))', gap:24 }}>
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
+              <FeatureIcon>[]</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Ejecucion segura de Jueza</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Herramientas para optimizar tu código a nivel competitivo.</p>
+              <TerminalBox filename="auth.sh" lines={[
+                { prefix:'$', text:'Ejecutando Ejercicio --rotate' },
+                { prefix:'✓', text:'Tiempo de ejecucion: 2.34s' },
+                { prefix:'$', text:'"Operacion completada"' },
+              ]} />
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
+              <FeatureIcon>VS</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Integración en Torneos</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Participa en torneos de programación y mejora tu rendimiento con herramientas que te permiten competir al máximo nivel.</p>
+              <TerminalBox filename="ejercicio.sh" lines={[
+                { prefix:'$', text:'Se ha analizado el ejercicio' },
+                { prefix:'$', text:'optimización -m "Auto-optimized"' },
+                { prefix:'✓', text:'1 archivos, +48 −12' },
+              ]} />
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
+              <FeatureIcon>::</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Biblioteca actualizada</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Una enorme biblioteca de ejercicios y aplicaciones para que no salgas del editor a buscar lógica común.</p>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
+                {['Algoritmos','Estructuras','Grafos','DP','Matrices','Recursividad'].map(t => (
+                  <span key={t} style={{ background:'#0736FE', color:'#fff', border:'2px solid #000', padding:'6px 12px', fontFamily:mono, fontWeight:700, fontSize:12 }}>{t}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── 03 FAQ ── */}
+        <section style={{ maxWidth:820, margin:'0 auto', padding:'0 28px 84px' }}>
+          <div style={{ textAlign:'center', marginBottom:36 }}>
+            <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,0.95vw,15px)', textTransform:'uppercase', letterSpacing:'0.16em', color:'#fff', background:'#0736FE', padding:'6px 12px', marginBottom:20 }}>03 — Preguntas frecuentes</span>
+            <h2 style={{ fontFamily:press, fontSize:'clamp(18px,2.8vw,38px)', color:'#000', textShadow:'4px 4px 0px #0736FE', margin:0, lineHeight:1.4 }}>Todo lo que necesitas saber</h2>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+            {FAQS.map((faq, i) => {
+              const open = openFaq === i;
+              return (
+                <div key={i} style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000' }}>
+                  <button
+                    onClick={() => setOpenFaq(open ? null : i)}
+                    style={{ width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, textAlign:'left', padding:'18px 20px', background:'transparent', border:'none', cursor:'pointer', fontFamily:grotesk, fontSize:'clamp(15px,1.4vw,20px)', fontWeight:700, color:'#000' }}
+                  >
+                    <span>{faq.q}</span>
+                    <span style={{ width:32, height:32, flexShrink:0, background:'#0736FE', color:'#fff', border:'2px solid #000', display:'grid', placeItems:'center', fontFamily:mono, fontWeight:700, fontSize:16 }}>{open ? '−' : '+'}</span>
+                  </button>
+                  <div style={{ overflow:'hidden', transition:'max-height 260ms ease-out', maxHeight: open ? '300px' : '0px' }}>
+                    <p style={{ margin:0, padding:'16px 20px 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.6, fontWeight:500, borderTop:'2px solid #000' }}>{faq.a}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── Footer ── */}
+        <footer style={{ background:'#000', borderTop:'3px solid #000', padding:'56px 28px 28px' }}>
+          <div style={{ maxWidth:1120, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:40, marginBottom:44 }}>
+            <div>
+              <span style={{ fontFamily:press, fontSize:15, color:'#fff', display:'block', marginBottom:18 }}>CODECOMP</span>
+              <p style={{ margin:'0 0 22px', color:'#fff', fontSize:15, lineHeight:1.6, fontWeight:500, maxWidth:280 }}>El entorno de programación competitiva de nueva generación, potenciado por modelos de IA de élite.</p>
+              <div style={{ display:'flex', gap:10 }}>
+                {['W','>','@'].map(icon => (
+                  <a key={icon} href="#" className="nb-social-btn">{icon}</a>
+                ))}
+              </div>
+            </div>
+            <div>
+              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Producto</h4>
+              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
+                {['Características','Seguridad','Beta','Novedades'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
+              </div>
+            </div>
+            <div>
+              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Recursos</h4>
+              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
+                {['Documentación','API Reference','Comunidad','Tutoriales'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
+              </div>
+            </div>
+            <div>
+              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Legal</h4>
+              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
+                {['Términos','Privacidad','Cookies'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
+              </div>
+            </div>
+          </div>
+          <div style={{ maxWidth:1120, margin:'0 auto', paddingTop:22, borderTop:'2px solid #fff', display:'flex', flexWrap:'wrap', justifyContent:'space-between', gap:16 }}>
+            <p style={{ margin:0, color:'#fff', fontFamily:mono, fontSize:12.5 }}>© 2026 CODECOMP · Universidad Francisco de Paula de Santander</p>
+            <div style={{ display:'flex', gap:24, fontFamily:mono, fontSize:12.5 }}>
+              <a href="#" className="nb-footer-link">Política de privacidad</a>
+              <a href="#" className="nb-footer-link">Términos del servicio</a>
+            </div>
+          </div>
+        </footer>
+
+      </div>
+    </>
   );
 };
 
