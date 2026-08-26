@@ -4,7 +4,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db, hasFirebaseConfig } from './firebase/firebaseConfig';
 import RegisterPage from './loginProject/RegisterPage';
-import LoginPage from './loginProject/LoginPage';
 import DashboardPage from './loginProject/DashboardPage';
 import UserHistoryPage from './loginProject/UserHistoryPage';
 import RecoverPage from './loginProject/RecoverPage';
@@ -44,7 +43,7 @@ const useAuthAndProfile = () => {
 const ProtectedRoute = ({ element }) => {
   const status = useAuthAndProfile();
   if (status === 'loading') return null;
-  if (status === 'unauthenticated') return <Navigate to="/login" replace />;
+  if (status === 'unauthenticated') return <Navigate to="/" replace state={{ openLogin: true }} />;
   if (status === 'incomplete') return <Navigate to="/complete-profile" replace />;
   return element;
 };
@@ -53,7 +52,7 @@ const ProtectedRoute = ({ element }) => {
 const CompleteProfileRoute = ({ element }) => {
   const status = useAuthAndProfile();
   if (status === 'loading') return null;
-  if (status === 'unauthenticated') return <Navigate to="/login" replace />;
+  if (status === 'unauthenticated') return <Navigate to="/" replace state={{ openLogin: true }} />;
   if (status === 'complete') return <Navigate to="/dashboard" replace />;
   return element;
 };
@@ -74,7 +73,9 @@ function App() {
         <Route path="/" element={<HomePage />} />
 
         {/* Rutas públicas: redirigen al dashboard si ya hay sesión */}
-        <Route path="/login"    element={<PublicOnlyRoute element={<LoginPage />} />} />
+        {/* /login quedo retirado: el inicio de sesion vive en el modal del HomePage.
+           Se conserva la ruta para que enlaces y marcadores viejos no se rompan. */}
+        <Route path="/login"    element={<Navigate to="/" replace state={{ openLogin: true }} />} />
         <Route path="/register" element={<PublicOnlyRoute element={<RegisterPage />} />} />
         <Route path="/recover"  element={<PublicOnlyRoute element={<RecoverPage />} />} />
 

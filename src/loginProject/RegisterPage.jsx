@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { registerUserInFirestore } from './registerService';
+import AuthShell from './components/AuthShell';
 
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -108,191 +109,126 @@ const RegisterPage = () => {
     }
   };
 
+  const field = (name) => `nb-input${errors[name] ? ' is-error' : ''}`;
+
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-blue-200">
-      <header className="fixed left-0 right-0 top-0 z-50 border-b border-slate-200 bg-slate-50/95 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-4">
-          <Link to="/" className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight hover:opacity-80 transition-opacity">CODECOMP</Link>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="rounded-lg px-4 py-2 font-['Space_Grotesk'] text-sm font-semibold text-blue-700 transition hover:bg-blue-50"
-            >
-              Iniciar sesión
-            </Link>
+    <AuthShell
+      title="Crear cuenta"
+      subtitle="Construye tu futuro, línea por línea"
+      action={{ to: '/', label: 'Volver al inicio' }}
+      maxWidth={620}
+    >
+      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+        <div className="nb-row">
+          <div className="nb-field">
+            <label htmlFor="nombre" className="nb-label">Nombre</label>
+            <input
+              id="nombre"
+              name="nombre"
+              type="text"
+              maxLength={50}
+              autoComplete="given-name"
+              placeholder="Tu nombre"
+              value={formData.nombre}
+              onChange={handleInputChange}
+              className={field('nombre')}
+            />
+            {errors.nombre && <span className="nb-error">{errors.nombre}</span>}
+          </div>
+
+          <div className="nb-field">
+            <label htmlFor="apellido" className="nb-label">Apellido</label>
+            <input
+              id="apellido"
+              name="apellido"
+              type="text"
+              maxLength={50}
+              autoComplete="family-name"
+              placeholder="Tu apellido"
+              value={formData.apellido}
+              onChange={handleInputChange}
+              className={field('apellido')}
+            />
+            {errors.apellido && <span className="nb-error">{errors.apellido}</span>}
           </div>
         </div>
-      </header>
 
-      <main className="mx-auto grid min-h-screen w-full max-w-7xl grid-cols-1 items-center gap-12 px-6 pb-10 pt-28 lg:grid-cols-12">
-        <section className="space-y-8 lg:col-span-5">
-          <div>
-            <h1 className="font-['Space_Grotesk'] text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-              Construye tu futuro,
-              <br />
-              <span className="text-blue-700">linea por linea.</span>
-            </h1>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-slate-600 md:text-lg">
-              Registra tu cuenta para acceder a tus ejercicios y seguir practicando tu logica de programación de manera
-              organizada.
-            </p>
+        <div className="nb-field">
+          <label htmlFor="codigo" className="nb-label">Código UFPSO</label>
+          <input
+            id="codigo"
+            name="codigo"
+            type="text"
+            maxLength={6}
+            placeholder="Ej: 191000"
+            value={formData.codigo}
+            onChange={handleInputChange}
+            className={field('codigo')}
+          />
+          {errors.codigo && <span className="nb-error">{errors.codigo}</span>}
+        </div>
+
+        <div className="nb-field">
+          <label htmlFor="email" className="nb-label">Correo electrónico</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            maxLength={254}
+            autoComplete="email"
+            placeholder="correo@ufpso.edu.co"
+            value={formData.email}
+            onChange={handleInputChange}
+            className={field('email')}
+          />
+          {errors.email && <span className="nb-error">{errors.email}</span>}
+        </div>
+
+        <div className="nb-row">
+          <div className="nb-field">
+            <label htmlFor="password" className="nb-label">Contraseña</label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••••"
+              value={formData.password}
+              onChange={handleInputChange}
+              className={field('password')}
+            />
+            {errors.password && <span className="nb-error">{errors.password}</span>}
           </div>
 
-    
-        </section>
-
-        <section className="lg:col-span-7 lg:flex lg:justify-end">
-          <div className="w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-8 shadow-[0_20px_50px_rgba(15,23,42,0.08)] md:p-10">
-            <div className="mb-7">
-              <h2 className="font-['Space_Grotesk'] text-2xl font-bold tracking-tight">Crear cuenta</h2>
-              <p className="mt-1 text-sm text-slate-600">Completa los datos para registrarte.</p>
-            </div>
-
-            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="nombre" className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Nombre
-                  </label>
-                  <input
-                    id="nombre"
-                    name="nombre"
-                    type="text"
-                    maxLength={50}
-                    placeholder="Tu nombre"
-                    value={formData.nombre}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                      errors.nombre ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                    }`}
-                  />
-                  {errors.nombre && <p className="ml-1 text-xs font-medium text-red-600">{errors.nombre}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="apellido" className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Apellido
-                  </label>
-                  <input
-                    id="apellido"
-                    name="apellido"
-                    type="text"
-                    maxLength={50}
-                    placeholder="Tu apellido"
-                    value={formData.apellido}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                      errors.apellido ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                    }`}
-                  />
-                  {errors.apellido && <p className="ml-1 text-xs font-medium text-red-600">{errors.apellido}</p>}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="codigo" className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Código
-                </label>
-                <input
-                  id="codigo"
-                  name="codigo"
-                  type="text"
-                  maxLength={6}
-                  placeholder="Ej: 191000"
-                  value={formData.codigo}
-                  onChange={handleInputChange}
-                  className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                    errors.codigo ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                  }`}
-                />
-                {errors.codigo && <p className="ml-1 text-xs font-medium text-red-600">{errors.codigo}</p>}
-              </div>
-
-              <div className="space-y-2">
-                <label htmlFor="email" className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Correo electrónico
-                </label>
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  maxLength={254}
-                  placeholder="correo@ejemplo.com"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                    errors.email ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                  }`}
-                />
-                {errors.email && <p className="ml-1 text-xs font-medium text-red-600">{errors.email}</p>}
-              </div>
-
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label htmlFor="password" className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600">
-                    Contraseña
-                  </label>
-                  <input
-                    id="password"
-                    name="password"
-                    type="password"
-                    placeholder="********"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                      errors.password ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                    }`}
-                  />
-                  {errors.password && <p className="ml-1 text-xs font-medium text-red-600">{errors.password}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <label
-                    htmlFor="confirmPassword"
-                    className="ml-1 block font-['Space_Grotesk'] text-xs font-bold uppercase tracking-wider text-slate-600"
-                  >
-                    Confirmar contraseña
-                  </label>
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type="password"
-                    placeholder="********"
-                    value={formData.confirmPassword}
-                    onChange={handleInputChange}
-                    className={`w-full rounded-lg border bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:bg-white ${
-                      errors.confirmPassword ? 'border-red-400 focus:border-red-500' : 'border-slate-200 focus:border-blue-400'
-                    }`}
-                  />
-                  {errors.confirmPassword && (
-                    <p className="ml-1 text-xs font-medium text-red-600">{errors.confirmPassword}</p>
-                  )}
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="flex w-full items-center justify-center rounded-lg bg-gradient-to-r from-blue-700 to-blue-500 py-3.5 font-['Space_Grotesk'] text-sm font-bold text-white transition hover:brightness-110 active:scale-[0.99]"
-              >
-                {isSubmitting ? 'Registrando cuenta...' : 'Registrarse'}
-              </button>
-
-              {submitError && <p className="text-sm font-medium text-red-600">{submitError}</p>}
-              {successMessage && <p className="text-sm font-medium text-emerald-700">{successMessage}</p>}
-            </form>
-
-            <div className="mt-6 flex flex-col items-center justify-between gap-3 border-t border-slate-200 pt-5 text-sm text-slate-600 md:flex-row">
-              <p>Ya tienes cuenta?</p>
-              <Link to="/login" className="font-semibold text-blue-700 hover:underline">
-                Ir a inicio de sesión
-              </Link>
-            </div>
+          <div className="nb-field">
+            <label htmlFor="confirmPassword" className="nb-label">Confirmar contraseña</label>
+            <input
+              id="confirmPassword"
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              placeholder="••••••••••"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className={field('confirmPassword')}
+            />
+            {errors.confirmPassword && <span className="nb-error">{errors.confirmPassword}</span>}
           </div>
-        </section>
-      </main>
+        </div>
 
-    </div>
+        {submitError && <div className="nb-note nb-note-error">{submitError}</div>}
+        {successMessage && <div className="nb-note nb-note-ok">{successMessage}</div>}
+
+        <button type="submit" disabled={isSubmitting} className="nb-submit">
+          {isSubmitting ? 'Registrando cuenta...' : 'Registrarse'}
+        </button>
+
+        <div className="nb-panel-foot">
+          <span>¿Ya tienes cuenta?</span>
+          <Link to="/" state={{ openLogin: true }}>Iniciar sesión</Link>
+        </div>
+      </form>
+    </AuthShell>
   );
 };
 
