@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HomeIcon, TrophyIcon, TournamentIcon, GruposIcon, LeaderboardIcon, HistoryIcon, SettingsIcon } from './icons';
+import { HomeIcon, TrophyIcon, LeaderboardIcon, HistoryIcon, SettingsIcon } from './icons';
 
 const NavItem = ({ icon, label, to, end = false }) => (
   <NavLink
@@ -35,8 +35,6 @@ const AppSidebar = () => {
       <div className="flex flex-1 flex-col gap-1">
         <NavItem icon={<HomeIcon />} label="Inicio" to="/dashboard" end />
         <NavItem icon={<TrophyIcon />} label="Retos Diarios" to="/dashboard/retos" />
-        <NavItem icon={<TournamentIcon />} label="Torneos" to="/dashboard/torneos" />
-        <NavItem icon={<GruposIcon />} label="Grupos" to="/dashboard/grupos" />
         <NavItem icon={<LeaderboardIcon />} label="Rankings" to="#" />
         {isAdmin && <NavItem icon={<HistoryIcon />} label="Usuarios" to="/historial-usuarios" />}
       </div>
