@@ -137,8 +137,10 @@ const ResetPage = () => {
             <AuthShell
                 title="Cambiar contraseña"
                 subtitle="Ingresa tu nueva contraseña"
-                action={{ to: '/', label: 'Volver al inicio' }}
+                action={{ to: '/dashboard', label: 'Volver al dashboard' }}
+                home="/dashboard"
                 maxWidth={480}
+                decorated
             >
                 <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
                     <div className="nb-field">

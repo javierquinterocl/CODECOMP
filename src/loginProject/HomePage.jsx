@@ -33,8 +33,8 @@ const mono = "'JetBrains Mono',monospace";
 const press = "'Press Start 2P',monospace";
 const grotesk = "'Space Grotesk',sans-serif";
 
-const FloatCard = ({ style, filename, children }) => (
-  <div style={{ position:'absolute', background:'rgba(255,255,255,0.12)', border:'2px solid rgba(255,255,255,0.45)', boxShadow:'6px 6px 0px rgba(255,255,255,0.14)', textAlign:'left', overflow:'hidden', ...style }}>
+const FloatCard = ({ style, filename, className = '', children }) => (
+  <div className={className} style={{ position:'absolute', background:'rgba(255,255,255,0.12)', border:'2px solid rgba(255,255,255,0.45)', boxShadow:'6px 6px 0px rgba(255,255,255,0.14)', textAlign:'left', overflow:'hidden', ...style }}>
     <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.22)', padding:'5px 8px' }}>
       <span style={{ width:7, height:7, background:'rgba(255,255,255,0.7)', display:'block' }}></span>
       <span style={{ width:7, height:7, background:'rgba(255,255,255,0.4)', display:'block' }}></span>
@@ -104,13 +104,13 @@ const HomePage = () => {
       <div className="nb-page">
 
         {/* ── Navbar + Hero (full viewport height) ── */}
-        <div style={{ height:'100dvh', display:'flex', flexDirection:'column' }}>
+        <div className="nb-hero-wrap">
 
           {/* Navbar */}
           <nav ref={navRef} style={{ background:'#fff', borderBottom:'3px solid #000', flex:'0 0 auto', zIndex:50 }}>
             <div className="nb-nav-inner">
               <div style={{ display:'flex', alignItems:'center', gap:36 }}>
-                <span style={{ fontFamily:press, fontSize:15, color:'#000', letterSpacing:1 }}>CODECOMP</span>
+                <span className="nb-brand">CODECOMP</span>
                 <div className="nb-nav-links">
                   {['Producto','Retos','Seguridad','Recursos'].map(l => (
                     <span key={l} className="nb-nav-link">{l}</span>
@@ -125,22 +125,22 @@ const HomePage = () => {
           </nav>
 
           {/* Hero */}
-          <section style={{ background:'#0736FE', borderBottom:'3px solid #000', flex:'1 1 auto', minHeight:0, display:'flex', alignItems:'center', justifyContent:'center', overflow:'hidden', position:'relative' }}>
+          <section className="nb-hero">
             {/* Grid overlay */}
-            <div style={{ position:'absolute', top:0, right:0, bottom:0, left:0, backgroundImage:'repeating-linear-gradient(0deg,rgba(255,255,255,0.16) 0 1px,transparent 1px 56px),repeating-linear-gradient(90deg,rgba(255,255,255,0.16) 0 1px,transparent 1px 56px)', pointerEvents:'none' }}></div>
+            <div className="nb-hero-grid" />
 
             {/* Floating code cards */}
-            <div style={{ position:'absolute', top:0, right:0, bottom:0, left:0, pointerEvents:'none' }}>
-              <FloatCard filename="main.cpp" style={{ right:'1.5%', top:'6%', width:'clamp(118px,13vw,208px)', animation:'om-float-b 8.5s ease-in-out infinite' }}>
+            <div className="nb-hero-deco" aria-hidden="true">
+              <FloatCard className="nb-hero-card nb-hero-card-1" filename="main.cpp" style={{ right:'1.5%', top:'6%', width:'clamp(118px,13vw,208px)', animation:'om-float-b 8.5s ease-in-out infinite' }}>
                 {kw('int')}{' main() {\n  '}{kw('int')}{' n;\n  cin >> n;\n  solve(n);\n  '}{kw('return')}{' 0;\n}'}
               </FloatCard>
-              <FloatCard filename="solve.py" style={{ left:'3%', top:'14%', width:'clamp(120px,13.5vw,214px)', animation:'om-float-a 7.5s ease-in-out infinite' }}>
+              <FloatCard className="nb-hero-card nb-hero-card-2" filename="solve.py" style={{ left:'3%', top:'14%', width:'clamp(120px,13.5vw,214px)', animation:'om-float-a 7.5s ease-in-out infinite' }}>
                 {kw('def')}{' solve(n):\n  dp = [0] * (n+1)\n  '}{kw('for')}{' i '}{kw('in')}{' range(n):\n    dp[i+1] = dp[i] + i\n  '}{kw('return')}{' dp[n]'}
               </FloatCard>
-              <FloatCard filename="judge.log" style={{ right:'5%', bottom:'8%', width:'clamp(104px,11.5vw,182px)', animation:'om-float-c 9.5s ease-in-out infinite' }}>
+              <FloatCard className="nb-hero-card nb-hero-card-3" filename="judge.log" style={{ right:'5%', bottom:'8%', width:'clamp(104px,11.5vw,182px)', animation:'om-float-c 9.5s ease-in-out infinite' }}>
                 {kw('AC')}{'  0.42s  12MB\n'}{kw('AC')}{'  0.31s  11MB\nTLE 2.00s  --\n'}{kw('AC')}{'  0.18s  10MB'}
               </FloatCard>
-              <FloatCard filename="main.rs" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
+              <FloatCard className="nb-hero-card nb-hero-card-4" filename="main.rs" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
                 {kw('fn')}{' main() {\n  '}{kw('let')}{' n = read();\n  println!("{}", n);\n}'}
               </FloatCard>
 
@@ -148,38 +148,38 @@ const HomePage = () => {
               {[
                 { t:'#include <bits/stdc++.h>', s:{ left:'23%', top:'8%', animation:'om-float-c 10s ease-in-out infinite', fontSize:'clamp(8px,0.85vw,14px)', color:'rgba(255,255,255,0.34)' } },
                 { t:'O(n log n)',              s:{ right:'24%', top:'9%', animation:'om-float-a 9s ease-in-out infinite', fontSize:'clamp(10px,1.1vw,18px)', color:'rgba(255,255,255,0.4)' } },
-                { t:'while (true)',            s:{ left:'17%', top:'46%', animation:'om-float-b 8.4s ease-in-out infinite', fontSize:'clamp(9px,0.95vw,15px)', color:'rgba(255,255,255,0.3)' } },
-                { t:'git push origin main',    s:{ right:'16%', top:'44%', animation:'om-float-c 9.2s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.3)' } },
+                { t:'while (true)', sm:false, s:{ left:'17%', top:'46%', animation:'om-float-b 8.4s ease-in-out infinite', fontSize:'clamp(9px,0.95vw,15px)', color:'rgba(255,255,255,0.3)' } },
+                { t:'git push origin main', sm:false, s:{ right:'16%', top:'44%', animation:'om-float-c 9.2s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.3)' } },
                 { t:'{ }',                    s:{ left:'31%', bottom:'6%', animation:'om-float-a 8.6s ease-in-out infinite', fontSize:'clamp(14px,1.8vw,30px)', color:'rgba(255,255,255,0.28)' } },
                 { t:'return 0;',              s:{ right:'31%', bottom:'5%', animation:'om-float-b 7.8s ease-in-out infinite', fontSize:'clamp(9px,0.9vw,15px)', color:'rgba(255,255,255,0.32)' } },
                 { t:'// TODO: optimizar',     s:{ left:'44%', top:'3%', animation:'om-float-c 9.8s ease-in-out infinite', fontSize:'clamp(8px,0.78vw,13px)', color:'rgba(255,255,255,0.28)', fontWeight:400 } },
-                { t:'sizeof(int)',            s:{ right:'3.5%', top:'58%', animation:'om-float-a 10.4s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
-                { t:'npm run judge',          s:{ left:'3.5%', top:'57%', animation:'om-float-b 9.6s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
-              ].map(({ t, s }) => (
-                <span key={t} style={{ position:'absolute', fontFamily:mono, fontWeight:700, letterSpacing:'0.02em', whiteSpace:'nowrap', ...s }}>{t}</span>
+                { t:'sizeof(int)', sm:false, s:{ right:'3.5%', top:'58%', animation:'om-float-a 10.4s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
+                { t:'npm run judge', sm:false, s:{ left:'3.5%', top:'57%', animation:'om-float-b 9.6s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
+              ].map(({ t, s, sm = true }) => (
+                <span key={t} className={sm ? 'nb-hero-text' : 'nb-hero-text hide-sm'} style={{ position:'absolute', fontFamily:mono, fontWeight:700, letterSpacing:'0.02em', whiteSpace:'nowrap', ...s }}>{t}</span>
               ))}
             </div>
 
             {/* Hero text */}
-            <div style={{ position:'relative', width:'100%', maxWidth:1400, margin:'0 auto', padding:'clamp(28px,5vh,72px) clamp(16px,3vw,32px)', textAlign:'center' }}>
-              <h1 style={{ fontFamily:press, color:'#fff', textShadow:'0.07em 0.07em 0px #3A1FE8', fontSize:'clamp(20px,7.8vw,140px)', lineHeight:1, margin:'0 0 clamp(18px,3vh,38px)', display:'inline-block', overflow:'hidden', borderRight:'0.09em solid #fff', width:'9.2ch', animation:'om-type 1.9s steps(9,end) 0.35s both, om-caret 0.75s steps(1) 2.4s infinite', whiteSpace:'nowrap' }}>CODECOMP</h1>
+            <div className="nb-hero-inner">
+              <h1 className="nb-hero-title">CODECOMP</h1>
               <p style={{ margin:'0 auto clamp(20px,3.6vh,40px)', fontSize:'clamp(15px,1.6vw,24px)', lineHeight:1.6, color:'#fff', fontWeight:500, maxWidth:'min(760px,88%)' }}>Eficiencia y precisión sin igual gracias a herramientas inteligentes diseñadas para acelerar tu flujo, potenciar la creatividad y redefinir tu codigo.</p>
 
-              <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(12px,1.4vw,20px)', justifyContent:'center', marginBottom:'clamp(20px,3.4vh,38px)' }}>
+              <div className="nb-hero-actions">
                 <button type="button" onClick={openLogin} className="nb-hero-btn-white" style={{ cursor:'pointer', fontFamily:'inherit' }}>Empieza ahora <span style={{ fontFamily:mono }}>→</span></button>
                 <button type="button" onClick={openLogin} className="nb-hero-btn-blue" style={{ cursor:'pointer', fontFamily:'inherit' }}>Ver retos</button>
-                <img src="/cat-pixel.png" alt="" style={{ width:'clamp(46px,4.6vw,78px)', height:'auto', imageRendering:'pixelated', alignSelf:'center', animation:'om-float-b 6s ease-in-out infinite', pointerEvents:'none' }} />
+                <img src="/cat-pixel.png" alt="" className="nb-hero-cat" style={{ width:'clamp(46px,4.6vw,78px)', height:'auto', imageRendering:'pixelated', alignSelf:'center', animation:'om-float-b 6s ease-in-out infinite', pointerEvents:'none' }} />
               </div>
 
               {/* Terminal */}
-              <div style={{ display:'inline-flex', alignItems:'center', gap:10, background:'#000', border:'2px solid #000', boxShadow:'5px 5px 0px #0736FE', padding:'clamp(8px,1.1vw,14px) clamp(12px,1.6vw,22px)', fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,1.05vw,16px)', color:'#fff' }}>
+              <div className="nb-terminal">
                 <span>$</span>
                 <span>codecomp run --lang cpp --judge ufpso</span>
                 <span style={{ width:'0.6em', height:'1.1em', background:'#fff', display:'inline-block', animation:'om-blink 1s steps(1) infinite' }}></span>
               </div>
 
               {/* Stats */}
-              <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(10px,1.4vw,20px)', justifyContent:'center', marginTop:'clamp(18px,3.2vh,36px)' }}>
+              <div className="nb-stats">
                 {[
                   { label:'envios hoy', value:'1.240' },
                   { label:'veredicto',  value:'AC 98%' },
@@ -300,8 +300,10 @@ const HomePage = () => {
                     <span>{faq.q}</span>
                     <span style={{ width:32, height:32, flexShrink:0, background:'#0736FE', color:'#fff', border:'2px solid #000', display:'grid', placeItems:'center', fontFamily:mono, fontWeight:700, fontSize:16 }}>{open ? '−' : '+'}</span>
                   </button>
-                  <div style={{ overflow:'hidden', transition:'max-height 260ms ease-out', maxHeight: open ? '300px' : '0px' }}>
-                    <p style={{ margin:0, padding:'16px 20px 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.6, fontWeight:500, borderTop:'2px solid #000' }}>{faq.a}</p>
+                  <div className={`nb-faq-body${open ? ' is-open' : ''}`}>
+                    <div>
+                      <p style={{ margin:0, padding:'16px 20px 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.6, fontWeight:500, borderTop:'2px solid #000' }}>{faq.a}</p>
+                    </div>
                   </div>
                 </div>
               );

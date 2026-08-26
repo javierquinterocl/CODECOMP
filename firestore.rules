@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Debe coincidir con ADMIN_EMAILS en src/config.js
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email in [
+        'afsalasn@ufpso.edu.co',
+        'acastillac@ufpso.edu.co',
+        'jaquinterocl@ufpso.edu.co'
+      ];
+    }
+
+    // Perfiles: cada quien lee y edita el suyo. Los admins pueden listarlos
+    // para el historial de usuarios.
+    match /usuarios_registrados/{uid} {
+      allow read:          if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == uid;
+      allow delete:        if isAdmin();
+    }
+
+    // Sesiones: cada usuario solo alcanza las propias.
+    // Las consultas deben venir filtradas por uid; una lectura sin filtro
+    // se rechaza salvo que sea un admin.
+    match /historial_sesiones/{sessionId} {
+      allow read:   if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update: if isSignedIn() && (resource.data.uid == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Contenido: lo lee cualquiera con sesión iniciada, lo edita solo un admin.
+    match /daily_challenges/{challengeId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /tournaments/{tournamentId} {
+      allow read:  if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Todo lo demás queda cerrado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
