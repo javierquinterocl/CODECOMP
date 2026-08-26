@@ -14,7 +14,7 @@ const CompleteProfilePage = () => {
   useEffect(() => {
     const user = auth?.currentUser;
     if (!user) {
-      navigate('/login');
+      navigate('/', { state: { openLogin: true } });
       return;
     }
     const [nombre = '', ...rest] = (user.displayName || '').split(' ');
@@ -55,7 +55,7 @@ const CompleteProfilePage = () => {
 
     const user = auth?.currentUser;
     if (!user) {
-      navigate('/login');
+      navigate('/', { state: { openLogin: true } });
       return;
     }
 

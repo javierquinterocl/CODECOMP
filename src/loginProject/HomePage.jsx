@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import LoginModal from './components/LoginModal';
 
 const FAQS = [
   {
@@ -27,47 +28,6 @@ const FAQS = [
     a: 'Ocho semanas una vez aprobado el anteproyecto. El proyecto se desarrolla en Ocaña, Norte de Santander, dentro de la Universidad Francisco de Paula Santander Ocaña.',
   },
 ];
-
-const animCSS = `
-  @keyframes om-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-  @keyframes om-blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
-  @keyframes om-type { from { width: 0; } to { width: 9.2ch; } }
-  @keyframes om-caret { 0%,49% { border-color: #fff; } 50%,100% { border-color: transparent; } }
-  @keyframes om-float-a { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-22px) rotate(-6deg); } }
-  @keyframes om-float-b { 0%,100% { transform: translateY(0) rotate(8deg); } 50% { transform: translateY(-16px) rotate(8deg); } }
-  @keyframes om-float-c { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-28px) rotate(-3deg); } }
-  .nb-page { background:#fff; font-family:'Space Grotesk',Helvetica,sans-serif; color:#000; min-height:100vh; overflow-x:hidden; }
-  .nb-page a { text-decoration:none; }
-  .nb-nav-link { color:#000; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; padding:4px 2px; border-bottom:2px solid transparent; }
-  .nb-nav-link:hover { color:#0736FE; }
-  .nb-btn-white { background:#fff; border:2px solid #000; box-shadow:4px 4px 0px #000; padding:9px 18px; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#000; display:inline-block; transition:all 0.1s; }
-  .nb-btn-white:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000; color:#000; }
-  .nb-btn-blue { background:#0736FE; border:2px solid #000; box-shadow:4px 4px 0px #000; padding:9px 18px; font-weight:700; font-size:14px; text-transform:uppercase; letter-spacing:0.05em; color:#fff; display:inline-block; transition:all 0.1s; }
-  .nb-btn-blue:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000; color:#fff; }
-  .nb-hero-btn-white { background:#fff; border:2px solid #000; box-shadow:5px 5px 0px #000; padding:clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight:700; font-size:clamp(13px,1.25vw,19px); text-transform:uppercase; letter-spacing:0.06em; color:#000; display:inline-flex; align-items:center; gap:10px; transition:all 0.1s; }
-  .nb-hero-btn-white:hover { transform:translate(2px,2px); box-shadow:3px 3px 0px #000; color:#000; }
-  .nb-hero-btn-blue { background:#0736FE; border:2px solid #000; box-shadow:5px 5px 0px #000; padding:clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight:700; font-size:clamp(13px,1.25vw,19px); text-transform:uppercase; letter-spacing:0.06em; color:#fff; display:inline-block; transition:all 0.1s; }
-  .nb-hero-btn-blue:hover { transform:translate(2px,2px); box-shadow:3px 3px 0px #000; color:#fff; }
-  .nb-card { transition:all 0.1s; }
-  .nb-card:hover { transform:translate(2px,2px); box-shadow:2px 2px 0px #000 !important; }
-  .nb-footer-link { color:#DDE3FF; }
-  .nb-footer-link:hover { color:#fff; }
-  .nb-social-btn { width:44px; height:44px; background:#fff; border:2px solid #000; display:grid; place-items:center; font-family:'JetBrains Mono',monospace; font-weight:700; color:#0736FE; }
-  .nb-social-btn:hover { background:#0428C9; color:#fff; }
-  .nb-nav-inner { max-width:1280px; margin:0 auto; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; }
-  .nb-nav-links { display:flex; gap:22px; }
-  @media (max-width:640px) {
-    .nb-nav-links { display:none; }
-    .nb-nav-inner { padding:14px 16px; }
-    .nb-btn-white { padding:8px 12px; font-size:12px; box-shadow:3px 3px 0px #000; letter-spacing:0.03em; }
-    .nb-btn-blue  { padding:8px 12px; font-size:12px; box-shadow:3px 3px 0px #000; letter-spacing:0.03em; }
-  }
-  @media (max-width:900px) and (min-width:641px) {
-    .nb-nav-links { gap:14px; }
-    .nb-nav-link  { font-size:13px; }
-    .nb-nav-inner { padding:14px 20px; }
-  }
-`;
 
 const mono = "'JetBrains Mono',monospace";
 const press = "'Press Start 2P',monospace";
@@ -110,18 +70,44 @@ const TerminalBox = ({ filename, lines }) => (
 );
 
 const HomePage = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
+  // Quien llega redirigido desde una ruta protegida (o desde /login) entra
+  // con el panel de sesión ya abierto.
+  const [loginOpen, setLoginOpen] = useState(Boolean(location.state?.openLogin));
+  const [navH, setNavH] = useState('79px');
+  const navRef = useRef(null);
+
+  // Mide el navbar para que el panel de login arranque justo debajo
+  useEffect(() => {
+    const measure = () => {
+      if (!navRef.current) return;
+      setNavH(`${Math.round(navRef.current.getBoundingClientRect().height)}px`);
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
+  // Limpia el state de navegación para que el panel no reaparezca al volver atrás.
+  useEffect(() => {
+    if (!location.state?.openLogin) return;
+    navigate(location.pathname, { replace: true, state: null });
+  }, [location, navigate]);
+
+  const openLogin = useCallback((e) => { if (e) e.preventDefault(); setLoginOpen(true); }, []);
+  const closeLogin = useCallback(() => setLoginOpen(false), []);
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: animCSS }} />
       <div className="nb-page">
 
         {/* ── Navbar + Hero (full viewport height) ── */}
         <div style={{ height:'100dvh', display:'flex', flexDirection:'column' }}>
 
           {/* Navbar */}
-          <nav style={{ background:'#fff', borderBottom:'3px solid #000', flex:'0 0 auto', zIndex:50 }}>
+          <nav ref={navRef} style={{ background:'#fff', borderBottom:'3px solid #000', flex:'0 0 auto', zIndex:50 }}>
             <div className="nb-nav-inner">
               <div style={{ display:'flex', alignItems:'center', gap:36 }}>
                 <span style={{ fontFamily:press, fontSize:15, color:'#000', letterSpacing:1 }}>CODECOMP</span>
@@ -132,7 +118,7 @@ const HomePage = () => {
                 </div>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:12 }}>
-                <Link to="/login"    className="nb-btn-white">Iniciar sesión</Link>
+                <button type="button" onClick={openLogin} className="nb-btn-white" style={{ cursor:'pointer', fontFamily:'inherit' }}>Iniciar sesión</button>
                 <Link to="/register" className="nb-btn-blue">Registrarse</Link>
               </div>
             </div>
@@ -180,8 +166,8 @@ const HomePage = () => {
               <p style={{ margin:'0 auto clamp(20px,3.6vh,40px)', fontSize:'clamp(15px,1.6vw,24px)', lineHeight:1.6, color:'#fff', fontWeight:500, maxWidth:'min(760px,88%)' }}>Eficiencia y precisión sin igual gracias a herramientas inteligentes diseñadas para acelerar tu flujo, potenciar la creatividad y redefinir tu codigo.</p>
 
               <div style={{ display:'flex', flexWrap:'wrap', gap:'clamp(12px,1.4vw,20px)', justifyContent:'center', marginBottom:'clamp(20px,3.4vh,38px)' }}>
-                <Link to="/login"    className="nb-hero-btn-white">Empieza ahora <span style={{ fontFamily:mono }}>→</span></Link>
-                <Link to="/login"    className="nb-hero-btn-blue">Ver retos</Link>
+                <button type="button" onClick={openLogin} className="nb-hero-btn-white" style={{ cursor:'pointer', fontFamily:'inherit' }}>Empieza ahora <span style={{ fontFamily:mono }}>→</span></button>
+                <button type="button" onClick={openLogin} className="nb-hero-btn-blue" style={{ cursor:'pointer', fontFamily:'inherit' }}>Ver retos</button>
                 <img src="/cat-pixel.png" alt="" style={{ width:'clamp(46px,4.6vw,78px)', height:'auto', imageRendering:'pixelated', alignSelf:'center', animation:'om-float-b 6s ease-in-out infinite', pointerEvents:'none' }} />
               </div>
 
@@ -364,6 +350,8 @@ const HomePage = () => {
         </footer>
 
       </div>
+
+      <LoginModal open={loginOpen} onClose={closeLogin} topOffset={navH} />
     </>
   );
 };

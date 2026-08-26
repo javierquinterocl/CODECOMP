@@ -1,0 +1,120 @@
+/* ============================================================
+   Sistema visual Neubrutalismo — CODECOMP
+   Compartido por HomePage, RegisterPage, RecoverPage y ResetPage.
+   ============================================================ */
+
+:root {
+  --nb-blue: #0736FE;
+  --nb-blue-dark: #0428C9;
+  --nb-black: #000;
+}
+
+/* ---------- Animaciones ---------- */
+@keyframes om-marquee  { from { transform: translateX(0); }   to { transform: translateX(-50%); } }
+@keyframes om-blink    { 0%,49% { opacity: 1; }               50%,100% { opacity: 0; } }
+@keyframes om-type     { from { width: 0; }                   to { width: 9.2ch; } }
+@keyframes om-caret    { 0%,49% { border-color: #fff; }       50%,100% { border-color: transparent; } }
+@keyframes om-float-a  { 0%,100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(-22px) rotate(-6deg); } }
+@keyframes om-float-b  { 0%,100% { transform: translateY(0) rotate(8deg); }  50% { transform: translateY(-16px) rotate(8deg); } }
+@keyframes om-float-c  { 0%,100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-28px) rotate(-3deg); } }
+@keyframes om-slide-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes om-fade-in  { from { opacity: 0; }                 to { opacity: 1; } }
+@keyframes om-pop-in   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ---------- HomePage ---------- */
+.nb-page { background: #fff; font-family: 'Space Grotesk', Helvetica, sans-serif; color: #000; min-height: 100vh; overflow-x: hidden; }
+.nb-page a { text-decoration: none; }
+
+.nb-nav-link { color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; padding: 4px 2px; border-bottom: 2px solid transparent; }
+.nb-nav-link:hover { color: var(--nb-blue); }
+
+.nb-btn-white { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #000; display: inline-block; transition: all 0.1s; }
+.nb-btn-white:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #000; }
+.nb-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; display: inline-block; transition: all 0.1s; }
+.nb-btn-blue:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #fff; }
+
+.nb-hero-btn-white { background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #000; display: inline-flex; align-items: center; gap: 10px; transition: all 0.1s; }
+.nb-hero-btn-white:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; color: #000; }
+.nb-hero-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #fff; display: inline-block; transition: all 0.1s; }
+.nb-hero-btn-blue:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; color: #fff; }
+
+.nb-card { transition: all 0.1s; }
+.nb-card:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000 !important; }
+
+.nb-footer-link { color: #DDE3FF; }
+.nb-footer-link:hover { color: #fff; }
+.nb-social-btn { width: 44px; height: 44px; background: #fff; border: 2px solid #000; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--nb-blue); }
+.nb-social-btn:hover { background: var(--nb-blue-dark); color: #fff; }
+
+.nb-nav-inner { max-width: 1280px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.nb-nav-links { display: flex; gap: 22px; }
+
+/* ---------- Modal de inicio de sesión ---------- */
+.nb-modal-close { width: 32px; height: 32px; flex: 0 0 32px; border: 2px solid #000; background: #fff; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; color: #000; cursor: pointer; }
+.nb-modal-close:hover { background: #000; color: #fff; }
+.nb-modal-input:focus { box-shadow: 4px 4px 0px #000; }
+.nb-modal-submit { margin-top: 4px; text-align: center; background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 0.1s; }
+.nb-modal-submit:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; }
+.nb-modal-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+.nb-modal-oauth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-modal-oauth:hover:not(:disabled) { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0px #000; }
+.nb-modal-oauth:disabled { opacity: 0.6; cursor: not-allowed; }
+
+/* ============================================================
+   Páginas de autenticación (registro / recuperar / cambiar)
+   ============================================================ */
+.nb-auth { min-height: 100vh; background: #fff; font-family: 'Space Grotesk', Helvetica, sans-serif; color: #000; display: flex; flex-direction: column; }
+.nb-auth a { text-decoration: none; }
+
+.nb-authnav { background: #fff; border-bottom: 3px solid #000; flex: 0 0 auto; position: sticky; top: 0; z-index: 50; }
+.nb-authnav-inner { max-width: 1280px; margin: 0 auto; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
+.nb-brand { font-family: 'Press Start 2P', monospace; font-size: 15px; color: #000; letter-spacing: 1px; }
+.nb-brand:hover { color: var(--nb-blue); }
+
+.nb-auth-main { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; padding: clamp(28px,5vh,64px) clamp(16px,4vw,28px); }
+
+/* Tarjeta blanca del formulario */
+.nb-panel { width: 100%; background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000; }
+.nb-panel-head { background: var(--nb-blue); border-bottom: 3px solid #000; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
+.nb-panel-title { font-family: 'Press Start 2P', monospace; font-size: clamp(11px,1.5vw,15px); line-height: 1.6; color: #fff; text-shadow: 2px 2px 0px #000; margin: 0; }
+.nb-panel-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fff; opacity: 0.9; margin: 8px 0 0; }
+.nb-panel-body { padding: clamp(20px,3vw,30px) clamp(18px,3vw,26px); display: flex; flex-direction: column; gap: 18px; }
+
+/* Campos */
+.nb-field { display: flex; flex-direction: column; gap: 7px; }
+.nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #000; }
+.nb-input { width: 100%; border: 2px solid #000; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #000; background: #fff; outline: none; transition: box-shadow 0.1s; }
+.nb-input:focus { box-shadow: 4px 4px 0px var(--nb-blue); }
+.nb-input.is-error { border-color: #B00020; }
+.nb-input.is-error:focus { box-shadow: 4px 4px 0px #B00020; }
+.nb-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: #B00020; }
+.nb-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+@media (max-width: 620px) { .nb-row { grid-template-columns: 1fr; } }
+
+/* Ojo mostrar/ocultar contraseña */
+.nb-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--nb-blue); }
+
+/* Botón principal */
+.nb-submit { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.1s; }
+.nb-submit:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; }
+.nb-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+
+/* Avisos en línea */
+.nb-note { border: 2px solid #000; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
+.nb-note-error { background: #B00020; color: #fff; }
+.nb-note-ok { background: #000; color: #fff; }
+
+/* Pie de la tarjeta */
+.nb-panel-foot { border-top: 2px solid #000; padding-top: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; font-weight: 500; color: #000; }
+.nb-panel-foot a { font-weight: 700; color: var(--nb-blue); text-decoration: underline; }
+.nb-panel-foot a:hover { color: var(--nb-blue-dark); }
+
+/* Diálogo de confirmación (recuperar / cambiar contraseña) */
+.nb-dialog-backdrop { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(0,0,0,0.5); animation: om-fade-in 0.2s ease-out both; }
+.nb-dialog { width: 100%; max-width: 520px; background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000; animation: om-pop-in 0.22s ease-out both; }
+.nb-dialog-head { border-bottom: 3px solid #000; padding: 18px 22px; }
+.nb-dialog-head.is-error { background: #B00020; }
+.nb-dialog-head.is-ok { background: var(--nb-blue); }
+.nb-dialog-title { font-family: 'Press Start 2P', monospace; font-size: 13px; line-height: 1.6; color: #fff; text-shadow: 2px 2px 0px #000; margin: 0; }
+.nb-dialog-body { padding: 20px 22px; font-size: 14px; line-height: 1.6; font-weight: 500; color: #000; }
+.nb-dialog-foot { padding: 0 22px 22px; display: flex; justify-content: flex-end; }

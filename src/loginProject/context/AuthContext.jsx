@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
         await Promise.all(activeSessions.map((s) => updateSessionExit(s.id, Date.now())));
       }
       await signOut(auth);
-      navigate('/login');
+      navigate('/');
     } catch (error) {
       console.error('Error al finalizar sesión:', error);
     } finally {
