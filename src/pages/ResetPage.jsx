@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { updatePassword, signOut, confirmPasswordReset } from 'firebase/auth';
-import { auth, hasFirebaseConfig } from '../firebase/firebaseConfig';
-import AuthShell, { AuthDialog } from './components/AuthShell';
+import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
+import AuthShell, { AuthDialog } from '../components/AuthShell';
 
 const ResetPage = () => {
     const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, hasFirebaseConfig } from '../../firebase/firebaseConfig';
-import { useSocialLogin } from '../socialAuth';
+import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
+import { useSocialLogin } from '../scripts/socialAuth';
 import { GoogleIcon, GithubIcon, FacebookIcon } from './BrandIcons';
 
 const mono = "'JetBrains Mono',monospace";

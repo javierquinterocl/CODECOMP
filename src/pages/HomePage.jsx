@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import LoginModal from './components/LoginModal';
+import LoginModal from '../components/LoginModal';
 
 const FAQS = [
   {

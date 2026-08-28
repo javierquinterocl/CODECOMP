@@ -10,7 +10,7 @@ import {
   signInWithPopup,
   signOut,
 } from 'firebase/auth';
-import { auth, googleProvider, githubProvider, facebookProvider, hasFirebaseConfig } from '../firebase/firebaseConfig';
+import { auth, googleProvider, githubProvider, facebookProvider, hasFirebaseConfig } from './firebaseConfig';
 import { googleUserExistsInFirestore, createSessionRecord, updateUserPhotoURL } from './registerService';
 
 const PROVIDER_LABELS = {

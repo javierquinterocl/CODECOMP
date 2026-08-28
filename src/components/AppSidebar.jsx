@@ -33,6 +33,7 @@ const AppSidebar = () => {
 
       <div className="nb-dash-nav">
         <NavItem label="Inicio" to="/dashboard" end />
+        <NavItem label="Problemas" to="/dashboard/problemas" />
         <NavItem label="Retos Diarios" to="/dashboard/retos" />
         <NavItemSoon label="Rankings" />
         {/* Estudiantes queda restringido a administradores, como estaba antes */}

@@ -13,6 +13,24 @@ Plataforma de programación competitiva para el grupo de maratón de Ingeniería
 - Tailwind CSS
 - React Router DOM
 
+## Estructura
+
+```
+src/
+├── main.jsx              punto de entrada
+├── App.jsx               rutas
+├── css/                  hojas de estilo (una por área)
+├── scripts/              lógica sin JSX: servicios, datos, hooks, config
+├── pages/                componentes principales — una página por ruta
+├── components/           componentes secundarios — piezas reutilizables
+├── context/              estado compartido (AuthContext)
+└── assets/               imágenes empaquetadas por Vite
+```
+
+Regla para saber dónde va un archivo nuevo: si lo renderiza una ruta, va en
+`pages/`; si lo usa más de una página, va en `components/`; si no devuelve
+JSX, va en `scripts/`.
+
 ## Desarrollo local
 
 ```bash

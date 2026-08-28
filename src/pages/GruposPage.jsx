@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { collection, getDocs, orderBy, query } from 'firebase/firestore';
-import { db } from '../firebase/firebaseConfig';
-import { useAuth } from './context/AuthContext';
-import { createGrupo, deleteGrupo, getGrupos, updateGrupo } from './gruposService';
+import { db } from '../scripts/firebaseConfig';
+import { useAuth } from '../context/AuthContext';
+import { createGrupo, deleteGrupo, getGrupos, updateGrupo } from '../scripts/gruposService';
 
 const ROLES = [
   { value: 'programador',  label: 'Programador',          color: 'bg-blue-100 text-blue-700 border-blue-200' },
