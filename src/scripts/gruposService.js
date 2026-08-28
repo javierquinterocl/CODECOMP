@@ -2,7 +2,7 @@ import {
   addDoc, collection, deleteDoc, doc,
   getDoc, getDocs, orderBy, query, serverTimestamp, updateDoc, where,
 } from 'firebase/firestore';
-import { db, hasFirebaseConfig } from '../firebase/firebaseConfig';
+import { db, hasFirebaseConfig } from './firebaseConfig';
 
 const GRUPOS_COLLECTION = 'grupos';
 

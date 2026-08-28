@@ -1,0 +1,258 @@
+/* ============================================================
+   Módulo de Problemas — Neubrutalismo
+   Vive dentro de .nb-dash, así que hereda su escala fluida
+   (--fs-*, --sp-*, --nb-blue) y crece igual que el resto del panel.
+
+   Cada tarjeta trae su propio par de color en dos variables:
+   --cat-bg (fondo) y --cat-ink (texto). El recuadro del número usa
+   las mismas dos invertidas, así el contraste sale solo tanto en
+   los colores oscuros como en los claros.
+   ============================================================ */
+
+/* ---------- Encabezado del módulo ---------- */
+.nb-pb-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-gap); }
+.nb-pb-hero-main { position: relative; flex: 1 1 380px; min-width: 0; }
+.nb-pb-hero-stats { position: relative; display: flex; flex-wrap: wrap; gap: clamp(8px, 0.7vw, 16px); }
+.nb-pb-hstat { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(8px,0.6vw,14px) clamp(12px,1vw,20px); min-width: clamp(92px, 7vw, 140px); }
+.nb-pb-hstat-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
+.nb-pb-hstat-value { font-family: 'Press Start 2P', monospace; font-size: clamp(14px, 0.5vw + 11px, 24px); line-height: 1; margin-top: 9px; }
+
+/* ---------- Barra de búsqueda ---------- */
+.nb-pb-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--sp-gap); margin-bottom: var(--sp-gap); }
+.nb-pb-search { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(9px,0.7vw,15px) clamp(12px,1vw,18px); }
+.nb-pb-search svg { flex: 0 0 auto; width: clamp(15px, 1.1vw, 20px); height: auto; color: var(--nb-blue); }
+.nb-pb-search input { flex: 1 1 auto; min-width: 0; border: none; outline: none; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); color: #000; }
+.nb-pb-search input::placeholder { color: #5A6070; }
+.nb-pb-clear { flex: 0 0 auto; border: 2px solid #000; background: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-xs); line-height: 1; padding: 5px 8px; color: #000; }
+.nb-pb-clear:hover { background: #000; color: #fff; }
+.nb-pb-all { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 10px; background: #000; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); padding: clamp(9px,0.7vw,15px) clamp(16px,1.3vw,28px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; font-family: inherit; cursor: pointer; transition: all 0.1s; }
+.nb-pb-all:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--nb-blue); color: #fff; }
+
+/* ---------- Rejilla de categorías ---------- */
+.nb-pb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-gap); }
+
+.nb-pb-card { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: clamp(170px, 14vw, 264px); background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; transition: all 0.1s; }
+.nb-pb-card:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #000; color: var(--cat-ink); }
+.nb-pb-card:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
+
+/* Número gigante de fondo: el guiño al diseño de referencia */
+.nb-pb-ghost { position: absolute; right: -0.04em; bottom: -0.22em; font-family: 'Press Start 2P', monospace; font-size: clamp(74px, 8.5vw, 168px); line-height: 1; color: var(--cat-ink); opacity: 0.13; pointer-events: none; user-select: none; }
+
+.nb-pb-card-head { position: relative; flex: 1 1 auto; display: flex; align-items: flex-start; gap: clamp(11px, 0.9vw, 20px); padding: var(--sp-card); padding-bottom: clamp(12px, 0.9vw, 20px); }
+.nb-pb-badge { flex: 0 0 auto; width: clamp(38px, 2.6vw + 20px, 66px); aspect-ratio: 1; border: 2px solid #000; background: var(--cat-ink); color: var(--cat-bg); display: grid; place-items: center; font-family: 'Press Start 2P', monospace; font-size: clamp(12px, 0.5vw + 9px, 21px); }
+.nb-pb-card-title { margin: 0 0 7px; font-weight: 700; font-size: var(--fs-lg); line-height: 1.2; letter-spacing: -0.01em; text-transform: uppercase; }
+.nb-pb-card-topics { margin: 0; font-size: var(--fs-sm); line-height: 1.5; font-weight: 500; opacity: 0.92; }
+
+.nb-pb-card-foot { position: relative; border-top: 2px solid #000; padding: clamp(9px,0.7vw,16px) var(--sp-card); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.nb-pb-count { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; }
+.nb-pb-go { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-lg); line-height: 1; }
+
+/* Búsqueda sin resultados */
+.nb-pb-empty { grid-column: 1 / -1; background: #fff; border: 3px dashed #000; padding: calc(var(--sp-card) * 1.4) var(--sp-card); text-align: center; }
+.nb-pb-empty-title { font-weight: 700; font-size: var(--fs-lg); margin: 0 0 8px; }
+.nb-pb-empty a { color: var(--nb-blue); font-weight: 700; text-decoration: underline; }
+
+/* ---------- Detalle de una categoría ---------- */
+.nb-pb-back { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); margin-bottom: var(--sp-gap); }
+.nb-pb-back:hover { color: #000; }
+
+.nb-pb-cat-head { position: relative; overflow: hidden; background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: var(--sp-card); margin-bottom: var(--sp-gap); display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-gap); }
+.nb-pb-cat-main { position: relative; flex: 1 1 340px; min-width: 0; }
+.nb-pb-cat-title { margin: 0 0 10px; font-family: 'Press Start 2P', monospace; font-size: clamp(14px, 1vw + 8px, 30px); line-height: 1.5; }
+.nb-pb-cat-text { margin: 0; font-size: var(--fs-base); font-weight: 500; line-height: 1.55; max-width: 42em; }
+.nb-pb-tags { position: relative; display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.nb-pb-tag { border: 2px solid #000; background: var(--cat-ink); color: var(--cat-bg); font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 9px; }
+.nb-pb-cat-count { position: relative; flex: 0 0 auto; border: 2px solid #000; background: var(--cat-ink); color: var(--cat-bg); padding: clamp(12px,1vw,22px) clamp(16px,1.4vw,30px); text-align: center; }
+.nb-pb-cat-count-value { font-family: 'Press Start 2P', monospace; font-size: clamp(18px, 0.8vw + 13px, 34px); line-height: 1; }
+.nb-pb-cat-count-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 10px; }
+
+/* ---------- Listado de ejercicios de una categoría ---------- */
+.nb-pb-listbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: var(--sp-gap); }
+.nb-pb-listbar-title { font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; }
+.nb-pb-filtro { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,18px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-pb-filtro svg { width: clamp(13px,1vw,17px); height: auto; }
+.nb-pb-filtro:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+.nb-pb-filtro.is-on { background: var(--nb-blue); color: #fff; }
+
+.nb-pb-list { display: flex; flex-direction: column; gap: clamp(10px, 0.8vw, 16px); }
+
+.nb-pb-row { position: relative; display: flex; align-items: center; gap: clamp(11px, 0.9vw, 22px); background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(11px,0.9vw,20px) clamp(13px,1vw,24px); transition: all 0.1s; }
+.nb-pb-row:hover { transform: translate(3px, 3px); box-shadow: 1px 1px 0px #000; }
+.nb-pb-row:focus-within { box-shadow: 4px 4px 0px var(--nb-blue); }
+
+.nb-pb-row-num { flex: 0 0 auto; min-width: clamp(52px, 4vw, 78px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-base); color: var(--nb-blue); }
+.nb-pb-row-main { flex: 1 1 200px; min-width: 0; }
+/* Enlace estirado: toda la fila es clicable sin anidar el botón dentro del <a>. */
+.nb-pb-row-link { font-weight: 700; font-size: var(--fs-base); line-height: 1.3; color: #000; }
+.nb-pb-row-link::after { content: ''; position: absolute; inset: 0; }
+.nb-pb-row:hover .nb-pb-row-link { color: var(--nb-blue); }
+.nb-pb-row-sub { font-size: var(--fs-sm); font-weight: 500; color: #3B4252; line-height: 1.45; margin-top: 4px; }
+
+.nb-pb-row-nivel { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: clamp(84px, 7vw, 122px); }
+.nb-pb-row-nivel-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.nb-pb-nivel { display: inline-flex; gap: 3px; vertical-align: middle; }
+.nb-pb-nivel-seg { width: clamp(9px, 0.7vw, 14px); height: clamp(9px, 0.7vw, 14px); border: 2px solid #000; background: #fff; }
+.nb-pb-nivel-seg.is-on { background: var(--nb-blue); }
+
+/* Botón de favorito: por encima del enlace estirado */
+.nb-pb-fav { position: relative; z-index: 1; flex: 0 0 auto; display: grid; place-items: center; width: clamp(34px, 2.6vw, 46px); aspect-ratio: 1; border: 2px solid #000; background: #fff; color: #000; cursor: pointer; padding: 0; transition: all 0.1s; }
+.nb-pb-fav svg { width: 62%; height: 62%; }
+.nb-pb-fav:hover { background: var(--nb-pink); }
+.nb-pb-fav.is-on { background: var(--nb-pink); }
+.nb-pb-fav:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 2px; }
+/* Sobre la cabecera de color el blanco se pierde: se invierte con el par --cat-* */
+.nb-pb-fav.is-onhead { background: var(--cat-ink); color: var(--cat-bg); }
+.nb-pb-fav.is-onhead.is-on { background: var(--nb-pink); color: #000; }
+
+.nb-pb-row-go { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-lg); line-height: 1; }
+
+/* ============================================================
+   Vista de un ejercicio
+   Dos columnas: enunciado a la izquierda, editor a la derecha,
+   igual que el boceto.
+   ============================================================ */
+.nb-ex { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--sp-gap); align-items: start; }
+/* "Agrandar": el enunciado se retira y el editor toma todo el ancho. */
+.nb-ex.is-expanded { grid-template-columns: minmax(0, 1fr); }
+.nb-ex.is-expanded .nb-ex-left { display: none; }
+
+.nb-ex-left { display: flex; flex-direction: column; gap: var(--sp-gap); min-width: 0; }
+.nb-ex-right { display: flex; flex-direction: column; gap: var(--sp-gap); min-width: 0; }
+
+.nb-ex-card { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
+.nb-ex-pad { padding: var(--sp-card); }
+.nb-ex-h2 { margin: 0 0 10px; font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; }
+.nb-ex-text { margin: 0 0 10px; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; }
+.nb-ex-text:last-child { margin-bottom: 0; }
+
+/* ---------- Nombre + número ---------- */
+.nb-ex-title-card { background: var(--cat-bg); color: var(--cat-ink); display: flex; align-items: center; gap: var(--sp-gap); padding: var(--sp-card); }
+.nb-ex-title-main { flex: 1 1 auto; min-width: 0; }
+.nb-ex-kicker { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; opacity: 0.85; margin-bottom: 10px; }
+.nb-ex-title { margin: 0; font-family: 'Press Start 2P', monospace; font-size: clamp(13px, 0.8vw + 8px, 26px); line-height: 1.5; }
+.nb-ex-title-side { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
+.nb-ex-numero { border: 2px solid #000; background: var(--cat-ink); color: var(--cat-bg); padding: clamp(7px,0.6vw,13px) clamp(10px,0.8vw,17px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-base); line-height: 1; }
+
+/* ---------- Franja de datos ---------- */
+.nb-ex-meta { display: flex; flex-wrap: wrap; gap: clamp(8px, 0.7vw, 14px); }
+.nb-ex-meta-item { flex: 1 1 118px; background: #fff; border: 2px solid #000; padding: clamp(8px,0.6vw,14px) clamp(10px,0.8vw,16px); }
+.nb-ex-meta-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-ex-meta-value { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 6px; font-weight: 700; font-size: var(--fs-sm); }
+
+/* ---------- Ejemplos ---------- */
+.nb-ex-samples { display: flex; flex-direction: column; gap: clamp(10px, 0.8vw, 16px); }
+.nb-ex-sample { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 2px solid #000; }
+.nb-ex-sample-col { min-width: 0; padding: clamp(9px,0.7vw,15px) clamp(11px,0.9vw,18px); }
+.nb-ex-sample-col + .nb-ex-sample-col { border-left: 2px solid #000; }
+.nb-ex-sample-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); margin-bottom: 8px; }
+.nb-ex-pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); line-height: 1.6; white-space: pre; overflow-x: auto; }
+
+/* ---------- Barra del editor ---------- */
+.nb-ex-toolbar { display: flex; flex-wrap: wrap; align-items: stretch; gap: clamp(8px, 0.7vw, 14px); }
+
+.nb-ex-reset,
+.nb-ex-send { flex: 0 0 auto; border: 2px solid #000; font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,15px) clamp(15px,1.2vw,26px); cursor: pointer; transition: all 0.1s; }
+.nb-ex-reset { background: #fff; color: #000; box-shadow: 4px 4px 0px #000; }
+.nb-ex-reset:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-ex-send { background: var(--nb-blue); color: #fff; box-shadow: 4px 4px 0px #000; }
+.nb-ex-send:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+
+/* ---------- Desplegable propio (reemplaza al <select> del navegador) ----------
+   El menú nativo lo dibuja el sistema operativo y no acepta estilos: por eso
+   se usa un listbox propio, que sí puede seguir el diseño. */
+.nb-select { position: relative; flex: 1 1 190px; min-width: 0; }
+.nb-select-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); margin-bottom: 5px; }
+.nb-select-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); font-family: inherit; font-weight: 700; font-size: var(--fs-sm); color: #000; text-align: left; cursor: pointer; transition: box-shadow 0.1s; }
+.nb-select-btn:hover { box-shadow: 2px 2px 0px #000; }
+.nb-select-btn:focus-visible { outline: none; box-shadow: 4px 4px 0px var(--nb-blue); }
+.nb-select-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.nb-select-btn.is-open { box-shadow: 4px 4px 0px var(--nb-blue); }
+.nb-select-value { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-select-caret { flex: 0 0 auto; font-size: 0.85em; line-height: 1; color: var(--nb-blue); transition: transform 0.12s; }
+.nb-select-btn.is-open .nb-select-caret { transform: rotate(180deg); }
+
+.nb-select-menu { position: absolute; z-index: 60; top: calc(100% + 6px); left: 0; right: 0; margin: 0; padding: 0; list-style: none; max-height: min(280px, 50vh); overflow-y: auto; background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; animation: om-pop-in 0.12s ease-out both; }
+.nb-select-opt { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-sm); color: #000; cursor: pointer; border-bottom: 1px solid #000; }
+.nb-select-opt:last-child { border-bottom: none; }
+.nb-select-opt.is-highlighted { background: var(--nb-blue); color: #fff; }
+.nb-select-opt.is-selected { background: #E4E9FD; }
+.nb-select-opt.is-selected.is-highlighted { background: var(--nb-blue); color: #fff; }
+.nb-select-check { flex: 0 0 auto; }
+
+/* ---------- Editor ---------- */
+.nb-ex-editor { --ed-lh: 1.65; --ed-fs: clamp(12px, 0.28vw + 10.6px, 16px); --ed-bg: #0B0B0F; --ed-ink: #EAEAF2; --ed-gutter-bg: #15151C; --ed-gutter-ink: #6C7080; --ed-gutter-line: #2A2A38; --ed-caret: #7EA0FF; display: flex; flex-direction: column; background: var(--ed-bg); border: 2px solid #000; box-shadow: 4px 4px 0px #000; overflow: hidden; }
+/* Modo claro del editor: solo cambian las variables de arriba. */
+.nb-ex-editor.is-light { --ed-bg: #fff; --ed-ink: #14161F; --ed-gutter-bg: #F1F3FB; --ed-gutter-ink: #767C90; --ed-gutter-line: #C9CEE4; --ed-caret: var(--nb-blue); }
+
+.nb-ex-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #000; border-bottom: 2px solid #000; padding: clamp(7px,0.55vw,12px) clamp(11px,0.9vw,18px); }
+.nb-ex-editor-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #fff; }
+.nb-ex-editor-tools { display: flex; align-items: center; gap: 8px; }
+.nb-ex-icon-btn { background: transparent; border: 2px solid #fff; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.4; padding: 4px 9px; cursor: pointer; }
+.nb-ex-icon-btn:hover { background: #fff; color: #000; }
+
+.nb-ex-editor-body { display: flex; align-items: stretch; min-height: 0; }
+.nb-ex-gutter { flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: clamp(10px,0.8vw,16px) 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
+.nb-ex-gutter span { display: block; }
+/* El textarea manda en la altura; la regleta la sigue por scroll. */
+.nb-ex-code { flex: 1 1 auto; min-width: 0; height: clamp(320px, 46vh, 620px); border: none; outline: none; resize: vertical; background: transparent; color: var(--ed-ink); caret-color: var(--ed-caret); font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); padding: clamp(10px,0.8vw,16px) clamp(11px,0.9vw,18px); white-space: pre; overflow: auto; tab-size: 4; }
+.nb-ex-editor.is-expanded .nb-ex-code { height: clamp(420px, 66vh, 900px); }
+
+/* ---------- Retroalimentación ----------
+   El panel entero va en azul oscuro: el gato es azul y sobre el blanco
+   se perdía. Con el fondo oscuro el texto pasa a blanco. */
+.nb-ex-feedback { display: flex; align-items: flex-start; gap: clamp(11px, 0.9vw, 20px); background: var(--nb-blue-deep); color: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: var(--sp-card); min-height: clamp(120px, 12vh, 190px); }
+.nb-ex-cat { flex: 0 0 auto; display: block; width: clamp(48px, 4vw, 78px); height: auto; image-rendering: pixelated; }
+.nb-ex-feedback-main { flex: 1 1 auto; min-width: 0; }
+.nb-ex-feedback-title { font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 8px; color: #fff; }
+.nb-ex-feedback-text { margin: 0; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; color: rgba(255,255,255,0.82); }
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+/* Con la barra lateral todavía en columna, tres tarjetas se aprietan
+   antes de llegar a la anchura de tableta. */
+@media (max-width: 1180px) {
+  .nb-pb-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* El editor deja de caber al lado del enunciado: pasan a una sola columna. */
+@media (max-width: 1024px) {
+  .nb-ex { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* La fila del listado se reordena en dos líneas antes de apretarse */
+@media (max-width: 760px) {
+  .nb-pb-row { flex-wrap: wrap; row-gap: 10px; }
+  .nb-pb-row-main { flex: 1 1 100%; order: 1; }
+  .nb-pb-row-num { order: 0; }
+  .nb-pb-row-nivel { order: 2; flex-direction: row; align-items: center; gap: 8px; }
+  .nb-pb-row-go { order: 3; margin-left: auto; }
+  .nb-pb-fav { order: 4; }
+}
+
+@media (max-width: 640px) {
+  .nb-pb-grid { grid-template-columns: 1fr; }
+  .nb-pb-card { min-height: 0; box-shadow: 3px 3px 0px #000; }
+  .nb-pb-ghost { font-size: 88px; }
+  .nb-pb-hstat { flex: 1 1 120px; box-shadow: 3px 3px 0px #000; }
+  .nb-pb-all { flex: 1 1 100%; justify-content: center; }
+  .nb-pb-cat-head { box-shadow: 3px 3px 0px #000; }
+  .nb-pb-cat-count { flex: 1 1 100%; }
+
+  .nb-pb-row { box-shadow: 3px 3px 0px #000; }
+  .nb-ex-card,
+  .nb-ex-editor,
+  .nb-ex-feedback { box-shadow: 3px 3px 0px #000; }
+  .nb-ex-title-card { flex-wrap: wrap; }
+  /* Dos ejemplos lado a lado dejan las columnas demasiado angostas */
+  .nb-ex-sample { grid-template-columns: minmax(0, 1fr); }
+  .nb-ex-sample-col + .nb-ex-sample-col { border-left: none; border-top: 2px solid #000; }
+  .nb-select { flex: 1 1 100%; }
+  .nb-select-btn,
+  .nb-ex-reset,
+  .nb-ex-send { box-shadow: 3px 3px 0px #000; }
+  .nb-ex-reset,
+  .nb-ex-send { flex: 1 1 100%; }
+  .nb-ex-cat { width: 42px; }
+}

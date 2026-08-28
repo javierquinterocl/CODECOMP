@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth, hasFirebaseConfig } from '../firebase/firebaseConfig';
-import AuthShell, { AuthDialog } from './components/AuthShell';
+import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
+import AuthShell, { AuthDialog } from '../components/AuthShell';
 
 const RecoverPage = () => {
     const [formData, setFormData] = useState({

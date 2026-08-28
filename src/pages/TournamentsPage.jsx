@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
-import { db, hasFirebaseConfig } from '../firebase/firebaseConfig';
-import { useAuth } from './context/AuthContext';
+import { db, hasFirebaseConfig } from '../scripts/firebaseConfig';
+import { useAuth } from '../context/AuthContext';
 
 const DateIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>

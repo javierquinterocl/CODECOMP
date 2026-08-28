@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { auth } from '../firebase/firebaseConfig';
-import { saveGoogleUserToFirestore, updateActiveSessionsCodigo } from './registerService';
-import AuthShell from './components/AuthShell';
+import { auth } from '../scripts/firebaseConfig';
+import { saveGoogleUserToFirestore, updateActiveSessionsCodigo } from '../scripts/registerService';
+import AuthShell from '../components/AuthShell';
 
 const CompleteProfilePage = () => {
   const navigate = useNavigate();

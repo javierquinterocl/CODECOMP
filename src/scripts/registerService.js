@@ -1,10 +1,42 @@
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, where, updateDoc } from 'firebase/firestore';
-import { auth, db, hasFirebaseConfig } from '../firebase/firebaseConfig';
+import { auth, db, hasFirebaseConfig } from './firebaseConfig';
 
 const USERS_COLLECTION = 'usuarios_registrados';
 
 const normalizeString = (value = '') => value.trim();
+
+/**
+ * Traducción de los códigos de Firebase Auth al mensaje que ve la persona.
+ *
+ * Antes todo lo que no fuera correo repetido / inválido / contraseña débil
+ * caía en un "No se pudo crear la cuenta." que no decía nada: el 400 del
+ * endpoint quedaba solo en la consola del navegador. Ahora cada causa tiene
+ * su mensaje y, si aparece un código nuevo, se muestra el código para poder
+ * rastrearlo en vez de esconderlo.
+ */
+const MENSAJES_AUTH = {
+  'auth/email-already-in-use': 'El correo electrónico ya está registrado.',
+  'auth/invalid-email': 'El correo electrónico no tiene un formato válido.',
+  'auth/weak-password': 'La contraseña no cumple los requisitos: mínimo 10 caracteres, mayúscula, minúscula, número y carácter especial.',
+  'auth/password-does-not-meet-requirements': 'La contraseña no cumple la política configurada en Firebase: mínimo 10 caracteres, mayúscula, minúscula, número y carácter especial.',
+  // Causas de configuración: el formulario está bien, falta algo en la consola de Firebase.
+  'auth/operation-not-allowed': 'El registro con correo y contraseña está desactivado en Firebase (Authentication → Sign-in method → Email/Password).',
+  'auth/admin-restricted-operation': 'Firebase tiene restringido el registro de cuentas nuevas para este proyecto.',
+  'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication → Settings → Authorized domains).',
+  'auth/invalid-api-key': 'La clave de API de Firebase no es válida. Revisa el archivo .env.',
+  'auth/api-key-not-valid': 'La clave de API de Firebase no es válida. Revisa el archivo .env.',
+  // Transitorias
+  'auth/too-many-requests': 'Demasiados intentos seguidos. Espera unos minutos y vuelve a intentarlo.',
+  'auth/network-request-failed': 'No hubo conexión con Firebase. Revisa tu red y vuelve a intentarlo.',
+};
+
+const mensajeDeAuth = (error) => {
+  const codigo = error?.code || 'desconocido';
+  // El código queda en consola siempre: es lo que permite diagnosticar un 400.
+  console.error('[registro] Firebase Auth rechazó el alta:', codigo, error?.message || '');
+  return MENSAJES_AUTH[codigo] || `No se pudo crear la cuenta (${codigo}).`;
+};
 
 export const registerUserInFirestore = async (formData) => {
   if (!hasFirebaseConfig || !db || !auth) {
@@ -20,19 +52,7 @@ export const registerUserInFirestore = async (formData) => {
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     firebaseUser = userCredential.user;
   } catch (error) {
-    if (error?.code === 'auth/email-already-in-use') {
-      throw new Error('El correo electronico ya esta registrado.');
-    }
-
-    if (error?.code === 'auth/invalid-email') {
-      throw new Error('El correo electronico no tiene un formato valido.');
-    }
-
-    if (error?.code === 'auth/weak-password' || error?.code === 'auth/password-does-not-meet-requirements') {
-      throw new Error('La contraseña no cumple los requisitos: mínimo 10 caracteres, mayúscula, minúscula, número y carácter especial.');
-    }
-
-    throw new Error('No se pudo crear la cuenta.');
+    throw new Error(mensajeDeAuth(error));
   }
 
   const payload = {
@@ -127,7 +147,7 @@ export const getSessionsHistory = async () => {
         sessions.push({ id: doc.id, ...doc.data() });
       });
       return sessions;
-    } catch (orderError) {
+    } catch {
       // Si falla el ordenamiento, intenta sin ordenar
       const snap = await getDocs(sessionsRef);
 
@@ -181,7 +201,7 @@ export const updateSessionExit = async (sessionId, exitTime) => {
       duration,
       updatedAt: serverTimestamp(),
     });
-  } catch (error) {
+  } catch {
     throw new Error('No se pudo actualizar la sesión.');
   }
 };

@@ -1,8 +1,8 @@
 import { Outlet } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import AppNavbar from './components/AppNavbar';
-import AppSidebar from './components/AppSidebar';
-import AppFooter from './components/AppFooter';
+import { AuthProvider } from '../context/AuthContext';
+import AppNavbar from './AppNavbar';
+import AppSidebar from './AppSidebar';
+import AppFooter from './AppFooter';
 
 const DashboardLayout = () => (
   <AuthProvider>

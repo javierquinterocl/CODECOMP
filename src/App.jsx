@@ -2,19 +2,21 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db, hasFirebaseConfig } from './firebase/firebaseConfig';
-import RegisterPage from './loginProject/RegisterPage';
-import DashboardPage from './loginProject/DashboardPage';
-import UserHistoryPage from './loginProject/UserHistoryPage';
-import RecoverPage from './loginProject/RecoverPage';
-import ResetPage from './loginProject/ResetPage';
-import CompleteProfilePage from './loginProject/CompleteProfilePage';
-import DailyChallengesPage from './loginProject/DailyChallengesPage';
-import TournamentsPage from './loginProject/TournamentsPage';
-import GruposPage from './loginProject/GruposPage';
-import HomePage from './loginProject/HomePage';
-import DashboardLayout from './loginProject/DashboardLayout';
-import './App.css';
+import { auth, db, hasFirebaseConfig } from './scripts/firebaseConfig';
+import RegisterPage from './pages/RegisterPage';
+import DashboardPage from './pages/DashboardPage';
+import UserHistoryPage from './pages/UserHistoryPage';
+import RecoverPage from './pages/RecoverPage';
+import ResetPage from './pages/ResetPage';
+import CompleteProfilePage from './pages/CompleteProfilePage';
+import DailyChallengesPage from './pages/DailyChallengesPage';
+import TournamentsPage from './pages/TournamentsPage';
+import GruposPage from './pages/GruposPage';
+import HomePage from './pages/HomePage';
+import ProblemsPage from './pages/ProblemsPage';
+import ProblemsCategoryPage from './pages/ProblemsCategoryPage';
+import ProblemDetailPage from './pages/ProblemDetailPage';
+import DashboardLayout from './components/DashboardLayout';
 
 // 'loading' | 'unauthenticated' | 'incomplete' | 'complete'
 const useAuthAndProfile = () => {
@@ -82,6 +84,9 @@ function App() {
         {/* Rutas protegidas con layout compartido */}
         <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
           <Route path="/dashboard"          element={<DashboardPage />} />
+          <Route path="/dashboard/problemas"        element={<ProblemsPage />} />
+          <Route path="/dashboard/problemas/:slug" element={<ProblemsCategoryPage />} />
+          <Route path="/dashboard/problemas/:slug/:numero" element={<ProblemDetailPage />} />
           <Route path="/dashboard/retos"    element={<DailyChallengesPage />} />
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/grupos"   element={<GruposPage />} />

@@ -2,9 +2,9 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../../firebase/firebaseConfig';
-import { ADMIN_EMAILS } from '../../config';
-import { getUserSessions, updateSessionExit } from '../registerService';
+import { auth, db } from '../scripts/firebaseConfig';
+import { ADMIN_EMAILS } from '../scripts/config';
+import { getUserSessions, updateSessionExit } from '../scripts/registerService';
 
 const AuthContext = createContext(null);
 

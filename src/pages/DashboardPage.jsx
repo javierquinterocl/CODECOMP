@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 
 /* ── Iconos del diseño ───────────────────────────────────────── */
 const Stroke = ({ children }) => (
@@ -155,7 +155,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="nb-dash-col" style={{ flex: '7 1 420px' }}>
-            <Link to="/dashboard/retos" className="nb-dash-card nb-dash-link-card nb-dash-pad" style={{ flex: 1, display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center' }}>
+            <Link to="/dashboard/problemas" className="nb-dash-card nb-dash-link-card nb-dash-pad" style={{ flex: 1, display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center' }}>
               <div className="nb-dash-icon"><CpuIcon /></div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="nb-dash-kicker">Módulo</div>

@@ -6,6 +6,8 @@
 :root {
   --nb-blue: #0736FE;
   --nb-blue-dark: #0428C9;
+  --nb-blue-deep: #00072b;   /* superficies oscuras: panel de retroalimentacion */
+  --nb-pink: #FF6FA5;        /* marcas de favorito */
   --nb-black: #000;
 }
 
