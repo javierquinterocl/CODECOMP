@@ -27,7 +27,7 @@
 .nb-page { background: #fff; font-family: 'Space Grotesk', Helvetica, sans-serif; color: #000; min-height: 100vh; overflow-x: hidden; }
 .nb-page a { text-decoration: none; }
 
-.nb-nav-link { color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; padding: 4px 2px; border-bottom: 2px solid transparent; }
+.nb-nav-link { font-family: inherit; background: none; border: none; border-bottom: 2px solid transparent; color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; padding: 4px 2px; }
 .nb-nav-link:hover { color: var(--nb-blue); }
 
 .nb-btn-white { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #000; display: inline-block; transition: all 0.1s; }
@@ -45,11 +45,21 @@
 
 .nb-footer-link { color: #DDE3FF; }
 .nb-footer-link:hover { color: #fff; }
+.nb-footer-btn { font-family: inherit; font-size: 15px; font-weight: 500; background: none; border: none; padding: 0; cursor: pointer; }
 .nb-social-btn { width: 44px; height: 44px; background: #fff; border: 2px solid #000; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--nb-blue); }
 .nb-social-btn:hover { background: var(--nb-blue-dark); color: #fff; }
 
 .nb-nav-inner { max-width: 1280px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .nb-nav-links { display: flex; gap: 22px; }
+
+/* ---- Secciones de contenido (01 a 04) ---- */
+.nb-sec { max-width: 1120px; margin: 0 auto; padding: 72px 28px 84px; scroll-margin-top: 20px; }
+.nb-sec-tight { padding-top: 0; }
+
+/* Panel destacado de la seccion 01: texto a la izquierda, lenguajes a la derecha */
+.nb-lead-panel { background: var(--nb-blue); border: 2px solid #000; box-shadow: 6px 6px 0px #000;
+  padding: clamp(24px, 3vw, 40px); display: grid; grid-template-columns: 1.15fr 1fr;
+  gap: clamp(24px, 3vw, 40px); align-items: center; }
 
 /* ---- Hero ---- */
 .nb-hero-wrap { height: 100dvh; display: flex; flex-direction: column; }
@@ -213,6 +223,11 @@ a.nb-brand:hover { color: var(--nb-blue); }
   .nb-hero-card-4 { bottom: 1.5% !important; left: 2% !important; }
 }
 
+/* --- El panel destacado de la 01 no cabe a dos columnas --- */
+@media (max-width: 860px) {
+  .nb-lead-panel { grid-template-columns: 1fr; }
+}
+
 /* --- Móvil --- */
 @media (max-width: 640px) {
   .nb-nav-links { display: none; }
@@ -233,6 +248,9 @@ a.nb-brand:hover { color: var(--nb-blue); }
   /* Rejilla de 2 columnas: con flex-wrap quedaban filas desparejas */
   .nb-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .nb-stats > div { box-shadow: 3px 3px 0px #000 !important; }
+
+  .nb-sec { padding: 52px 18px 60px; }
+  .nb-sec-tight { padding-top: 0; }
 
   .nb-panel { box-shadow: 5px 5px 0px #000; }
   .nb-panel-head { padding: 16px 18px; gap: 12px; }

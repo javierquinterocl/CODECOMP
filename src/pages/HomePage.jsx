@@ -1,31 +1,79 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import LoginModal from '../components/LoginModal';
+import { LENGUAJES } from '../scripts/problemsData';
+import imgMaraton2026 from '../assets/noticias/maraton-nacional-2026.jpg';
+import imgCalendario2026 from '../assets/noticias/calendario-rpc-2026.jpg';
+import imgEquipos2025 from '../assets/noticias/equipos-maraton-2025.jpg';
+
+// Enlaces del navbar: cada uno baja hasta la seccion que lleva ese id.
+const NAV_LINKS = [
+  { label: 'Plataforma',   id: 'plataforma' },
+  { label: 'Herramientas', id: 'herramientas' },
+  { label: 'Noticias',     id: 'noticias' },
+  { label: 'Preguntas',    id: 'preguntas' },
+];
 
 const FAQS = [
   {
-    q: '¿Cuál es la pregunta de investigación?',
-    a: '¿De qué manera una plataforma de aprendizaje con retroalimentación automatizada contribuye a mantener la continuidad y el mejoramiento de las habilidades algorítmicas de los estudiantes del grupo de maratón de programación en Ingeniería de Sistemas de la Universidad Francisco de Paula Santander Ocaña?',
+    q: '¿Qué es CODECOMP?',
+    a: 'Una plataforma para practicar programación competitiva: eliges un ejercicio, escribes tu solución en el editor, la envías y recibes el veredicto al instante.',
   },
   {
-    q: '¿A quién está dirigida la plataforma?',
-    a: 'A los estudiantes de Ingeniería de Sistemas de la UFPS Ocaña que hacen parte del grupo estable de maratón de programación. Se excluye a quienes pertenezcan a otros programas académicos o carezcan de bases en programación.',
+    q: '¿Qué lenguajes puedo usar?',
+    a: 'C#, Python 3, Java, C++ y JavaScript. Cada lenguaje trae una plantilla inicial lista para que empieces a escribir sin configurar nada.',
   },
   {
-    q: '¿Qué objetivos específicos tiene el proyecto?',
-    a: 'Analizar el desempeño actual y los factores de discontinuidad; diseñar la arquitectura del sistema por módulos; construir la plataforma priorizando el rendimiento de la retroalimentación automatizada; y medir su funcionalidad en sesiones de prueba con el grupo.',
+    q: '¿Cómo se evalúa mi código?',
+    a: 'Tu solución se ejecuta contra los casos de prueba del ejercicio y se compara la salida esperada con la obtenida. Ves el resultado, el tiempo de ejecución y qué caso falló.',
   },
   {
-    q: '¿Reemplaza al docente?',
-    a: 'No. La retroalimentación automática acorta la espera y conserva el historial más allá del cambio de instructores, mientras el docente asume su rol de guía con un acompañamiento informado.',
+    q: '¿Necesito experiencia previa?',
+    a: 'No. Los ejercicios están organizados por categoría y dificultad, así que puedes arrancar por lo básico e ir subiendo de nivel a tu ritmo.',
   },
   {
-    q: '¿Qué mide el seguimiento?',
-    a: 'Intentos, veredictos, tiempos y temas trabajados por estudiante, para identificar bajo desempeño e intervenir antes de que se produzca el abandono del grupo.',
+    q: '¿Qué más hay además de los ejercicios?',
+    a: 'Retos diarios, torneos, grupos de práctica, favoritos para guardar los ejercicios que quieras repetir y un historial con todos tus envíos.',
   },
   {
-    q: '¿Cuánto dura el desarrollo?',
-    a: 'Ocho semanas una vez aprobado el anteproyecto. El proyecto se desarrolla en Ocaña, Norte de Santander, dentro de la Universidad Francisco de Paula Santander Ocaña.',
+    q: '¿Tiene algún costo?',
+    a: 'No. Crear tu cuenta y resolver ejercicios es gratis; solo necesitas registrarte para que tu progreso quede guardado.',
+  },
+];
+
+// Novedades que se muestran por defecto, de la mas reciente a la mas antigua.
+// "foco" es el object-position del recorte: cada imagen tiene una proporcion
+// distinta y la franja las iguala a 16:9.
+const NOTICIAS = [
+  {
+    fecha: '3 OCT 2026',
+    etiqueta: 'Convocatoria',
+    titulo: 'Abren las inscripciones de la XL Maratón Nacional',
+    texto: 'La edición 2026 de la maratón ACIS/REDIS se corre el 3 de octubre, presencial y en seis sedes del país, con equipos de tres estudiantes y un coach. La inscripción temprana va hasta el 10 de septiembre y la regular del 11 al 18.',
+    imagen: imgMaraton2026,
+    // El afiche ya viene en 16:9, entra completo.
+    foco: 'center',
+    alt: 'Afiche de la XL Maratón Nacional de Programación ACIS/REDIS 2026',
+  },
+  {
+    fecha: 'AÑO 2026',
+    etiqueta: 'Calendario',
+    titulo: 'Once fechas para entrenar durante el año',
+    texto: 'La Red de Programación Competitiva ya publicó su calendario: once contests repartidos entre febrero y noviembre, más la Regional ICPC LATAM del 7 de noviembre. Sirve para planear la práctica mes a mes en vez de llegar a improvisar.',
+    imagen: imgCalendario2026,
+    // Casi 16:9, el recorte vertical es minimo.
+    foco: 'center',
+    alt: 'Calendario de competencias 2026 de la Red de Programación Competitiva',
+  },
+  {
+    fecha: 'OCT 2025',
+    etiqueta: 'Resultados',
+    titulo: 'Cuatro problemas resueltos en la Maratón Nacional',
+    texto: 'Los equipos ALPACA y FUNDA_CODERS sumaron cuatro soluciones en la XXXIX Maratón ACIS/REDIS. ALPACA resolvió tres, quedó en el puesto 15 del país y se ganó el cupo a la Regional Latinoamericana.',
+    imagen: imgEquipos2025,
+    // Ya viene recortada a la foto del grupo, en 16:9.
+    foco: 'center',
+    alt: 'Equipos de la maratón de programación celebrando con globos',
   },
 ];
 
@@ -57,15 +105,33 @@ const FeatureIcon = ({ children }) => (
   <div style={{ width:64, height:64, background:'#0736FE', color:'#fff', border:'2px solid #000', display:'grid', placeItems:'center', fontFamily:press, fontSize:18, marginBottom:22 }}>{children}</div>
 );
 
-const TerminalBox = ({ filename, lines }) => (
-  <div style={{ border:'2px solid #000', background:'#000' }}>
-    <div style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderBottom:'2px solid #fff' }}>
-      <span style={{ width:10, height:10, background:'#fff', display:'block' }}></span>
-      <span style={{ fontFamily:mono, fontWeight:700, fontSize:11, color:'#fff' }}>{filename}</span>
+// Franja superior de una noticia. Si la imagen no carga se oculta la franja
+// entera, asi la tarjeta nunca queda con el icono de roto.
+const NoticiaImagen = ({ src, alt, foco = 'center' }) => {
+  const [visible, setVisible] = useState(true);
+  if (!src || !visible) return null;
+  return (
+    <div style={{ borderBottom:'2px solid #000', background:'#0736FE' }}>
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onError={() => setVisible(false)}
+        style={{ display:'block', width:'100%', height:'auto', aspectRatio:'16 / 9', objectFit:'cover', objectPosition:foco }}
+      />
     </div>
-    <div style={{ padding:14, fontFamily:mono, fontSize:12.5, lineHeight:1.8, color:'#fff' }}>
-      {lines.map((l, i) => <div key={i}><span style={{ color:'#fff' }}>{l.prefix}</span> {l.text}</div>)}
-    </div>
+  );
+};
+
+// Ficha de caracteristicas al pie de las tarjetas de herramientas.
+const SpecSheet = ({ rows }) => (
+  <div style={{ borderBottom:'2px solid #000' }}>
+    {rows.map(({ label, value }) => (
+      <div key={label} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, borderTop:'2px solid #000', padding:'10px 0' }}>
+        <span style={{ fontFamily:grotesk, fontWeight:700, fontSize:15 }}>{label}</span>
+        <span style={{ fontFamily:mono, fontWeight:700, fontSize:11.5, letterSpacing:'0.1em', textTransform:'uppercase', background:'#0736FE', color:'#fff', padding:'4px 9px', whiteSpace:'nowrap' }}>{value}</span>
+      </div>
+    ))}
   </div>
 );
 
@@ -99,6 +165,11 @@ const HomePage = () => {
   const openLogin = useCallback((e) => { if (e) e.preventDefault(); setLoginOpen(true); }, []);
   const closeLogin = useCallback(() => setLoginOpen(false), []);
 
+  // Baja suavemente hasta la seccion enlazada desde el navbar o el footer.
+  const scrollToSection = useCallback((id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
+
   return (
     <>
       <div className="nb-page">
@@ -112,8 +183,8 @@ const HomePage = () => {
               <div style={{ display:'flex', alignItems:'center', gap:36 }}>
                 <span className="nb-brand">CODECOMP</span>
                 <div className="nb-nav-links">
-                  {['Producto','Retos','Seguridad','Recursos'].map(l => (
-                    <span key={l} className="nb-nav-link">{l}</span>
+                  {NAV_LINKS.map(({ label, id }) => (
+                    <button key={id} type="button" className="nb-nav-link" onClick={() => scrollToSection(id)}>{label}</button>
                   ))}
                 </div>
               </div>
@@ -140,8 +211,8 @@ const HomePage = () => {
               <FloatCard className="nb-hero-card nb-hero-card-3" filename="judge.log" style={{ right:'5%', bottom:'8%', width:'clamp(104px,11.5vw,182px)', animation:'om-float-c 9.5s ease-in-out infinite' }}>
                 {kw('AC')}{'  0.42s  12MB\n'}{kw('AC')}{'  0.31s  11MB\nTLE 2.00s  --\n'}{kw('AC')}{'  0.18s  10MB'}
               </FloatCard>
-              <FloatCard className="nb-hero-card nb-hero-card-4" filename="main.rs" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
-                {kw('fn')}{' main() {\n  '}{kw('let')}{' n = read();\n  println!("{}", n);\n}'}
+              <FloatCard className="nb-hero-card nb-hero-card-4" filename="Main.java" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
+                {kw('class')}{' Main {\n  '}{kw('void')}{' main() {\n    solve();\n  }\n}'}
               </FloatCard>
 
               {/* Floating text snippets */}
@@ -149,12 +220,12 @@ const HomePage = () => {
                 { t:'#include <bits/stdc++.h>', s:{ left:'23%', top:'8%', animation:'om-float-c 10s ease-in-out infinite', fontSize:'clamp(8px,0.85vw,14px)', color:'rgba(255,255,255,0.34)' } },
                 { t:'O(n log n)',              s:{ right:'24%', top:'9%', animation:'om-float-a 9s ease-in-out infinite', fontSize:'clamp(10px,1.1vw,18px)', color:'rgba(255,255,255,0.4)' } },
                 { t:'while (true)', sm:false, s:{ left:'17%', top:'46%', animation:'om-float-b 8.4s ease-in-out infinite', fontSize:'clamp(9px,0.95vw,15px)', color:'rgba(255,255,255,0.3)' } },
-                { t:'git push origin main', sm:false, s:{ right:'16%', top:'44%', animation:'om-float-c 9.2s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.3)' } },
+                { t:'print(resultado)', sm:false, s:{ right:'16%', top:'44%', animation:'om-float-c 9.2s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.3)' } },
                 { t:'{ }',                    s:{ left:'31%', bottom:'6%', animation:'om-float-a 8.6s ease-in-out infinite', fontSize:'clamp(14px,1.8vw,30px)', color:'rgba(255,255,255,0.28)' } },
                 { t:'return 0;',              s:{ right:'31%', bottom:'5%', animation:'om-float-b 7.8s ease-in-out infinite', fontSize:'clamp(9px,0.9vw,15px)', color:'rgba(255,255,255,0.32)' } },
                 { t:'// TODO: optimizar',     s:{ left:'44%', top:'3%', animation:'om-float-c 9.8s ease-in-out infinite', fontSize:'clamp(8px,0.78vw,13px)', color:'rgba(255,255,255,0.28)', fontWeight:400 } },
                 { t:'sizeof(int)', sm:false, s:{ right:'3.5%', top:'58%', animation:'om-float-a 10.4s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
-                { t:'npm run judge', sm:false, s:{ left:'3.5%', top:'57%', animation:'om-float-b 9.6s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
+                { t:'Scanner sc = new', sm:false, s:{ left:'3.5%', top:'57%', animation:'om-float-b 9.6s ease-in-out infinite', fontSize:'clamp(8px,0.8vw,13px)', color:'rgba(255,255,255,0.26)' } },
               ].map(({ t, s, sm = true }) => (
                 <span key={t} className={sm ? 'nb-hero-text' : 'nb-hero-text hide-sm'} style={{ position:'absolute', fontFamily:mono, fontWeight:700, letterSpacing:'0.02em', whiteSpace:'nowrap', ...s }}>{t}</span>
               ))}
@@ -163,7 +234,7 @@ const HomePage = () => {
             {/* Hero text */}
             <div className="nb-hero-inner">
               <h1 className="nb-hero-title">CODECOMP</h1>
-              <p style={{ margin:'0 auto clamp(20px,3.6vh,40px)', fontSize:'clamp(15px,1.6vw,24px)', lineHeight:1.6, color:'#fff', fontWeight:500, maxWidth:'min(760px,88%)' }}>Eficiencia y precisión sin igual gracias a herramientas inteligentes diseñadas para acelerar tu flujo, potenciar la creatividad y redefinir tu codigo.</p>
+              <p style={{ margin:'0 auto clamp(20px,3.6vh,40px)', fontSize:'clamp(15px,1.6vw,24px)', lineHeight:1.6, color:'#fff', fontWeight:500, maxWidth:'min(760px,88%)' }}>Resuelve ejercicios, envía tu código y recibe el veredicto al instante. Una plataforma hecha para entrenar programación competitiva sin salir del editor.</p>
 
               <div className="nb-hero-actions">
                 <button type="button" onClick={openLogin} className="nb-hero-btn-white" style={{ cursor:'pointer', fontFamily:'inherit' }}>Empieza ahora <span style={{ fontFamily:mono }}>→</span></button>
@@ -174,7 +245,7 @@ const HomePage = () => {
               {/* Terminal */}
               <div className="nb-terminal">
                 <span>$</span>
-                <span>codecomp run --lang cpp --judge ufpso</span>
+                <span>codecomp run --lang cpp --test all</span>
                 <span style={{ width:'0.6em', height:'1.1em', background:'#fff', display:'inline-block', animation:'om-blink 1s steps(1) infinite' }}></span>
               </div>
 
@@ -184,7 +255,7 @@ const HomePage = () => {
                   { label:'envios hoy', value:'1.240' },
                   { label:'veredicto',  value:'AC 98%' },
                   { label:'runtime',    value:'0.42s' },
-                  { label:'ranking',    value:'UFPSO' },
+                  { label:'lenguajes',  value:String(LENGUAJES.length) },
                 ].map(s => (
                   <div key={s.label} style={{ background:'#fff', border:'2px solid #000', boxShadow:'5px 5px 0px #000', padding:'clamp(8px,1vw,14px) clamp(10px,1.2vw,18px)', textAlign:'left' }}>
                     <div style={{ fontFamily:mono, fontWeight:700, fontSize:'clamp(8px,0.7vw,11px)', letterSpacing:'0.16em', textTransform:'uppercase', color:'#0736FE', marginBottom:4 }}>{s.label}</div>
@@ -197,82 +268,84 @@ const HomePage = () => {
         </div>
 
         {/* ── 01 Por qué CODECOMP ── */}
-        <section style={{ maxWidth:1120, margin:'0 auto', padding:'72px 28px 84px' }}>
+        <section id="plataforma" className="nb-sec">
           <SectionTag n="01" label="Por qué CODECOMP" />
-          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:24 }}>
+
+          {/* Panel destacado: los lenguajes que acepta el editor */}
+          <div className="nb-lead-panel">
+            <div>
+              <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:11, textTransform:'uppercase', letterSpacing:'0.16em', background:'#fff', border:'2px solid #000', padding:'6px 12px', marginBottom:18 }}>Editor multilenguaje</span>
+              <h2 style={{ fontFamily:press, fontSize:'clamp(16px,2.1vw,30px)', color:'#fff', textShadow:'3px 3px 0px #000', margin:'0 0 16px', lineHeight:1.45 }}>{LENGUAJES.length} lenguajes</h2>
+              <p style={{ margin:0, color:'#fff', fontSize:'clamp(14px,1.15vw,18px)', lineHeight:1.6, fontWeight:500 }}>Escoges un ejercicio y lo resuelves en el lenguaje que domines. Cada uno abre con su plantilla lista: la estructura base ya está escrita y solo te queda resolver.</p>
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:12, alignContent:'center' }}>
+              {LENGUAJES.map(lang => (
+                <span key={lang.id} style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:'9px 17px', fontFamily:mono, fontWeight:700, fontSize:14.5 }}>{lang.nombre}</span>
+              ))}
+            </div>
+          </div>
+
+          {/* Tres razones */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:24, marginTop:24 }}>
             <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
-              <FeatureIcon>✓</FeatureIcon>
-              <h3 style={{ fontSize:'clamp(22px,2.1vw,34px)', fontWeight:700, margin:'0 0 10px', letterSpacing:'-0.02em' }}>99.9% de precisión</h3>
-              <p style={{ margin:'0 0 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Modelos afinados con datos de programación competitiva de alta calidad, para una precisión inigualable.</p>
+              <FeatureIcon>!</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(19px,1.7vw,26px)', fontWeight:700, margin:'0 0 10px', letterSpacing:'-0.02em' }}>Respuesta inmediata</h3>
+              <p style={{ margin:'0 0 20px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Cada envío se compara con los casos de prueba del ejercicio y te dice exactamente qué pasó: qué caso falló, el tiempo y la salida obtenida.</p>
               <div style={{ height:20, border:'2px solid #000', background:'#fff', padding:2 }}>
-                <div style={{ height:'100%', width:'99.9%', background:'#0736FE' }}></div>
+                <div style={{ height:'100%', width:'92%', background:'#0736FE' }}></div>
               </div>
             </div>
 
             <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
-              <FeatureIcon>##</FeatureIcon>
-              <div style={{ fontFamily:press, fontSize:'clamp(22px,2.1vw,34px)', lineHeight:1.2, marginBottom:16 }}>UFPSO</div>
-              <p style={{ fontWeight:700, fontSize:'clamp(16px,1.3vw,20px)', margin:'0 0 6px' }}>Estudiantes</p>
-              <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Un espacio para estudiantes de programación competitiva.</p>
+              <FeatureIcon>//</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(19px,1.7vw,26px)', fontWeight:700, margin:'0 0 10px', letterSpacing:'-0.02em' }}>Ruta por dificultad</h3>
+              <p style={{ margin:'0 0 18px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Los ejercicios están agrupados por categoría y nivel, así siempre sabes qué sigue en vez de saltar de un tema a otro sin orden.</p>
+              <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                {['Básico','Intermedio','Avanzado'].map(t => (
+                  <span key={t} style={{ background:'#0736FE', color:'#fff', border:'2px solid #000', padding:'6px 12px', fontFamily:mono, fontWeight:700, fontSize:12 }}>{t}</span>
+                ))}
+              </div>
             </div>
 
             <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28 }}>
-              <FeatureIcon>!</FeatureIcon>
-              <div style={{ fontFamily:press, fontSize:'clamp(19px,1.9vw,30px)', lineHeight:1.2, marginBottom:16 }}>&lt;100ms</div>
-              <p style={{ fontWeight:700, fontSize:'clamp(16px,1.3vw,20px)', margin:'0 0 6px' }}>Latencia de sugerencia</p>
-              <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Asistencia en tiempo real que sigue el ritmo de tu escritura.</p>
-            </div>
-          </div>
-
-          {/* Languages banner */}
-          <div style={{ background:'#0736FE', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:32, marginTop:24, display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:28 }}>
-            <div style={{ maxWidth:480 }}>
-              <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:11, textTransform:'uppercase', letterSpacing:'0.16em', background:'#fff', border:'2px solid #000', padding:'6px 12px', marginBottom:16 }}>Soporte universal</span>
-              <h3 style={{ fontFamily:press, fontSize:'clamp(18px,2vw,30px)', color:'#fff', textShadow:'3px 3px 0px #000', margin:'0 0 12px', lineHeight:1.35 }}>40+ lenguajes</h3>
-              <p style={{ margin:0, color:'#fff', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>De C++ y Python a Rust y Haskell: CODECOMP entiende los matices de cada paradigma.</p>
-            </div>
-            <div style={{ display:'flex', flexWrap:'wrap', gap:12, maxWidth:420 }}>
-              {['C++','Python','Rust','Go','Java','TypeScript'].map(lang => (
-                <span key={lang} style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:'8px 16px', fontFamily:mono, fontWeight:700, fontSize:14 }}>{lang}</span>
-              ))}
+              <FeatureIcon>++</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(19px,1.7vw,26px)', fontWeight:700, margin:'0 0 10px', letterSpacing:'-0.02em' }}>Progreso que se queda</h3>
+              <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>Tu historial de envíos, los ejercicios resueltos y los que marcaste como favoritos siguen ahí cada vez que vuelves a entrar.</p>
             </div>
           </div>
         </section>
 
         {/* ── 02 Herramientas ── */}
-        <section style={{ maxWidth:1120, margin:'0 auto', padding:'0 28px 84px' }}>
+        <section id="herramientas" className="nb-sec nb-sec-tight">
           <SectionTag n="02" label="Herramientas" />
-          <div style={{ display:'flex', flexWrap:'wrap', alignItems:'flex-end', justifyContent:'space-between', gap:24, marginBottom:36 }}>
-            <h2 style={{ fontFamily:press, fontSize:'clamp(20px,3.4vw,46px)', color:'#000', textShadow:'3px 3px 0px #0736FE,-2px -2px 0px #0736FE,2px -2px 0px #0736FE,-2px 2px 0px #0736FE,5px 5px 0px #000', margin:0, lineHeight:1.35, maxWidth:620 }}>Herramientas pensadas para ganar</h2>
-            <p style={{ maxWidth:380, margin:0, fontWeight:500, fontSize:'clamp(14px,1.2vw,18px)', lineHeight:1.6 }}>Diseña y lanza algoritmos en pocos clics. Un flujo de trabajo hecho para la creatividad y la eficiencia.</p>
-          </div>
+          <h2 style={{ fontFamily:press, fontSize:'clamp(20px,3.4vw,46px)', color:'#000', textShadow:'3px 3px 0px #0736FE,-2px -2px 0px #0736FE,2px -2px 0px #0736FE,-2px 2px 0px #0736FE,5px 5px 0px #000', margin:'0 0 40px', lineHeight:1.35, maxWidth:720 }}>Herramientas pensadas para ganar</h2>
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))', gap:24 }}>
             <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
+              <FeatureIcon>&gt;_</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Editor con jueza integrada</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Escribe, ejecuta y envía desde la misma pantalla. La jueza corre tu código contra los casos de prueba y devuelve el veredicto.</p>
+              <SpecSheet rows={[
+                { label:'Ejecución',       value:'Automática' },
+                { label:'Casos de prueba', value:'Incluidos' },
+                { label:'Veredicto',       value:'Al instante' },
+              ]} />
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
+              <FeatureIcon>#1</FeatureIcon>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Torneos y grupos</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Compite contra otros en torneos con tiempo límite o entrena en grupo con retos compartidos y tabla de posiciones.</p>
+              <SpecSheet rows={[
+                { label:'Modalidad', value:'Torneo o grupo' },
+                { label:'Duración',  value:'Configurable' },
+                { label:'Ranking',   value:'En vivo' },
+              ]} />
+            </div>
+
+            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
               <FeatureIcon>[]</FeatureIcon>
-              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Ejecucion segura de Jueza</h3>
-              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Herramientas para optimizar tu código a nivel competitivo.</p>
-              <TerminalBox filename="auth.sh" lines={[
-                { prefix:'$', text:'Ejecutando Ejercicio --rotate' },
-                { prefix:'✓', text:'Tiempo de ejecucion: 2.34s' },
-                { prefix:'$', text:'"Operacion completada"' },
-              ]} />
-            </div>
-
-            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
-              <FeatureIcon>VS</FeatureIcon>
-              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Integración en Torneos</h3>
-              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Participa en torneos de programación y mejora tu rendimiento con herramientas que te permiten competir al máximo nivel.</p>
-              <TerminalBox filename="ejercicio.sh" lines={[
-                { prefix:'$', text:'Se ha analizado el ejercicio' },
-                { prefix:'$', text:'optimización -m "Auto-optimized"' },
-                { prefix:'✓', text:'1 archivos, +48 −12' },
-              ]} />
-            </div>
-
-            <div className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', padding:28, display:'flex', flexDirection:'column' }}>
-              <FeatureIcon>::</FeatureIcon>
-              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Biblioteca actualizada</h3>
-              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Una enorme biblioteca de ejercicios y aplicaciones para que no salgas del editor a buscar lógica común.</p>
+              <h3 style={{ fontSize:'clamp(18px,1.6vw,25px)', fontWeight:700, margin:'0 0 10px' }}>Biblioteca de ejercicios</h3>
+              <p style={{ margin:'0 0 22px', fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500, flex:1 }}>Un catálogo organizado por tema para encontrar rápido qué practicar, con favoritos para volver a lo que te costó resolver.</p>
               <div style={{ display:'flex', flexWrap:'wrap', gap:10 }}>
                 {['Algoritmos','Estructuras','Grafos','DP','Matrices','Recursividad'].map(t => (
                   <span key={t} style={{ background:'#0736FE', color:'#fff', border:'2px solid #000', padding:'6px 12px', fontFamily:mono, fontWeight:700, fontSize:12 }}>{t}</span>
@@ -282,10 +355,31 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* ── 03 FAQ ── */}
-        <section style={{ maxWidth:820, margin:'0 auto', padding:'0 28px 84px' }}>
+        {/* ── 03 Noticias ── */}
+        <section id="noticias" className="nb-sec nb-sec-tight">
+          <SectionTag n="03" label="Noticias" />
+          <h2 style={{ fontFamily:press, fontSize:'clamp(17px,2.4vw,32px)', color:'#000', textShadow:'3px 3px 0px #0736FE', margin:'0 0 36px', lineHeight:1.4, maxWidth:640 }}>Lo último de la plataforma</h2>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))', gap:24 }}>
+            {NOTICIAS.map(n => (
+              <article key={n.titulo} className="nb-card" style={{ background:'#fff', border:'2px solid #000', boxShadow:'4px 4px 0px #000', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+                <NoticiaImagen src={n.imagen} alt={n.alt} foco={n.foco} />
+                <div style={{ padding:26, display:'flex', flexDirection:'column', flex:1 }}>
+                  <div style={{ display:'flex', alignItems:'center', flexWrap:'wrap', gap:10, marginBottom:16 }}>
+                    <span style={{ background:'#0736FE', color:'#fff', border:'2px solid #000', padding:'5px 11px', fontFamily:mono, fontWeight:700, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase' }}>{n.etiqueta}</span>
+                    <span style={{ fontFamily:mono, fontWeight:700, fontSize:11.5, letterSpacing:'0.1em', color:'#555' }}>{n.fecha}</span>
+                  </div>
+                  <h3 style={{ fontSize:'clamp(18px,1.6vw,24px)', fontWeight:700, margin:'0 0 12px', letterSpacing:'-0.02em', lineHeight:1.25 }}>{n.titulo}</h3>
+                  <p style={{ margin:0, fontSize:'clamp(14px,1.1vw,17px)', lineHeight:1.55, fontWeight:500 }}>{n.texto}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* ── 04 FAQ ── */}
+        <section id="preguntas" className="nb-sec nb-sec-tight" style={{ maxWidth:820 }}>
           <div style={{ textAlign:'center', marginBottom:36 }}>
-            <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,0.95vw,15px)', textTransform:'uppercase', letterSpacing:'0.16em', color:'#fff', background:'#0736FE', padding:'6px 12px', marginBottom:20 }}>03 — Preguntas frecuentes</span>
+            <span style={{ display:'inline-block', fontFamily:mono, fontWeight:700, fontSize:'clamp(11px,0.95vw,15px)', textTransform:'uppercase', letterSpacing:'0.16em', color:'#fff', background:'#0736FE', padding:'6px 12px', marginBottom:20 }}>04 — Preguntas frecuentes</span>
             <h2 style={{ fontFamily:press, fontSize:'clamp(18px,2.8vw,38px)', color:'#000', textShadow:'4px 4px 0px #0736FE', margin:0, lineHeight:1.4 }}>Todo lo que necesitas saber</h2>
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
@@ -312,42 +406,18 @@ const HomePage = () => {
         </section>
 
         {/* ── Footer ── */}
-        <footer style={{ background:'#000', borderTop:'3px solid #000', padding:'56px 28px 28px' }}>
-          <div style={{ maxWidth:1120, margin:'0 auto', display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:40, marginBottom:44 }}>
-            <div>
-              <span style={{ fontFamily:press, fontSize:15, color:'#fff', display:'block', marginBottom:18 }}>CODECOMP</span>
-              <p style={{ margin:'0 0 22px', color:'#fff', fontSize:15, lineHeight:1.6, fontWeight:500, maxWidth:280 }}>El entorno de programación competitiva de nueva generación, potenciado por modelos de IA de élite.</p>
-              <div style={{ display:'flex', gap:10 }}>
-                {['W','>','@'].map(icon => (
-                  <a key={icon} href="#" className="nb-social-btn">{icon}</a>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Producto</h4>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
-                {['Características','Seguridad','Beta','Novedades'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
-              </div>
-            </div>
-            <div>
-              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Recursos</h4>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
-                {['Documentación','API Reference','Comunidad','Tutoriales'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
-              </div>
-            </div>
-            <div>
-              <h4 style={{ color:'#fff', fontSize:14, fontWeight:700, textTransform:'uppercase', letterSpacing:'0.12em', margin:'0 0 16px' }}>Legal</h4>
-              <div style={{ display:'flex', flexDirection:'column', gap:12, fontSize:15, fontWeight:500 }}>
-                {['Términos','Privacidad','Cookies'].map(l => <a key={l} href="#" className="nb-footer-link">{l}</a>)}
-              </div>
+        <footer style={{ background:'#000', borderTop:'3px solid #000', padding:'40px 28px 24px' }}>
+          <div style={{ maxWidth:1120, margin:'0 auto', display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:20, paddingBottom:22, borderBottom:'2px solid #fff' }}>
+            <span style={{ fontFamily:press, fontSize:15, color:'#fff' }}>CODECOMP</span>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:24 }}>
+              {NAV_LINKS.map(({ label, id }) => (
+                <button key={id} type="button" className="nb-footer-link nb-footer-btn" onClick={() => scrollToSection(id)}>{label}</button>
+              ))}
             </div>
           </div>
-          <div style={{ maxWidth:1120, margin:'0 auto', paddingTop:22, borderTop:'2px solid #fff', display:'flex', flexWrap:'wrap', justifyContent:'space-between', gap:16 }}>
-            <p style={{ margin:0, color:'#fff', fontFamily:mono, fontSize:12.5 }}>© 2026 CODECOMP · Universidad Francisco de Paula de Santander</p>
-            <div style={{ display:'flex', gap:24, fontFamily:mono, fontSize:12.5 }}>
-              <a href="#" className="nb-footer-link">Política de privacidad</a>
-              <a href="#" className="nb-footer-link">Términos del servicio</a>
-            </div>
+          <div style={{ maxWidth:1120, margin:'0 auto', paddingTop:20, display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+            <p style={{ margin:0, color:'#fff', fontFamily:mono, fontSize:12.5 }}>© 2026 CODECOMP</p>
+            <Link to="/register" className="nb-footer-link" style={{ fontFamily:mono, fontSize:12.5 }}>Crear cuenta →</Link>
           </div>
         </footer>
 
