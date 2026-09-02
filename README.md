@@ -38,6 +38,26 @@ npm install
 npm run dev
 ```
 
+Para habilitar la evaluación de código, copia `.env.example` a `.env` y configura
+`RAPIDAPI_KEY` para el proxy local de Vite. El servicio usa Judge0 CE mediante
+`/submissions?wait=true` y expone el mapa `JUDGE0_LANGUAGE_IDS` junto con
+`evaluarCodigo` desde `src/scripts/judge0Service.js`.
+
+En producción, configura la clave como secreto de Firebase y despliega el proxy:
+
+```bash
+firebase functions:secrets:set RAPIDAPI_KEY
+npm --prefix functions install
+npm run build
+firebase deploy --only functions,hosting
+```
+
+La ruta `/api/judge0` mantiene la clave de RapidAPI en Functions y nunca la
+envía al navegador.
+
+En local, `npm run dev` usa automáticamente el proxy de Vite, por lo que no
+necesitas desplegar Functions para probar el editor.
+
 ## Deploy
 
 ```bash
