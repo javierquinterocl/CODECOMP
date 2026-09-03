@@ -1,0 +1,12 @@
+{
+  "name": "codecomp-functions",
+  "private": true,
+  "engines": {
+    "node": "20"
+  },
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "firebase-functions": "^6.3.2"
+  }
+}

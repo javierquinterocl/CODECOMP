@@ -2,6 +2,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
+import { evaluarCodigo, JUDGE0_LANGUAGE_IDS } from '../scripts/judge0Service';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 import NbSelect from '../components/NbSelect';
 
@@ -93,6 +94,9 @@ const ProblemDetailPage = () => {
   const [expandido, setExpandido] = useState(false);
   const [temaClaro, setTemaClaro] = useState(false);
   const [enviado, setEnviado] = useState(false);
+  const [evaluando, setEvaluando] = useState(false);
+  const [resultado, setResultado] = useState(null);
+  const [errorEnvio, setErrorEnvio] = useState('');
 
   if (!ejercicio) {
     return (
@@ -123,6 +127,31 @@ const ProblemDetailPage = () => {
   const reiniciar = () => {
     setCodigo(lenguaje.plantilla);
     setEnviado(false);
+    setResultado(null);
+    setErrorEnvio('');
+  };
+
+  const enviarCodigo = async () => {
+    setEvaluando(true);
+    setEnviado(false);
+    setResultado(null);
+    setErrorEnvio('');
+
+    try {
+      const ejemplo = ejercicio.ejemplos[0] || {};
+      const resultadoJudge0 = await evaluarCodigo(
+        codigo,
+        JUDGE0_LANGUAGE_IDS[lenguaje.id],
+        ejemplo.entrada,
+        ejemplo.salida,
+      );
+      setResultado(resultadoJudge0);
+      setEnviado(true);
+    } catch (error) {
+      setErrorEnvio(error.message || 'No se pudo evaluar el código.');
+    } finally {
+      setEvaluando(false);
+    }
   };
 
   return (
@@ -223,14 +252,19 @@ const ProblemDetailPage = () => {
             <button type="button" className="nb-ex-reset" onClick={reiniciar}>
               Reiniciar
             </button>
-            <button type="button" className="nb-ex-send" onClick={() => setEnviado(true)}>
-              Enviar
+            <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando}>
+              {evaluando ? 'Evaluando...' : 'Enviar'}
             </button>
           </div>
 
           <Editor
             codigo={codigo}
-            onChange={(v) => { setCodigo(v); setEnviado(false); }}
+            onChange={(v) => {
+              setCodigo(v);
+              setEnviado(false);
+              setResultado(null);
+              setErrorEnvio('');
+            }}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
             claro={temaClaro}
@@ -242,12 +276,12 @@ const ProblemDetailPage = () => {
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" aria-hidden="true" />
             <div className="nb-ex-feedback-main">
               <div className="nb-ex-feedback-title">
-                {enviado ? 'Envío recibido' : '¡Resuélvelo primero, vamos!'}
+                {errorEnvio ? 'No se pudo evaluar' : enviado ? resultado?.verdict : '¡Resuélvelo primero, vamos!'}
               </div>
               <p className="nb-ex-feedback-text">
-                {enviado
-                  ? 'Todavía no hay juez ni IA conectados, así que aún no hay veredicto. Este panel mostrará la retroalimentación cuando se conecte.'
-                  : 'Escribe tu solución y envíala. Aquí aparecerá la retroalimentación de la IA sobre tu código.'}
+                {errorEnvio || (enviado
+                  ? `Estado: ${resultado.statusDescription}. Salida: ${resultado.stdout || '(sin salida)'}. Tiempo: ${resultado.time}. Memoria: ${resultado.memory}.${resultado.errorDetails ? ` Detalle: ${resultado.errorDetails}` : ''}`
+                  : 'Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.')}
               </p>
             </div>
           </div>
