@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   CATEGORIAS,
@@ -6,7 +6,9 @@ import {
   buscarCategoria,
   ejerciciosDeCategoria,
   NIVELES,
+  problemaPerteneceCategoria,
 } from '../scripts/problemsData';
+import { getAllProblems } from '../scripts/problemsApi';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 
@@ -62,14 +64,27 @@ const ProblemsCategoryPage = () => {
   const { slug } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const [soloFavoritos, setSoloFavoritos] = useState(false);
+  const [problemas, setProblemas] = useState([]);
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
+    setCargando(true);
+    const load = getAllProblems().then((todos) => (
+      slug === 'todos' ? todos : todos.filter((problema) => problemaPerteneceCategoria(problema, slug))
+    ));
+    load.then(setProblemas).catch((e) => setError(e.message)).finally(() => setCargando(false));
+  }, [slug]);
 
   const categoria = slug === 'todos' ? TODOS : buscarCategoria(slug);
-  const ejercicios = useMemo(() => ejerciciosDeCategoria(slug), [slug]);
+  const ejerciciosLocales = useMemo(() => ejerciciosDeCategoria(slug), [slug]);
+  const ejercicios = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true' ? problemas : ejerciciosLocales;
   const visibles = soloFavoritos
     ? ejercicios.filter((e) => esFavorito(e.numero))
     : ejercicios;
 
-  if (!categoria) {
+  if (!categoria && import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') {
     return (
       <div className="nb-dash-inner">
         <Link to="/dashboard/problemas" className="nb-pb-back">← Volver a problemas</Link>
@@ -81,18 +96,19 @@ const ProblemsCategoryPage = () => {
     );
   }
 
+  const encabezado = categoria || { titulo: slug, temas: `Problemas etiquetados como ${slug}.`, etiquetas: [slug], total: ejercicios.length, bg: 'var(--nb-blue)', ink: '#fff' };
   return (
     <div className="nb-dash-inner">
       <Link to="/dashboard/problemas" className="nb-pb-back">← Volver a problemas</Link>
 
-      <div className="nb-pb-cat-head" style={{ '--cat-bg': categoria.bg, '--cat-ink': categoria.ink }}>
-        {categoria.n && <span className="nb-pb-ghost" aria-hidden="true">{categoria.n}</span>}
+      <div className="nb-pb-cat-head" style={{ '--cat-bg': encabezado.bg, '--cat-ink': encabezado.ink }}>
+        {encabezado.n && <span className="nb-pb-ghost" aria-hidden="true">{encabezado.n}</span>}
 
         <div className="nb-pb-cat-main">
-          <h1 className="nb-pb-cat-title">{categoria.titulo}</h1>
-          <p className="nb-pb-cat-text">{categoria.temas}</p>
+          <h1 className="nb-pb-cat-title">{encabezado.titulo}</h1>
+          <p className="nb-pb-cat-text">{encabezado.temas}</p>
           <div className="nb-pb-tags">
-            {categoria.etiquetas.map((e) => <span key={e} className="nb-pb-tag">{e}</span>)}
+            {encabezado.etiquetas.map((e) => <span key={e} className="nb-pb-tag">{e}</span>)}
           </div>
         </div>
 
@@ -118,6 +134,8 @@ const ProblemsCategoryPage = () => {
       )}
 
       <div className="nb-pb-list">
+        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas...</p></div>}
+        {error && <div className="nb-pb-empty"><p className="nb-dash-body-text">{error}</p></div>}
         {visibles.map((e) => (
           <ProblemRow
             key={e.numero}

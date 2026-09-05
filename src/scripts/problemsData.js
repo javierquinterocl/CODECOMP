@@ -139,57 +139,88 @@ const CATALOGO = [
     n: 1, slug: 'principiante', titulo: 'Principiante',
     temas: 'Problemas básicos para quien apenas empieza a programar.',
     etiquetas: ['Entrada/Salida', 'Condicionales', 'Ciclos'],
+    tags: ['input-output', 'basic', 'beginner'],
     bg: '#22A44E', ink: '#fff',
   },
   {
     n: 2, slug: 'ad-hoc', titulo: 'Ad-Hoc',
     temas: 'Simulación, fechas, juegos y problemas ad-hoc en general.',
     etiquetas: ['Simulación', 'Fechas', 'Juegos'],
+    tags: ['adhoc', 'ad-hoc', 'simulation', 'games', 'brute force'],
     bg: '#FF8228', ink: '#000',
   },
   {
     n: 3, slug: 'cadenas', titulo: 'Cadenas',
     temas: 'Palíndromos, frecuencias, LCS y manipulación de texto.',
     etiquetas: ['Palíndromos', 'Frecuencia', 'LCS'],
+    tags: ['strings', 'string', 'string matching', 'hashing', 'text'],
     bg: '#93D8E8', ink: '#000',
   },
   {
     n: 4, slug: 'estructuras-de-datos', titulo: 'Estructuras de Datos',
     temas: 'Colas, pilas, ordenamiento y las librerías estándar.',
     etiquetas: ['Cola', 'Pila', 'Map', 'Set'],
+    tags: ['data structures', 'data-structures', 'stack', 'queue', 'heap', 'sorting'],
     bg: '#EC2027', ink: '#fff',
   },
   {
     n: 5, slug: 'matematicas', titulo: 'Matemáticas',
     temas: 'Teoría de números, primos, combinatoria y BigInteger.',
     etiquetas: ['Primos', 'Combinatoria', 'BigInteger'],
+    tags: ['math', 'number theory', 'combinatorics', 'prime numbers', 'probabilities'],
     bg: '#FBA9C6', ink: '#000',
   },
   {
     n: 6, slug: 'paradigmas', titulo: 'Paradigmas',
     temas: 'Programación dinámica, búsqueda binaria, voraces y backtracking.',
     etiquetas: ['DP', 'Búsqueda binaria', 'Voraces'],
+    tags: ['dp', 'dynamic programming', 'greedy', 'binary search', 'backtracking', 'divide and conquer'],
     bg: '#A0459F', ink: '#fff',
   },
   {
     n: 7, slug: 'grafos', titulo: 'Grafos',
     temas: 'Flood fill, MST, SSSP, DAG, flujo máximo y árboles.',
     etiquetas: ['MST', 'SSSP', 'Flujo máximo'],
+    tags: ['graphs', 'graph', 'dfs', 'bfs', 'shortest paths', 'mst', 'trees', 'flows'],
     bg: '#3F49CC', ink: '#fff',
   },
   {
     n: 8, slug: 'geometria', titulo: 'Geometría Computacional',
     temas: 'Puntos, rectas, polígonos y envolvente convexa.',
     etiquetas: ['Puntos', 'Rectas', 'Polígonos'],
+    tags: ['geometry', 'computational geometry', 'points', 'lines', 'polygons'],
     bg: '#8B0018', ink: '#fff',
   },
   {
     n: 9, slug: 'sql', titulo: 'SQL',
     temas: 'Lenguajes de consulta: select, insert, update y create.',
     etiquetas: ['Select', 'Insert', 'Update'],
+    tags: ['sql', 'database', 'databases'],
     bg: '#C3BEE5', ink: '#000',
   },
+  {
+    n: 10, slug: 'otros', titulo: 'Otros',
+    temas: 'Problemas que todavía no tienen una categoría temática específica.',
+    etiquetas: ['Clasificación pendiente'],
+    tags: [],
+    bg: '#111', ink: '#fff',
+  },
 ];
+
+const normalizarTag = (tag) =>
+  String(tag?.name || tag || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
+
+const categoriaCoincidente = (problema) => {
+  const tags = (problema.tags || []).map(normalizarTag);
+  return CATALOGO.find((categoria) => categoria.tags.some((tag) => tags.includes(normalizarTag(tag))))
+    || CATALOGO.find((categoria) => categoria.slug === 'otros');
+};
+
+export const problemaPerteneceCategoria = (problema, slug) =>
+  categoriaCoincidente(problema)?.slug === slug;
+
+export const categoriaDeProblema = (problema) =>
+  categoriaCoincidente(problema)?.slug || 'principiante';
 
 /** El conteo sale de los ejercicios cargados, no de un número escrito a mano. */
 export const CATEGORIAS = CATALOGO.map((c) => ({

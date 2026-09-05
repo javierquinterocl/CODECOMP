@@ -29,6 +29,41 @@
         }
       },
       {
+        "source": "/api/adaptive",
+        "function": {
+          "functionId": "adaptiveSubmission",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/recommendations",
+        "function": {
+          "functionId": "recommendations",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/problems",
+        "function": {
+          "functionId": "problems",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/problems/:number",
+        "function": {
+          "functionId": "problemDetail",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/progress",
+        "function": {
+          "functionId": "progress",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

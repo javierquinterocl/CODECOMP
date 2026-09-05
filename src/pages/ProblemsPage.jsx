@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CATEGORIAS, TOTAL_PROBLEMAS } from '../scripts/problemsData';
+import { CATEGORIAS as CATEGORIAS_LOCALES, problemaPerteneceCategoria } from '../scripts/problemsData';
+import { getAllProblems } from '../scripts/problemsApi';
 
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square">
@@ -42,14 +43,33 @@ const CategoryCard = ({ categoria }) => (
 
 const ProblemsPage = () => {
   const [busqueda, setBusqueda] = useState('');
+  const [problemas, setProblemas] = useState([]);
+  const [error, setError] = useState('');
+  const [cargando, setCargando] = useState(false);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
+    setCargando(true);
+    getAllProblems().then(setProblemas).catch((e) => setError(e.message)).finally(() => setCargando(false));
+  }, []);
+
+  const categorias = useMemo(() => {
+    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return CATEGORIAS_LOCALES;
+    return CATEGORIAS_LOCALES
+      .map((categoria) => ({
+        ...categoria,
+        total: problemas.filter((problema) => problemaPerteneceCategoria(problema, categoria.slug)).length,
+      }))
+      .filter((categoria) => categoria.total > 0);
+  }, [problemas]);
 
   const visibles = useMemo(() => {
     const termino = normalizar(busqueda.trim());
-    if (!termino) return CATEGORIAS;
-    return CATEGORIAS.filter((c) =>
+    if (!termino) return categorias;
+    return categorias.filter((c) =>
       normalizar(`${c.titulo} ${c.temas} ${c.etiquetas.join(' ')}`).includes(termino),
     );
-  }, [busqueda]);
+  }, [busqueda, categorias]);
 
   return (
     <div className="nb-dash-inner">
@@ -82,11 +102,11 @@ const ProblemsPage = () => {
         <div className="nb-pb-hero-stats">
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Problemas</div>
-            <div className="nb-pb-hstat-value">{TOTAL_PROBLEMAS}</div>
+            <div className="nb-pb-hstat-value">{import.meta.env.VITE_ENABLE_ADAPTIVE === 'true' ? problemas.length : CATEGORIAS_LOCALES.reduce((total, c) => total + c.total, 0)}</div>
           </div>
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Categorías</div>
-            <div className="nb-pb-hstat-value">{CATEGORIAS.length}</div>
+            <div className="nb-pb-hstat-value">{categorias.length}</div>
           </div>
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Resueltos</div>
@@ -119,9 +139,10 @@ const ProblemsPage = () => {
 
       {/* ── Rejilla de categorías ── */}
       <div className="nb-pb-grid">
+        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas desde PostgreSQL...</p></div>}
         {visibles.map((c) => <CategoryCard key={c.slug} categoria={c} />)}
 
-        {visibles.length === 0 && (
+        {!cargando && !error && visibles.length === 0 && (
           <div className="nb-pb-empty">
             <h3 className="nb-pb-empty-title">Sin coincidencias</h3>
             <p className="nb-dash-body-text">
@@ -130,6 +151,7 @@ const ProblemsPage = () => {
           </div>
         )}
       </div>
+      {error && <div className="nb-pb-empty"><p className="nb-dash-body-text">{error}</p></div>}
     </div>
   );
 };

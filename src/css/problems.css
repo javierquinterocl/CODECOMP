@@ -203,8 +203,20 @@
 .nb-ex-feedback { display: flex; align-items: flex-start; gap: clamp(11px, 0.9vw, 20px); background: var(--nb-blue-deep); color: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: var(--sp-card); min-height: clamp(120px, 12vh, 190px); }
 .nb-ex-cat { flex: 0 0 auto; display: block; width: clamp(48px, 4vw, 78px); height: auto; image-rendering: pixelated; }
 .nb-ex-feedback-main { flex: 1 1 auto; min-width: 0; }
-.nb-ex-feedback-title { font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 8px; color: #fff; }
+.nb-ex-feedback-title { font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 10px; color: #fff; }
+.nb-ex-feedback-title.is-success { color: #B8F5C8; }
+.nb-ex-feedback-title.is-error { color: #FFD0D0; }
 .nb-ex-feedback-text { margin: 0; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; color: rgba(255,255,255,0.82); }
+.nb-ex-feedback-error { color: #FFD0D0; }
+.nb-ex-feedback-result { display: flex; flex-direction: column; gap: 10px; }
+.nb-ex-feedback-status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: var(--fs-sm); color: rgba(255,255,255,0.82); }
+.nb-ex-feedback-status span,
+.nb-ex-feedback-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.62); }
+.nb-ex-feedback-status strong { color: #fff; }
+.nb-ex-feedback-metrics { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--fs-xs); color: rgba(255,255,255,0.74); }
+.nb-ex-feedback-metrics strong { color: #fff; }
+.nb-ex-feedback-output { margin-top: 2px; }
+.nb-ex-feedback-output pre { margin: 5px 0 0; max-height: 180px; overflow: auto; padding: 10px 12px; background: #080A12; border: 1px solid rgba(255,255,255,0.35); color: #F5F7FF; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ============================================================
    Responsive
