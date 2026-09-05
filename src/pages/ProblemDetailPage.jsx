@@ -1,10 +1,12 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
-import { evaluarCodigo, JUDGE0_LANGUAGE_IDS } from '../scripts/judge0Service';
+import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS } from '../scripts/judge0Service';
+import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 import NbSelect from '../components/NbSelect';
+import { getProblem } from '../scripts/problemsApi';
 
 const MIN_LINEAS = 18;
 
@@ -87,6 +89,7 @@ const Ejemplo = ({ n, entrada, salida }) => (
 const ProblemDetailPage = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
+  const { user } = useAuth();
 
   const ejercicio = buscarEjercicio(numero);
   const [lenguaje, setLenguaje] = useState(LENGUAJES[0]);
@@ -97,23 +100,31 @@ const ProblemDetailPage = () => {
   const [evaluando, setEvaluando] = useState(false);
   const [resultado, setResultado] = useState(null);
   const [errorEnvio, setErrorEnvio] = useState('');
+  const [problemaReal, setProblemaReal] = useState(null);
+  const [errorCarga, setErrorCarga] = useState('');
 
-  if (!ejercicio) {
+  useEffect(() => {
+    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
+    getProblem(numero).then(setProblemaReal).catch((e) => setErrorCarga(e.message));
+  }, [numero]);
+
+  const problema = problemaReal || ejercicio;
+  if (!problema) {
     return (
       <div className="nb-dash-inner">
         <Link to={`/dashboard/problemas/${slug || 'principiante'}`} className="nb-pb-back">← Volver al listado</Link>
         <div className="nb-pb-empty">
           <h3 className="nb-pb-empty-title">Ejercicio no encontrado</h3>
-          <p className="nb-dash-body-text">No existe un ejercicio con el número «{numero}».</p>
+          <p className="nb-dash-body-text">{errorCarga || `No existe un ejercicio con el número «${numero}».`}</p>
         </div>
       </div>
     );
   }
 
-  const categoria = buscarCategoria(ejercicio.categoria);
+  const categoria = buscarCategoria(problema.categoria);
   // El destino de "volver" es el listado por el que se entró, que puede ser "todos".
   const volverA = slug === 'todos' ? 'todos los problemas' : (categoria?.titulo || 'problemas');
-  const marcado = esFavorito(ejercicio.numero);
+  const marcado = esFavorito(problema.numero);
 
   /* Al cambiar de lenguaje solo se reemplaza la plantilla si nadie la tocó:
      así no se pierde el trabajo de quien ya empezó a escribir. */
@@ -138,13 +149,10 @@ const ProblemDetailPage = () => {
     setErrorEnvio('');
 
     try {
-      const ejemplo = ejercicio.ejemplos[0] || {};
-      const resultadoJudge0 = await evaluarCodigo(
-        codigo,
-        JUDGE0_LANGUAGE_IDS[lenguaje.id],
-        ejemplo.entrada,
-        ejemplo.salida,
-      );
+      const lenguajeId = JUDGE0_LANGUAGE_IDS[lenguaje.id];
+      const resultadoJudge0 = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true'
+        ? await evaluarCodigoAdaptativo(codigo, lenguajeId, problema.numero, user)
+        : await evaluarCodigo(codigo, lenguajeId, problema.ejemplos[0]?.entrada, problema.ejemplos[0]?.salida);
       setResultado(resultadoJudge0);
       setEnviado(true);
     } catch (error) {
@@ -172,15 +180,15 @@ const ProblemDetailPage = () => {
           >
             <div className="nb-ex-title-main">
               <div className="nb-ex-kicker">{categoria?.titulo || 'Problema'}</div>
-              <h1 className="nb-ex-title">{ejercicio.titulo}</h1>
+              <h1 className="nb-ex-title">{problema.titulo}</h1>
             </div>
 
             <div className="nb-ex-title-side">
-              <span className="nb-ex-numero">{ejercicio.numero}</span>
+              <span className="nb-ex-numero">{problema.numero}</span>
               <button
                 type="button"
                 className={`nb-pb-fav is-onhead${marcado ? ' is-on' : ''}`}
-                onClick={() => alternar(ejercicio.numero)}
+                onClick={() => alternar(problema.numero)}
                 aria-pressed={marcado}
                 title={marcado ? 'Quitar de favoritos' : 'Marcar como favorito'}
               >
@@ -192,29 +200,29 @@ const ProblemDetailPage = () => {
           {/* Franja de datos rápidos */}
           <div className="nb-ex-meta">
             <div className="nb-ex-meta-item">
-              <span className="nb-ex-meta-label">Complejidad</span>
+                <span className="nb-ex-meta-label">Dificultad</span>
               <span className="nb-ex-meta-value">
-                {NIVELES[ejercicio.nivel]} <NivelBarra nivel={ejercicio.nivel} />
+                {NIVELES[problema.nivel]} <NivelBarra nivel={problema.nivel} />
               </span>
             </div>
             <div className="nb-ex-meta-item">
-              <span className="nb-ex-meta-label">Puntos</span>
-              <span className="nb-ex-meta-value">+{ejercicio.puntos.toFixed(1)}</span>
+              <span className="nb-ex-meta-label">Rating de dificultad</span>
+              <span className="nb-ex-meta-value">+{problema.dificultadRating}</span>
             </div>
             <div className="nb-ex-meta-item">
               <span className="nb-ex-meta-label">Tiempo</span>
-              <span className="nb-ex-meta-value">{ejercicio.tiempoLimite} s</span>
+              <span className="nb-ex-meta-value">{problema.tiempoLimite} s</span>
             </div>
             <div className="nb-ex-meta-item">
               <span className="nb-ex-meta-label">Memoria</span>
-              <span className="nb-ex-meta-value">{ejercicio.memoriaLimite} MB</span>
+              <span className="nb-ex-meta-value">{problema.memoriaLimite} MB</span>
             </div>
           </div>
 
           {/* Descripción */}
           <div className="nb-ex-card nb-ex-pad">
             <h2 className="nb-ex-h2">Descripción</h2>
-            {ejercicio.descripcion.map((p) => (
+            {problema.descripcion.map((p) => (
               <p key={p} className="nb-ex-text">{p}</p>
             ))}
           </div>
@@ -222,16 +230,16 @@ const ProblemDetailPage = () => {
           {/* Entrada y salida */}
           <div className="nb-ex-card nb-ex-pad">
             <h2 className="nb-ex-h2">Entrada</h2>
-            <p className="nb-ex-text">{ejercicio.entrada}</p>
+            <p className="nb-ex-text">{problema.entrada}</p>
             <h2 className="nb-ex-h2" style={{ marginTop: 'var(--sp-gap)' }}>Salida</h2>
-            <p className="nb-ex-text">{ejercicio.salida}</p>
+            <p className="nb-ex-text">{problema.salida}</p>
           </div>
 
           {/* Ejemplos */}
           <div className="nb-ex-card nb-ex-pad">
             <h2 className="nb-ex-h2">Ejemplos</h2>
             <div className="nb-ex-samples">
-              {ejercicio.ejemplos.map((ej, i) => (
+              {problema.ejemplos.map((ej, i) => (
                 <Ejemplo key={ej.salida} n={i + 1} entrada={ej.entrada} salida={ej.salida} />
               ))}
             </div>
@@ -275,14 +283,30 @@ const ProblemDetailPage = () => {
           <div className="nb-ex-feedback">
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" aria-hidden="true" />
             <div className="nb-ex-feedback-main">
-              <div className="nb-ex-feedback-title">
+              <div className={`nb-ex-feedback-title${errorEnvio ? ' is-error' : enviado && resultado?.verdict === 'ACCEPTED' ? ' is-success' : ''}`}>
                 {errorEnvio ? 'No se pudo evaluar' : enviado ? resultado?.verdict : '¡Resuélvelo primero, vamos!'}
               </div>
-              <p className="nb-ex-feedback-text">
-                {errorEnvio || (enviado
-                  ? `Estado: ${resultado.statusDescription}. Salida: ${resultado.stdout || '(sin salida)'}. Tiempo: ${resultado.time}. Memoria: ${resultado.memory}.${resultado.errorDetails ? ` Detalle: ${resultado.errorDetails}` : ''}`
-                  : 'Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.')}
-              </p>
+              {errorEnvio && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorEnvio}</p>}
+              {!errorEnvio && !enviado && <p className="nb-ex-feedback-text">Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.</p>}
+              {!errorEnvio && enviado && (
+                <div className="nb-ex-feedback-result">
+                  <div className="nb-ex-feedback-status">
+                    <span>Estado</span>
+                    <strong>{resultado.status?.description || resultado.statusDescription || resultado.verdict}</strong>
+                  </div>
+                  <div className="nb-ex-feedback-metrics">
+                    <span>Tiempo: <strong>{resultado.time || '(no disponible)'}</strong></span>
+                    <span>Memoria: <strong>{resultado.memory || '(no disponible)'}</strong></span>
+                  </div>
+                  {resultado.stdout !== undefined && (
+                    <div className="nb-ex-feedback-output">
+                      <span className="nb-ex-feedback-label">Salida</span>
+                      <pre>{resultado.stdout || '(sin salida)'}</pre>
+                    </div>
+                  )}
+                  {resultado.errorDetails && <p className="nb-ex-feedback-text nb-ex-feedback-error">{resultado.errorDetails}</p>}
+                </div>
+              )}
             </div>
           </div>
         </div>

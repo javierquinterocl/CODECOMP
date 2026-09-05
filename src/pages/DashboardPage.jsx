@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getProgress } from '../scripts/progressApi';
+import { getRecommendations } from '../scripts/recommendationApi';
 
 /* ── Iconos del diseño ───────────────────────────────────────── */
 const Stroke = ({ children }) => (
@@ -68,6 +70,14 @@ const MemberRow = ({ pos, nombre, codigo, tiempo, envios, puntos, me = false, in
 const DashboardPage = () => {
   const { user, displayName, firstName, codigoEstudiante, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
   const [photoError, setPhotoError] = useState(false);
+  const [progress, setProgress] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
+
+  useEffect(() => {
+    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true' || !user) return;
+    getProgress(user).then(setProgress).catch(() => {});
+    getRecommendations(user).then(setRecommendations).catch(() => {});
+  }, [user]);
 
   const photo = storedPhotoURL || user?.photoURL || null;
   const inicial = (displayName || user?.email || '?')[0].toUpperCase();
@@ -116,12 +126,12 @@ const DashboardPage = () => {
               </div>
               <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-gap)' }}>
                 <div className="nb-dash-metric">
-                  <span className="nb-dash-metric-label">Puntos</span>
-                  <span className="nb-dash-metric-value">0</span>
+                  <span className="nb-dash-metric-label">Rating</span>
+                  <span className="nb-dash-metric-value">{progress?.user?.global_rating ?? 1000}</span>
                 </div>
                 <div className="nb-dash-metric">
-                  <span className="nb-dash-metric-label">Trofeos</span>
-                  <span className="nb-dash-metric-value">0</span>
+                  <span className="nb-dash-metric-label">Resueltos</span>
+                  <span className="nb-dash-metric-value">{progress?.user?.solved_count ?? 0}</span>
                 </div>
               </div>
             </div>
@@ -183,11 +193,11 @@ const DashboardPage = () => {
         <div className="nb-dash-card nb-dash-pad" style={{ display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center', flexWrap: 'wrap' }}>
           <div style={{ flex: '1 1 320px', minWidth: 0 }}>
             <div className="nb-dash-badge">En progreso</div>
-            <h2 className="nb-dash-level-title">Nivel 2: Estructuras Repetitivas</h2>
+            <h2 className="nb-dash-level-title">Rating actual: {progress?.user?.global_rating ?? 1000}</h2>
             <p className="nb-dash-body-text" style={{ marginBottom: 16, fontSize: 'var(--fs-base)' }}>
-              Domina el manejo de estructuras repetitivas, desde una sola hasta anidadas. Estás al 60% de este nivel.
+              Has resuelto {progress?.user?.solved_count ?? 0} problemas de {progress?.user?.attempted_count ?? 0} intentos registrados. Continúa practicando para fortalecer tus tags más débiles.
             </p>
-            <div className="nb-dash-progress"><div style={{ width: '60%' }} /></div>
+            <div className="nb-dash-progress"><div style={{ width: `${Math.min(100, ((progress?.user?.solved_count || 0) / Math.max(progress?.user?.attempted_count || 1, 1)) * 100)}%` }} /></div>
             <Link to="/dashboard/retos" className="nb-dash-cta">Continuar<span className="nb-mono">→</span></Link>
           </div>
 
@@ -202,6 +212,35 @@ const DashboardPage = () => {
               <span style={{ color: '#7EA0FF' }}>null</span>{');\n  ...\n}'}
             </pre>
           </div>
+        </div>
+
+        <div className="nb-dash-card nb-dash-pad">
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+            <div>
+              <div className="nb-dash-badge">Ruta adaptativa</div>
+              <h2 className="nb-dash-section-title">Problemas recomendados</h2>
+              <div className="nb-dash-section-sub">Seleccionados según tu rating y tus temas por fortalecer</div>
+            </div>
+            <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
+          </div>
+          {recommendations.length > 0 ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+              {recommendations.map((recommendation) => (
+                <Link
+                  key={recommendation.id}
+                  to={`/dashboard/problemas/todos/${recommendation.problem_number}`}
+                  className="nb-dash-event"
+                  style={{ color: 'inherit', textDecoration: 'none', border: '2px solid #000', padding: 14 }}
+                >
+                  <div className="nb-dash-kicker">Problema {recommendation.problem_number}</div>
+                  <h3 className="nb-dash-h3" style={{ margin: '6px 0 10px' }}>{recommendation.title}</h3>
+                  <div className="nb-dash-section-sub">Dificultad {recommendation.difficulty_rating}</div>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <p className="nb-dash-body-text">Completa un envío para construir tu primera ruta de práctica.</p>
+          )}
         </div>
 
         {/* ── Recursos + eventos ── */}

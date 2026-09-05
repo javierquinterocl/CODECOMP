@@ -1,4 +1,5 @@
 const JUDGE0_PROXY_URL = import.meta.env.VITE_JUDGE0_PROXY_URL || '/api/judge0';
+const ADAPTIVE_API_URL = import.meta.env.VITE_ADAPTIVE_API_URL || '/api/adaptive';
 
 /** IDs de los lenguajes soportados por Judge0 CE en RapidAPI. */
 export const JUDGE0_LANGUAGE_IDS = Object.freeze({
@@ -120,4 +121,18 @@ export const evaluarCodigo = async (sourceCode, languageId, stdin = '', expected
     if (error instanceof Error) throw error;
     throw new Error('No se pudo evaluar el código en Judge0.');
   }
+};
+
+/** Envía un problema completo al backend para ejecutar sus casos y actualizar el perfil. */
+export const evaluarCodigoAdaptativo = async (sourceCode, languageId, problemNumber, user) => {
+  if (!user) throw new Error('Inicia sesión para guardar tu progreso.');
+  const token = await user.getIdToken();
+  const response = await fetch(ADAPTIVE_API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ source_code: sourceCode, language_id: languageId, problem_number: problemNumber }),
+  });
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'No se pudo procesar el envío.');
+  return data;
 };

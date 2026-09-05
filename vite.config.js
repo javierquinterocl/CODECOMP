@@ -14,6 +14,32 @@ export default defineConfig(({ mode }) => {
       'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
     },
     proxy: {
+      '/api/adaptive': {
+        target: 'http://127.0.0.1:5001/codecompc/us-central1',
+        changeOrigin: true,
+        rewrite: () => '/adaptiveSubmission',
+      },
+      '/api/problems': {
+        target: 'http://127.0.0.1:5001/codecompc/us-central1',
+        changeOrigin: true,
+        rewrite: (path) => {
+          const query = path.includes('?') ? path.slice(path.indexOf('?')) : '';
+          const detail = path.match(/^\/api\/problems\/([^/?]+)/);
+          return detail
+            ? `/problemDetail?number=${encodeURIComponent(detail[1])}${query}`
+            : `/problems${query}`;
+        },
+      },
+      '/api/progress': {
+        target: 'http://127.0.0.1:5001/codecompc/us-central1',
+        changeOrigin: true,
+        rewrite: () => '/progress',
+      },
+      '/api/recommendations': {
+        target: 'http://127.0.0.1:5001/codecompc/us-central1',
+        changeOrigin: true,
+        rewrite: (path) => path.includes('?') ? `/recommendations${path.slice(path.indexOf('?'))}` : '/recommendations',
+      },
       '/api/judge0': {
         target: 'https://judge0-ce.p.rapidapi.com',
         changeOrigin: true,
