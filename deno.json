@@ -1,0 +1,15 @@
+{
+  "lock": false,
+  "nodeModulesDir": "none",
+  "tasks": {
+    "test": "deno test --allow-env supabase/tests/",
+    "check": "deno check supabase/functions/**/*.ts"
+  },
+  "imports": {
+    "postgres": "npm:postgres@3.4.5",
+    "jose": "npm:jose@5.9.6",
+    "@std/assert": "jsr:@std/assert@1.0.8"
+  },
+  "fmt": { "indentWidth": 2, "singleQuote": true, "lineWidth": 100 },
+  "compilerOptions": { "strict": true, "lib": ["deno.window"] }
+}
