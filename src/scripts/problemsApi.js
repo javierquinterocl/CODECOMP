@@ -1,6 +1,7 @@
 import { categoriaDeProblema } from './problemsData';
+import { rutaApi } from './apiBase';
 
-const API_URL = import.meta.env.VITE_PROBLEMS_API_URL || '/api/problems';
+const API_URL = import.meta.env.VITE_PROBLEMS_API_URL || rutaApi('problems');
 
 const subindices = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉' };
 
@@ -29,7 +30,7 @@ export const mapProblem = (problem) => {
   return {
     id: problem.id,
     numero: problem.problem_number,
-    categoria: categoriaDeProblema({ tags }) || (tags[0] ? slugify(tags[0].name) : 'principiante'),
+    categoria: categoriaDeProblema({ tags, dificultadRating: difficulty }) || (tags[0] ? slugify(tags[0].name) : 'principiante'),
     titulo: limpiarTexto(problem.title),
     nivel,
     dificultadRating: difficulty,

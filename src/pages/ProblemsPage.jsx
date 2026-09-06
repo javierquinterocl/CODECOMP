@@ -11,6 +11,8 @@ const SearchIcon = () => (
 );
 
 /** Sin tildes y en minúscula: buscar "matematicas" también encuentra "Matemáticas". */
+const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
+
 const normalizar = (texto) =>
   texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
@@ -45,16 +47,20 @@ const ProblemsPage = () => {
   const [busqueda, setBusqueda] = useState('');
   const [problemas, setProblemas] = useState([]);
   const [error, setError] = useState('');
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(ADAPTIVO);
 
   useEffect(() => {
-    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
-    setCargando(true);
-    getAllProblems().then(setProblemas).catch((e) => setError(e.message)).finally(() => setCargando(false));
+    if (!ADAPTIVO) return undefined;
+    let vigente = true;
+    getAllProblems()
+      .then((datos) => { if (vigente) setProblemas(datos); })
+      .catch((e) => { if (vigente) setError(e.message); })
+      .finally(() => { if (vigente) setCargando(false); });
+    return () => { vigente = false; };
   }, []);
 
   const categorias = useMemo(() => {
-    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return CATEGORIAS_LOCALES;
+    if (!ADAPTIVO) return CATEGORIAS_LOCALES;
     return CATEGORIAS_LOCALES
       .map((categoria) => ({
         ...categoria,
@@ -102,7 +108,7 @@ const ProblemsPage = () => {
         <div className="nb-pb-hero-stats">
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Problemas</div>
-            <div className="nb-pb-hstat-value">{import.meta.env.VITE_ENABLE_ADAPTIVE === 'true' ? problemas.length : CATEGORIAS_LOCALES.reduce((total, c) => total + c.total, 0)}</div>
+            <div className="nb-pb-hstat-value">{ADAPTIVO ? problemas.length : CATEGORIAS_LOCALES.reduce((total, c) => total + c.total, 0)}</div>
           </div>
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Categorías</div>
@@ -139,7 +145,7 @@ const ProblemsPage = () => {
 
       {/* ── Rejilla de categorías ── */}
       <div className="nb-pb-grid">
-        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas desde PostgreSQL...</p></div>}
+        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas…</p></div>}
         {visibles.map((c) => <CategoryCard key={c.slug} categoria={c} />)}
 
         {!cargando && !error && visibles.length === 0 && (

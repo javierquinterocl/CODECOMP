@@ -33,4 +33,9 @@ export default defineConfig([
       sourceType: 'commonjs',
     },
   },
+  // Archivos de configuracion: corren en Node, no en el navegador.
+  {
+    files: ['*.config.js'],
+    languageOptions: { globals: globals.node },
+  },
 ])

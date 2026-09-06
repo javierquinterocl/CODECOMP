@@ -12,6 +12,8 @@ import { getAllProblems } from '../scripts/problemsApi';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 
+const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
+
 /** "Ver todos" reutiliza esta misma vista con los colores del panel. */
 const TODOS = {
   slug: 'todos',
@@ -65,26 +67,34 @@ const ProblemsCategoryPage = () => {
   const { esFavorito, alternar } = useFavoritos();
   const [soloFavoritos, setSoloFavoritos] = useState(false);
   const [problemas, setProblemas] = useState([]);
-  const [cargando, setCargando] = useState(false);
+  const [cargando, setCargando] = useState(ADAPTIVO);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
-    setCargando(true);
-    const load = getAllProblems().then((todos) => (
-      slug === 'todos' ? todos : todos.filter((problema) => problemaPerteneceCategoria(problema, slug))
-    ));
-    load.then(setProblemas).catch((e) => setError(e.message)).finally(() => setCargando(false));
+    if (!ADAPTIVO) return undefined;
+    // `vigente` evita que una carga anterior pinte datos de otra categoria
+    // si se navega rapido entre ellas.
+    let vigente = true;
+    getAllProblems()
+      .then((todos) => {
+        if (!vigente) return;
+        setProblemas(slug === 'todos'
+          ? todos
+          : todos.filter((problema) => problemaPerteneceCategoria(problema, slug)));
+      })
+      .catch((e) => { if (vigente) setError(e.message); })
+      .finally(() => { if (vigente) setCargando(false); });
+    return () => { vigente = false; };
   }, [slug]);
 
   const categoria = slug === 'todos' ? TODOS : buscarCategoria(slug);
   const ejerciciosLocales = useMemo(() => ejerciciosDeCategoria(slug), [slug]);
-  const ejercicios = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true' ? problemas : ejerciciosLocales;
+  const ejercicios = ADAPTIVO ? problemas : ejerciciosLocales;
   const visibles = soloFavoritos
     ? ejercicios.filter((e) => esFavorito(e.numero))
     : ejercicios;
 
-  if (!categoria && import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') {
+  if (!categoria && !ADAPTIVO) {
     return (
       <div className="nb-dash-inner">
         <Link to="/dashboard/problemas" className="nb-pb-back">← Volver a problemas</Link>
@@ -113,12 +123,12 @@ const ProblemsCategoryPage = () => {
         </div>
 
         <div className="nb-pb-cat-count">
-          <div className="nb-pb-cat-count-value">{ejercicios.length}</div>
+          <div className="nb-pb-cat-count-value">{cargando ? '…' : ejercicios.length}</div>
           <div className="nb-pb-cat-count-label">Problemas</div>
         </div>
       </div>
 
-      {ejercicios.length > 0 && (
+      {!cargando && ejercicios.length > 0 && (
         <div className="nb-pb-listbar">
           <span className="nb-pb-listbar-title">Ejercicios</span>
           <button
@@ -146,7 +156,7 @@ const ProblemsCategoryPage = () => {
           />
         ))}
 
-        {ejercicios.length === 0 && (
+        {!cargando && !error && ejercicios.length === 0 && (
           <div className="nb-pb-empty">
             <h3 className="nb-pb-empty-title">Todavía sin ejercicios</h3>
             <p className="nb-dash-body-text">
@@ -156,7 +166,7 @@ const ProblemsCategoryPage = () => {
           </div>
         )}
 
-        {ejercicios.length > 0 && visibles.length === 0 && (
+        {!cargando && ejercicios.length > 0 && visibles.length === 0 && (
           <div className="nb-pb-empty">
             <h3 className="nb-pb-empty-title">Sin favoritos aquí</h3>
             <p className="nb-dash-body-text">

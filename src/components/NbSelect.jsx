@@ -1,19 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 
-/**
- * Desplegable con el estilo del sistema.
- *
- * El <select> nativo no se puede estilizar: el navegador dibuja la lista con
- * su propio menú del sistema, que es justo el contraste que rompía el diseño.
- * Esto lo reemplaza por un patrón listbox de verdad — botón + lista propia —
- * conservando teclado y lectores de pantalla:
- *
- *   Enter / Espacio / ↓ / ↑  abren
- *   ↓ / ↑                    mueven el resaltado
- *   Enter / Espacio          eligen
- *   Escape / clic afuera     cierran
- *   Home / End               primer y último
- */
+
 const NbSelect = ({ value, onChange, options, label, disabled = false }) => {
   const [abierto, setAbierto] = useState(false);
   const [resaltado, setResaltado] = useState(0);

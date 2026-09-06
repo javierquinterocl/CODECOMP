@@ -6,21 +6,14 @@ const USERS_COLLECTION = 'usuarios_registrados';
 
 const normalizeString = (value = '') => value.trim();
 
-/**
- * Traducción de los códigos de Firebase Auth al mensaje que ve la persona.
- *
- * Antes todo lo que no fuera correo repetido / inválido / contraseña débil
- * caía en un "No se pudo crear la cuenta." que no decía nada: el 400 del
- * endpoint quedaba solo en la consola del navegador. Ahora cada causa tiene
- * su mensaje y, si aparece un código nuevo, se muestra el código para poder
- * rastrearlo en vez de esconderlo.
- */
+// Códigos de Firebase Auth -> mensaje para la persona. Un código desconocido
+// se muestra tal cual en vez de esconderse tras un error genérico.
 const MENSAJES_AUTH = {
   'auth/email-already-in-use': 'El correo electrónico ya está registrado.',
   'auth/invalid-email': 'El correo electrónico no tiene un formato válido.',
   'auth/weak-password': 'La contraseña no cumple los requisitos: mínimo 10 caracteres, mayúscula, minúscula, número y carácter especial.',
   'auth/password-does-not-meet-requirements': 'La contraseña no cumple la política configurada en Firebase: mínimo 10 caracteres, mayúscula, minúscula, número y carácter especial.',
-  // Causas de configuración: el formulario está bien, falta algo en la consola de Firebase.
+  // Configuración: el formulario está bien, falta algo en la consola de Firebase.
   'auth/operation-not-allowed': 'El registro con correo y contraseña está desactivado en Firebase (Authentication → Sign-in method → Email/Password).',
   'auth/admin-restricted-operation': 'Firebase tiene restringido el registro de cuentas nuevas para este proyecto.',
   'auth/unauthorized-domain': 'Este dominio no está autorizado en Firebase (Authentication → Settings → Authorized domains).',
@@ -137,7 +130,6 @@ export const getSessionsHistory = async () => {
   try {
     const sessionsRef = collection(db, SESSIONS_COLLECTION);
     
-    // Intentar primero con ordenamiento
     try {
       const q = query(sessionsRef, orderBy('entryTime', 'desc'));
       const snap = await getDocs(q);
@@ -148,7 +140,7 @@ export const getSessionsHistory = async () => {
       });
       return sessions;
     } catch {
-      // Si falla el ordenamiento, intenta sin ordenar
+      // Sin índice compuesto: reintentar sin ordenar y ordenar en cliente.
       const snap = await getDocs(sessionsRef);
 
       const sessions = [];
@@ -156,7 +148,6 @@ export const getSessionsHistory = async () => {
         sessions.push({ id: doc.id, ...doc.data() });
       });
       
-      // Ordenar localmente si hay datos
       return sessions.sort((a, b) => (b.entryTime || 0) - (a.entryTime || 0));
     }
   } catch (error) {
@@ -165,11 +156,7 @@ export const getSessionsHistory = async () => {
   }
 };
 
-/**
- * Sesiones de un solo usuario. getSessionsHistory() trae las de todos y
- * queda reservada al panel de administración: usar esta en los flujos
- * normales evita exponer el historial ajeno.
- */
+// Solo las del usuario dado. getSessionsHistory() trae las de todos: es para admin.
 export const getUserSessions = async (uid) => {
   if (!hasFirebaseConfig || !db || !uid) return [];
 

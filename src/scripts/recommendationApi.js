@@ -1,4 +1,6 @@
-const API_URL = '/api/recommendations';
+import { rutaApi } from './apiBase';
+
+const API_URL = import.meta.env.VITE_RECOMMENDATIONS_API_URL || rutaApi('recommendations');
 
 export const getRecommendations = async (user, limit = 5) => {
   if (!user) return [];

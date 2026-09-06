@@ -12,11 +12,10 @@ dist
 dist-ssr
 *.local
 
-# Environment variables - NEVER commit these
+
 .env
-.env.local
-.env.*.local
-.env.production
+.env.*
+!.env.example
 functions/.secret.local
 
 # Firebase

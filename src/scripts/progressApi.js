@@ -1,4 +1,6 @@
-const API_URL = '/api/progress';
+import { rutaApi } from './apiBase';
+
+const API_URL = import.meta.env.VITE_PROGRESS_API_URL || rutaApi('progress');
 
 export const getProgress = async (user) => {
   if (!user) return null;
