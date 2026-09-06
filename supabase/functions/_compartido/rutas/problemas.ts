@@ -9,16 +9,18 @@ export const listarProblemas = async (ctx: Contexto): Promise<Response> => {
     return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
   }
 
-  const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 100, 1), 500);
+  // El catalogo entero cabe en una peticion: pedirlo de a 500 costaba 8 viajes.
+  const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 5000, 1), 10000);
   const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0);
   const tag = (url.searchParams.get('tag') ?? '').trim();
 
   try {
+
     const problemas = await sql`
-      SELECT p.id, p.problem_number, p.title, p.slug,
+      SELECT p.problem_number, p.title,
         p.difficulty_rating, p.time_limit_sec, p.memory_limit_mb,
-        COALESCE(json_agg(json_build_object('id', t.id, 'name', t.name)
-          ORDER BY t.name) FILTER (WHERE t.id IS NOT NULL), '[]') AS tags
+        COALESCE(array_agg(t.name ORDER BY t.name)
+          FILTER (WHERE t.id IS NOT NULL), '{}') AS tags
       FROM problems p
       LEFT JOIN problem_tags pt ON pt.problem_id = p.id
       LEFT JOIN tags t ON t.id = pt.tag_id
@@ -29,10 +31,14 @@ export const listarProblemas = async (ctx: Contexto): Promise<Response> => {
           AND regexp_replace(lower(filtro_t.name), '[^a-z0-9]+', '-', 'g') = lower(${tag})
       ))
       GROUP BY p.id
-      ORDER BY p.problem_number NULLS LAST, p.id
+      ORDER BY p.problem_number NULLS LAST
       LIMIT ${limit} OFFSET ${offset}
     `;
-    return responder({ status: 200, cuerpo: { problems: problemas, limit, offset } }, cors);
+    // El catalogo cambia como mucho una vez al mes.
+    return responder(
+      { status: 200, cuerpo: { problems: problemas, limit, offset } },
+      { ...cors, 'Cache-Control': 'public, max-age=300, s-maxage=3600' },
+    );
   } catch (error) {
     console.error('Problems list error:', error);
     return responder(
@@ -58,8 +64,8 @@ export const detalleProblema = async (ctx: Contexto, numero: number): Promise<Re
         COALESCE((SELECT json_agg(json_build_object('input', tc.input, 'output', tc.expected_output)
           ORDER BY tc.id) FROM test_cases tc
           WHERE tc.problem_id = p.id AND NOT tc.is_hidden), '[]') AS examples,
-        COALESCE((SELECT json_agg(json_build_object('id', t.id, 'name', t.name)
-          ORDER BY t.name) FROM problem_tags pt JOIN tags t ON t.id = pt.tag_id
+        COALESCE((SELECT json_agg(t.name ORDER BY t.name)
+          FROM problem_tags pt JOIN tags t ON t.id = pt.tag_id
           WHERE pt.problem_id = p.id), '[]') AS tags
       FROM problems p
       WHERE p.is_active AND p.problem_number = ${numero}
@@ -67,7 +73,10 @@ export const detalleProblema = async (ctx: Contexto, numero: number): Promise<Re
     if (!problema) {
       return responder(rechazo(404, 'no-encontrado', 'Problema no encontrado.'), cors);
     }
-    return responder({ status: 200, cuerpo: { problem: problema } }, cors);
+    return responder(
+      { status: 200, cuerpo: { problem: problema } },
+      { ...cors, 'Cache-Control': 'public, max-age=300, s-maxage=3600' },
+    );
   } catch (error) {
     console.error('Problem detail error:', error);
     return responder(rechazo(500, 'consulta', 'No se pudo consultar el problema.'), cors);

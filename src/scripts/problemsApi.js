@@ -22,15 +22,17 @@ export const mapProblem = (problem) => {
   const difficulty = Number(problem.difficulty_rating) || 1200;
   const nivel = Math.min(5, Math.max(1, Math.ceil((difficulty - 700) / 400)));
   const description = limpiarTexto(problem.description_markdown || problem.title);
+
   const tags = Array.isArray(problem.tags) ? problem.tags : [];
+  const nombreTag = (tag) => (typeof tag === 'string' ? tag : tag?.name || '');
   const examples = (problem.examples || []).map((example) => ({
     entrada: example.input || '',
     salida: example.output || '',
   }));
   return {
-    id: problem.id,
+    id: problem.id ?? problem.problem_number,
     numero: problem.problem_number,
-    categoria: categoriaDeProblema({ tags, dificultadRating: difficulty }) || (tags[0] ? slugify(tags[0].name) : 'principiante'),
+    categoria: categoriaDeProblema({ tags, dificultadRating: difficulty }) || (tags[0] ? slugify(nombreTag(tags[0])) : 'principiante'),
     titulo: limpiarTexto(problem.title),
     nivel,
     dificultadRating: difficulty,
@@ -59,23 +61,32 @@ const request = async (url) => {
   return data;
 };
 
-export const getProblems = async ({ tag = '', limit = 500, offset = 0 } = {}) => {
+export const getProblems = async ({ tag = '', limit = 5000, offset = 0 } = {}) => {
   const params = new URLSearchParams({ limit: String(limit), offset: String(offset) });
   if (tag) params.set('tag', tag);
   const data = await request(`${API_URL}?${params}`);
   return { ...data, problems: data.problems.map(mapProblem) };
 };
 
+
+let catalogoEnMemoria = null;
+
 export const getAllProblems = async (options = {}) => {
-  const all = [];
+  const sinFiltro = !options.tag;
+  if (sinFiltro && catalogoEnMemoria) return catalogoEnMemoria;
+
+  const limit = 5000;
+  const todos = [];
   let offset = 0;
-  const limit = 500;
-  while (true) {
+  for (;;) {
     const page = await getProblems({ ...options, limit, offset });
-    all.push(...page.problems);
-    if (page.problems.length < limit) return all;
+    todos.push(...page.problems);
+    if (page.problems.length < limit) break;
     offset += limit;
   }
+
+  if (sinFiltro) catalogoEnMemoria = todos;
+  return todos;
 };
 
 export const getProblem = async (problemNumber) => {
