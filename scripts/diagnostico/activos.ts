@@ -1,0 +1,12 @@
+import { cargarConfig } from '../../supabase/functions/_compartido/config.ts';
+import { conexion } from '../../supabase/functions/_compartido/db.ts';
+const sql = conexion(cargarConfig().databaseUrl);
+const [a] = await sql`SELECT count(*)::int AS n FROM problems`;
+const [b] = await sql`SELECT count(*)::int AS n FROM problems WHERE is_active`;
+const [c] = await sql`SELECT count(*)::int AS n FROM problems WHERE is_active AND problem_number IS NOT NULL`;
+const [d] = await sql`SELECT count(*)::int AS n FROM problems WHERE is_active AND EXISTS (SELECT 1 FROM test_cases tc WHERE tc.problem_id = problems.id)`;
+console.log('  total en la tabla        :', a.n);
+console.log('  is_active                :', b.n);
+console.log('  con problem_number       :', c.n);
+console.log('  con casos de prueba      :', d.n, ' <- los que /adaptive puede evaluar');
+await sql.end();
