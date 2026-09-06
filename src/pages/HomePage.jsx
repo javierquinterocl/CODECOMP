@@ -41,9 +41,8 @@ const FAQS = [
   },
 ];
 
-// Novedades que se muestran por defecto, de la mas reciente a la mas antigua.
-// "foco" es el object-position del recorte: cada imagen tiene una proporcion
-// distinta y la franja las iguala a 16:9.
+// Novedades, de la mas reciente a la mas antigua. "foco" es el object-position
+// del recorte: la franja iguala todas las imagenes a 16:9.
 const NOTICIAS = [
   {
     fecha: '3 OCT 2026',
@@ -105,8 +104,7 @@ const FeatureIcon = ({ children }) => (
   <div style={{ width:64, height:64, background:'#0736FE', color:'#fff', border:'2px solid #000', display:'grid', placeItems:'center', fontFamily:press, fontSize:18, marginBottom:22 }}>{children}</div>
 );
 
-// Franja superior de una noticia. Si la imagen no carga se oculta la franja
-// entera, asi la tarjeta nunca queda con el icono de roto.
+// Si la imagen no carga se oculta la franja entera, no el icono de roto.
 const NoticiaImagen = ({ src, alt, foco = 'center' }) => {
   const [visible, setVisible] = useState(true);
   if (!src || !visible) return null;
@@ -139,8 +137,7 @@ const HomePage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState(null);
-  // Quien llega redirigido desde una ruta protegida (o desde /login) entra
-  // con el panel de sesión ya abierto.
+  // Llegar redirigido desde una ruta protegida abre el panel de sesión.
   const [loginOpen, setLoginOpen] = useState(Boolean(location.state?.openLogin));
   const [navH, setNavH] = useState('79px');
   const navRef = useRef(null);

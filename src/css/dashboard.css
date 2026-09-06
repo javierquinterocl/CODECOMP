@@ -214,3 +214,15 @@
   .nb-dash-photo { flex-basis: 84px; }
   .nb-dash-member-field, .nb-dash-member-points { flex: 1 1 90px; min-width: 0; text-align: left; }
 }
+
+/* ---------- Problemas recomendados ---------- */
+/* No reutilizar .nb-dash-event aqui: esa es flex en fila y apila el kicker,
+   el titulo y la dificultad uno al lado del otro. */
+.nb-dash-reco-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(196px, 1fr)); gap: var(--sp-gap); }
+.nb-dash-reco { display: flex; flex-direction: column; gap: 6px; min-width: 0; border: 2px solid #000; background: #fff; padding: clamp(11px,0.9vw,18px); color: inherit; text-decoration: none; transition: transform 0.1s, box-shadow 0.1s; }
+.nb-dash-reco:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0px #000; color: inherit; }
+.nb-dash-reco-num { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
+.nb-dash-reco-title { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-base); line-height: 1.3; margin: 0; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.nb-dash-reco-foot { margin-top: auto; padding-top: 8px; display: flex; align-items: center; gap: 6px; }
+.nb-dash-reco-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.nb-dash-reco-val { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; background: #000; color: #fff; padding: 3px 7px; }

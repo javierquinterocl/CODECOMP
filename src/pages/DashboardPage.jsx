@@ -224,17 +224,20 @@ const DashboardPage = () => {
             <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
           </div>
           {recommendations.length > 0 ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+            <div className="nb-dash-reco-grid">
               {recommendations.map((recommendation) => (
                 <Link
                   key={recommendation.id}
                   to={`/dashboard/problemas/todos/${recommendation.problem_number}`}
-                  className="nb-dash-event"
-                  style={{ color: 'inherit', textDecoration: 'none', border: '2px solid #000', padding: 14 }}
+                  className="nb-dash-reco"
+                  title={recommendation.title}
                 >
-                  <div className="nb-dash-kicker">Problema {recommendation.problem_number}</div>
-                  <h3 className="nb-dash-h3" style={{ margin: '6px 0 10px' }}>{recommendation.title}</h3>
-                  <div className="nb-dash-section-sub">Dificultad {recommendation.difficulty_rating}</div>
+                  <span className="nb-dash-reco-num">Problema {recommendation.problem_number}</span>
+                  <h3 className="nb-dash-reco-title">{recommendation.title}</h3>
+                  <div className="nb-dash-reco-foot">
+                    <span className="nb-dash-reco-label">Dificultad</span>
+                    <span className="nb-dash-reco-val">{recommendation.difficulty_rating}</span>
+                  </div>
                 </Link>
               ))}
             </div>

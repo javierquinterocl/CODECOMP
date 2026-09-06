@@ -1,5 +1,7 @@
-const JUDGE0_PROXY_URL = import.meta.env.VITE_JUDGE0_PROXY_URL || '/api/judge0';
-const ADAPTIVE_API_URL = import.meta.env.VITE_ADAPTIVE_API_URL || '/api/adaptive';
+import { rutaApi } from './apiBase';
+
+const JUDGE0_PROXY_URL = import.meta.env.VITE_JUDGE0_PROXY_URL || rutaApi('judge0');
+const ADAPTIVE_API_URL = import.meta.env.VITE_ADAPTIVE_API_URL || rutaApi('adaptive');
 
 /** IDs de los lenguajes soportados por Judge0 CE en RapidAPI. */
 export const JUDGE0_LANGUAGE_IDS = Object.freeze({
@@ -102,7 +104,7 @@ export const evaluarCodigo = async (sourceCode, languageId, stdin = '', expected
     }
     if (!response.ok) {
       const detail = data.message || data.error || data.error_description;
-      throw new Error(detail || `Judge0 respondió con HTTP ${response.status}.`);
+      throw new Error(detail || `El juez respondió con un error (HTTP ${response.status}).`);
     }
 
     const statusId = data.status?.id;
@@ -119,7 +121,7 @@ export const evaluarCodigo = async (sourceCode, languageId, stdin = '', expected
     };
   } catch (error) {
     if (error instanceof Error) throw error;
-    throw new Error('No se pudo evaluar el código en Judge0.');
+    throw new Error('No se pudo evaluar el código. Inténtalo de nuevo.');
   }
 };
 

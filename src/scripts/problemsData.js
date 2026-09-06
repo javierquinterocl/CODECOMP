@@ -1,13 +1,6 @@
-/* ============================================================
-   Catálogo del módulo de Problemas.
-
-   Datos de muestra en memoria: cuando exista la colección en
-   Firestore este archivo es el único punto a cambiar — las vistas
-   ya leen todo desde aquí.
-
-   En las categorías, `bg` / `ink` son el par de color de la tarjeta:
-   `ink` se usa para el texto y, invertido, para el recuadro del número.
-   ============================================================ */
+// Catálogo del módulo de Problemas, en memoria. Único punto a cambiar
+// cuando exista la colección en Firestore.
+// En categorías, `bg`/`ink` son el par de color de la tarjeta.
 
 /** Etiqueta de complejidad; la barra del listado usa el mismo número. */
 export const NIVELES = {
@@ -18,11 +11,7 @@ export const NIVELES = {
   5: 'Muy difícil',
 };
 
-/* ------------------------------------------------------------
-   Ejercicios
-   `nivel` va de 1 a 5 y alimenta tanto la etiqueta como la barra
-   de complejidad que se dibuja en el listado.
-   ------------------------------------------------------------ */
+// Ejercicios. `nivel` va de 1 a 5: alimenta la etiqueta y la barra del listado.
 export const EJERCICIOS = [
   {
     numero: 1000,
@@ -131,9 +120,7 @@ export const EJERCICIOS = [
   },
 ];
 
-/* ------------------------------------------------------------
-   Categorías
-   ------------------------------------------------------------ */
+// Categorías
 const CATALOGO = [
   {
     n: 1, slug: 'principiante', titulo: 'Principiante',
@@ -210,9 +197,19 @@ const CATALOGO = [
 const normalizarTag = (tag) =>
   String(tag?.name || tag || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, ' ');
 
+// Principiante se decide por dificultad, no por tema: el banco no trae una
+// etiqueta de "nivel de entrada", asi que por tags la categoria quedaba vacia
+// y la rejilla la escondia.
+const RATING_PRINCIPIANTE = 1000;
+
 const categoriaCoincidente = (problema) => {
+  const rating = Number(problema.dificultadRating);
+  if (rating > 0 && rating <= RATING_PRINCIPIANTE) {
+    return CATALOGO.find((categoria) => categoria.slug === 'principiante');
+  }
   const tags = (problema.tags || []).map(normalizarTag);
-  return CATALOGO.find((categoria) => categoria.tags.some((tag) => tags.includes(normalizarTag(tag))))
+  return CATALOGO.find((categoria) => categoria.slug !== 'principiante'
+      && categoria.tags.some((tag) => tags.includes(normalizarTag(tag))))
     || CATALOGO.find((categoria) => categoria.slug === 'otros');
 };
 
@@ -239,9 +236,7 @@ export const ejerciciosDeCategoria = (slug) =>
 export const buscarEjercicio = (numero) =>
   EJERCICIOS.find((e) => String(e.numero) === String(numero));
 
-/* ------------------------------------------------------------
-   Lenguajes disponibles en el editor, con su plantilla inicial.
-   ------------------------------------------------------------ */
+// Lenguajes del editor, con su plantilla inicial.
 export const LENGUAJES = [
   {
     id: 'csharp', nombre: 'C#',

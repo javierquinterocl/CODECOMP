@@ -1,17 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
-/**
- * Marcas de "favorito" del módulo de Problemas.
- *
- * Por ahora viven en localStorage: no hay colección en Firestore todavía,
- * así que la marca es por navegador y no viaja con la cuenta. Cuando exista
- * el documento del usuario, basta con cambiar leer//guardar por Firestore —
- * la API del hook (`esFavorito` / `alternar`) no cambia.
- *
- * Se sincroniza entre pestañas y entre las dos vistas que lo usan (listado y
- * detalle) mediante un evento propio, porque `storage` solo avisa a las otras
- * pestañas, nunca a la que escribió.
- */
+// Favoritos en localStorage: por navegador, no viajan con la cuenta.
+// El evento propio existe porque `storage` no avisa a la pestaña que escribió.
 
 const CLAVE = 'codecomp:problemas:favoritos';
 const EVENTO = 'codecomp:favoritos';
@@ -22,7 +12,7 @@ const leer = () => {
     const lista = crudo ? JSON.parse(crudo) : [];
     return Array.isArray(lista) ? lista.map(Number) : [];
   } catch {
-    // Modo privado o almacenamiento bloqueado: se sigue sin favoritos.
+    // Modo privado o almacenamiento bloqueado.
     return [];
   }
 };
@@ -31,7 +21,7 @@ const guardar = (lista) => {
   try {
     localStorage.setItem(CLAVE, JSON.stringify(lista));
   } catch {
-    /* sin persistencia, pero la vista sigue respondiendo */
+    // Sin persistencia, pero la vista sigue respondiendo.
   }
   window.dispatchEvent(new CustomEvent(EVENTO, { detail: lista }));
 };
