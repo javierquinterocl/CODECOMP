@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CATEGORIAS as CATEGORIAS_LOCALES, problemaPerteneceCategoria } from '../scripts/problemsData';
+import { CATEGORIAS as CATEGORIAS_LOCALES, problemaPerteneceCategoria, normalizarTexto } from '../scripts/problemsData';
 import { getAllProblems } from '../scripts/problemsApi';
 
 const SearchIcon = () => (
@@ -10,11 +10,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-/** Sin tildes y en minúscula: buscar "matematicas" también encuentra "Matemáticas". */
 const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
-
-const normalizar = (texto) =>
-  texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 const CategoryCard = ({ categoria }) => (
   <Link
@@ -66,14 +62,17 @@ const ProblemsPage = () => {
         ...categoria,
         total: problemas.filter((problema) => problemaPerteneceCategoria(problema, categoria.slug)).length,
       }))
-      .filter((categoria) => categoria.total > 0);
+      .filter((categoria) => categoria.total > 0)
+      // Las categorias vacias se esconden, asi que el numero del catalogo
+      // dejaria huecos (…8, 10). Se renumera sobre lo que de verdad se ve.
+      .map((categoria, i) => ({ ...categoria, n: i + 1 }));
   }, [problemas]);
 
   const visibles = useMemo(() => {
-    const termino = normalizar(busqueda.trim());
+    const termino = normalizarTexto(busqueda.trim());
     if (!termino) return categorias;
     return categorias.filter((c) =>
-      normalizar(`${c.titulo} ${c.temas} ${c.etiquetas.join(' ')}`).includes(termino),
+      normalizarTexto(`${c.titulo} ${c.temas} ${c.etiquetas.join(' ')}`).includes(termino),
     );
   }, [busqueda, categorias]);
 

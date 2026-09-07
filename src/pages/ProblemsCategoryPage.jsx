@@ -7,12 +7,20 @@ import {
   ejerciciosDeCategoria,
   NIVELES,
   problemaPerteneceCategoria,
+  normalizarTexto,
 } from '../scripts/problemsData';
 import { getAllProblems } from '../scripts/problemsApi';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 
 const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
+
+const SearchIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square">
+    <circle cx="11" cy="11" r="7" />
+    <path d="M16.5 16.5 21 21" />
+  </svg>
+);
 
 /** "Ver todos" reutiliza esta misma vista con los colores del panel. */
 const TODOS = {
@@ -66,6 +74,7 @@ const ProblemsCategoryPage = () => {
   const { slug } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const [soloFavoritos, setSoloFavoritos] = useState(false);
+  const [busqueda, setBusqueda] = useState('');
   const [problemas, setProblemas] = useState([]);
   const [cargando, setCargando] = useState(ADAPTIVO);
   const [error, setError] = useState('');
@@ -90,9 +99,15 @@ const ProblemsCategoryPage = () => {
   const categoria = slug === 'todos' ? TODOS : buscarCategoria(slug);
   const ejerciciosLocales = useMemo(() => ejerciciosDeCategoria(slug), [slug]);
   const ejercicios = ADAPTIVO ? problemas : ejerciciosLocales;
-  const visibles = soloFavoritos
-    ? ejercicios.filter((e) => esFavorito(e.numero))
-    : ejercicios;
+  
+  const visibles = useMemo(() => {
+    const termino = normalizarTexto(busqueda.trim());
+    return ejercicios.filter((e) => {
+      if (soloFavoritos && !esFavorito(e.numero)) return false;
+      if (!termino) return true;
+      return normalizarTexto(`${e.numero} ${e.titulo} ${e.resumen || ''}`).includes(termino);
+    });
+  }, [ejercicios, busqueda, soloFavoritos, esFavorito]);
 
   if (!categoria && !ADAPTIVO) {
     return (
@@ -131,6 +146,23 @@ const ProblemsCategoryPage = () => {
       {!cargando && ejercicios.length > 0 && (
         <div className="nb-pb-listbar">
           <span className="nb-pb-listbar-title">Ejercicios</span>
+
+          <div className="nb-pb-search nb-pb-search-inline">
+            <SearchIcon />
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar por número o título..."
+              aria-label="Buscar un ejercicio de esta categoría"
+            />
+            {busqueda && (
+              <button type="button" className="nb-pb-clear" onClick={() => setBusqueda('')} aria-label="Limpiar búsqueda">
+                ✕
+              </button>
+            )}
+          </div>
+
           <button
             type="button"
             className={`nb-pb-filtro${soloFavoritos ? ' is-on' : ''}`}
@@ -168,9 +200,13 @@ const ProblemsCategoryPage = () => {
 
         {!cargando && ejercicios.length > 0 && visibles.length === 0 && (
           <div className="nb-pb-empty">
-            <h3 className="nb-pb-empty-title">Sin favoritos aquí</h3>
+            <h3 className="nb-pb-empty-title">
+              {busqueda ? 'Sin coincidencias' : 'Sin favoritos aquí'}
+            </h3>
             <p className="nb-dash-body-text">
-              Marca un ejercicio con la estrella para verlo en este filtro.
+              {busqueda
+                ? `Ningún ejercicio de esta lista corresponde a «${busqueda}».`
+                : 'Marca un ejercicio con la estrella para verlo en este filtro.'}
             </p>
           </div>
         )}

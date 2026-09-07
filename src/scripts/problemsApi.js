@@ -1,4 +1,4 @@
-import { categoriaDeProblema } from './problemsData';
+import { categoriaDeProblema, nivelDeRating } from './problemsData';
 import { rutaApi } from './apiBase';
 
 const API_URL = import.meta.env.VITE_PROBLEMS_API_URL || rutaApi('problems');
@@ -20,7 +20,7 @@ const slugify = (value = '') => value.toLowerCase().trim().replace(/[^a-z0-9]+/g
 
 export const mapProblem = (problem) => {
   const difficulty = Number(problem.difficulty_rating) || 1200;
-  const nivel = Math.min(5, Math.max(1, Math.ceil((difficulty - 700) / 400)));
+  const nivel = nivelDeRating(difficulty);
   const description = limpiarTexto(problem.description_markdown || problem.title);
 
   const tags = Array.isArray(problem.tags) ? problem.tags : [];

@@ -16,12 +16,31 @@ const DashAvatar = ({ user, photoURL }) => {
   );
 };
 
+
+const ESTRELLA = 'M0 -10 L2.47 -3.4 L9.51 -3.09 L3.99 1.3 L5.88 8.09 L0 4.2 L-5.88 8.09 L-3.99 1.3 L-9.51 -3.09 L-2.47 -3.4 Z';
+
+const BrandCat = () => (
+  <span className="nb-dash-brand-cat" aria-hidden="true">
+    <img src="/cat-pixel.png" alt="" />
+    <svg className="nb-dash-brand-stars" viewBox="0 0 100 100">
+      <g fill="#FFD100">
+        <path d={ESTRELLA} transform="translate(13 21) scale(0.78)" />
+        <path d={ESTRELLA} transform="translate(89 31) scale(0.5)" />
+        <path d={ESTRELLA} transform="translate(80 84) scale(0.62)" />
+      </g>
+    </svg>
+  </span>
+);
+
 const AppNavbar = () => {
   const { user, codigoEstudiante, storedPhotoURL, displayName, isLoggingOut, handleLogout } = useAuth();
 
   return (
     <header className="nb-dash-header">
-      <span className="nb-dash-brand">CODECOMP</span>
+      <div className="nb-dash-brandwrap">
+        <span className="nb-dash-brand">CODECOMP</span>
+        <BrandCat />
+      </div>
 
       <div className="nb-dash-headright">
         <div className="nb-dash-streak">

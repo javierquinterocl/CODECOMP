@@ -1,19 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getProgress } from '../scripts/progressApi';
 import { getRecommendations } from '../scripts/recommendationApi';
-
-/* ── Iconos del diseño ───────────────────────────────────────── */
-const Stroke = ({ children }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
-    {children}
-  </svg>
-);
-const PencilIcon = () => <Stroke><path d="M4 20h4L20 8l-4-4L4 16v4Z" /><path d="M14 6l4 4" /></Stroke>;
-const CpuIcon    = () => <Stroke><rect x="2" y="7" width="20" height="11" /><path d="M6 10v5M4 12.5h4M15 11h.01M18 14h.01" /></Stroke>;
-const TrophyIcon = () => <Stroke><path d="M7 3h10v6a5 5 0 0 1-10 0V3Z" /><path d="M7 5H4v2a3 3 0 0 0 3 3M17 5h3v2a3 3 0 0 1-3 3" /><path d="M12 14v4M8 21h8M9 21v-3h6v3" /></Stroke>;
-const BookIcon   = () => <Stroke><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4V4Z" /><path d="M20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6V4Z" /></Stroke>;
+import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
+import { PencilIcon, CpuIcon, TrophyIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
 
 /* ── Datos de muestra del diseño (aún sin fuente real) ───────── */
 const RPC_EVENTS = [
@@ -40,6 +31,71 @@ const RECURSOS = [
     texto: 'Sesiones grabadas del grupo estable y explicaciones de problemas resueltos en vivo.',
     chips: ['42 videos', 'UFPSO'] },
 ];
+
+
+const RECO_MIN_TARJETAS = 8;
+const RECO_SEG_POR_TARJETA = 5;
+
+
+const categoriaDeReco = (reco) => categoriaDeProblema({
+  tags: reco.tags || [],
+  dificultadRating: reco.difficulty_rating,
+});
+
+const RecoCard = ({ reco, duplicado }) => {
+  const categoria = buscarCategoria(categoriaDeReco(reco));
+
+  return (
+    <Link
+      to={`/dashboard/problemas/todos/${reco.problem_number}`}
+      className="nb-dash-reco"
+      style={{ '--cat-bg': categoria?.bg, '--cat-ink': categoria?.ink }}
+      title={reco.title}
+      // La copia es decorativa: ni se lee ni se tabula dos veces.
+      aria-hidden={duplicado || undefined}
+      tabIndex={duplicado ? -1 : undefined}
+    >
+      <span className="nb-dash-reco-num">Problema {reco.problem_number}</span>
+      <h3 className="nb-dash-reco-title">{reco.title}</h3>
+      <div className="nb-dash-reco-foot">
+        <span className="nb-dash-reco-cat">{categoria?.titulo}</span>
+        <div className="nb-dash-reco-nivel">
+          <span className="nb-dash-reco-label">{NIVELES[nivelDeRating(reco.difficulty_rating)]}</span>
+          <span className="nb-dash-reco-val">{reco.difficulty_rating}</span>
+        </div>
+      </div>
+    </Link>
+  );
+};
+
+const RecoCarrusel = ({ recomendados }) => {
+  const base = useMemo(() => {
+ 
+    const utiles = recomendados
+      .filter((reco) => categoriaDeReco(reco) !== 'otros')
+      .slice(0, RECO_MIN_TARJETAS);
+    if (utiles.length === 0) return [];
+    // Con pocas la cinta no llenaría el ancho: se repite hasta cubrirlo.
+    const lista = [];
+    while (lista.length < RECO_MIN_TARJETAS) lista.push(...utiles);
+    return lista;
+  }, [recomendados]);
+
+  if (base.length === 0) return null;
+
+  return (
+    <div className="nb-dash-reco-marquee">
+      <div
+        className="nb-dash-reco-track"
+        style={{ '--reco-dur': `${(base.length * RECO_SEG_POR_TARJETA).toFixed(1)}s` }}
+      >
+        {[...base, ...base].map((reco, i) => (
+          <RecoCard key={`${reco.id}-${i}`} reco={reco} duplicado={i >= base.length} />
+        ))}
+      </div>
+    </div>
+  );
+};
 
 const MemberField = ({ label, value }) => (
   <div className="nb-dash-member-field">
@@ -72,12 +128,25 @@ const DashboardPage = () => {
   const [photoError, setPhotoError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
+  const [refrescando, setRefrescando] = useState(false);
+
+
+  const traerRecomendados = useCallback(
+    () => getRecommendations(user, 14).then(setRecommendations).catch(() => {}),
+    [user],
+  );
+
+
+  const refrescarRecomendados = () => {
+    setRefrescando(true);
+    traerRecomendados().finally(() => setRefrescando(false));
+  };
 
   useEffect(() => {
     if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true' || !user) return;
     getProgress(user).then(setProgress).catch(() => {});
-    getRecommendations(user).then(setRecommendations).catch(() => {});
-  }, [user]);
+    traerRecomendados();
+  }, [user, traerRecomendados]);
 
   const photo = storedPhotoURL || user?.photoURL || null;
   const inicial = (displayName || user?.email || '?')[0].toUpperCase();
@@ -221,26 +290,22 @@ const DashboardPage = () => {
               <h2 className="nb-dash-section-title">Problemas recomendados</h2>
               <div className="nb-dash-section-sub">Seleccionados según tu rating y tus temas por fortalecer</div>
             </div>
-            <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
+            <div className="nb-dash-reco-acciones">
+              <button
+                type="button"
+                className="nb-dash-outline nb-dash-refresh"
+                onClick={refrescarRecomendados}
+                disabled={refrescando}
+                title="Traer otra ronda de recomendados"
+              >
+                <ReloadIcon />
+                {refrescando ? 'Actualizando' : 'Refrescar'}
+              </button>
+              <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
+            </div>
           </div>
           {recommendations.length > 0 ? (
-            <div className="nb-dash-reco-grid">
-              {recommendations.map((recommendation) => (
-                <Link
-                  key={recommendation.id}
-                  to={`/dashboard/problemas/todos/${recommendation.problem_number}`}
-                  className="nb-dash-reco"
-                  title={recommendation.title}
-                >
-                  <span className="nb-dash-reco-num">Problema {recommendation.problem_number}</span>
-                  <h3 className="nb-dash-reco-title">{recommendation.title}</h3>
-                  <div className="nb-dash-reco-foot">
-                    <span className="nb-dash-reco-label">Dificultad</span>
-                    <span className="nb-dash-reco-val">{recommendation.difficulty_rating}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
+            <RecoCarrusel recomendados={recommendations} />
           ) : (
             <p className="nb-dash-body-text">Completa un envío para construir tu primera ruta de práctica.</p>
           )}
