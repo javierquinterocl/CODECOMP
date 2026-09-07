@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -17,6 +17,13 @@ import ProblemsPage from './pages/ProblemsPage';
 import ProblemsCategoryPage from './pages/ProblemsCategoryPage';
 import ProblemDetailPage from './pages/ProblemDetailPage';
 import DashboardLayout from './components/DashboardLayout';
+
+
+const IrArriba = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
 
 // 'loading' | 'unauthenticated' | 'incomplete' | 'complete'
 const useAuthAndProfile = () => {
@@ -71,6 +78,7 @@ const PublicOnlyRoute = ({ element }) => {
 function App() {
   return (
     <Router>
+      <IrArriba />
       <Routes>
         <Route path="/" element={<HomePage />} />
 

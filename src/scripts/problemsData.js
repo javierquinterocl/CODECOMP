@@ -1,6 +1,6 @@
 // Catálogo del módulo de Problemas, en memoria. Único punto a cambiar
 // cuando exista la colección en Firestore.
-// En categorías, `bg`/`ink` son el par de color de la tarjeta.
+
 
 /** Etiqueta de complejidad; la barra del listado usa el mismo número. */
 export const NIVELES = {
@@ -10,6 +10,14 @@ export const NIVELES = {
   4: 'Difícil',
   5: 'Muy difícil',
 };
+
+export const normalizarTexto = (texto) =>
+  String(texto).normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
+/** Nivel 1-5 a partir del rating de Codeforces (800 → 1, 2300+ → 5). */
+export const nivelDeRating = (rating) =>
+  Math.min(5, Math.max(1, Math.ceil(((Number(rating) || 1200) - 700) / 400)));
+
 
 // Ejercicios. `nivel` va de 1 a 5: alimenta la etiqueta y la barra del listado.
 export const EJERCICIOS = [
@@ -127,70 +135,70 @@ const CATALOGO = [
     temas: 'Problemas básicos para quien apenas empieza a programar.',
     etiquetas: ['Entrada/Salida', 'Condicionales', 'Ciclos'],
     tags: ['input-output', 'basic', 'beginner'],
-    bg: '#22A44E', ink: '#fff',
+    bg: '#09AE40', ink: '#fff', bgSuave: '#0DEF58BF', inkSuave: '#000',
   },
   {
     n: 2, slug: 'ad-hoc', titulo: 'Ad-Hoc',
     temas: 'Simulación, fechas, juegos y problemas ad-hoc en general.',
     etiquetas: ['Simulación', 'Fechas', 'Juegos'],
     tags: ['adhoc', 'ad-hoc', 'simulation', 'games', 'brute force'],
-    bg: '#FF8228', ink: '#000',
+    bg: '#F97110', ink: '#fff', bgSuave: '#FF8936', inkSuave: '#000',
   },
   {
     n: 3, slug: 'cadenas', titulo: 'Cadenas',
     temas: 'Palíndromos, frecuencias, LCS y manipulación de texto.',
     etiquetas: ['Palíndromos', 'Frecuencia', 'LCS'],
     tags: ['strings', 'string', 'string matching', 'hashing', 'text'],
-    bg: '#93D8E8', ink: '#000',
+    bg: '#09AACE', ink: '#fff', bgSuave: '#78D0E4', inkSuave: '#000',
   },
   {
     n: 4, slug: 'estructuras-de-datos', titulo: 'Estructuras de Datos',
     temas: 'Colas, pilas, ordenamiento y las librerías estándar.',
     etiquetas: ['Cola', 'Pila', 'Map', 'Set'],
     tags: ['data structures', 'data-structures', 'stack', 'queue', 'heap', 'sorting'],
-    bg: '#EC2027', ink: '#fff',
+    bg: '#E10E15', ink: '#fff', bgSuave: '#FF4249', inkSuave: '#fff',
   },
   {
     n: 5, slug: 'matematicas', titulo: 'Matemáticas',
     temas: 'Teoría de números, primos, combinatoria y BigInteger.',
     etiquetas: ['Primos', 'Combinatoria', 'BigInteger'],
     tags: ['math', 'number theory', 'combinatorics', 'prime numbers', 'probabilities'],
-    bg: '#FBA9C6', ink: '#000',
+    bg: '#F72194', ink: '#fff', bgSuave: '#FF5FB4', inkSuave: '#000',
   },
   {
     n: 6, slug: 'paradigmas', titulo: 'Paradigmas',
     temas: 'Programación dinámica, búsqueda binaria, voraces y backtracking.',
     etiquetas: ['DP', 'Búsqueda binaria', 'Voraces'],
     tags: ['dp', 'dynamic programming', 'greedy', 'binary search', 'backtracking', 'divide and conquer'],
-    bg: '#A0459F', ink: '#fff',
+    bg: '#C115C1', ink: '#fff', bgSuave: '#EC62EC', inkSuave: '#000',
   },
   {
     n: 7, slug: 'grafos', titulo: 'Grafos',
     temas: 'Flood fill, MST, SSSP, DAG, flujo máximo y árboles.',
     etiquetas: ['MST', 'SSSP', 'Flujo máximo'],
     tags: ['graphs', 'graph', 'dfs', 'bfs', 'shortest paths', 'mst', 'trees', 'flows'],
-    bg: '#3F49CC', ink: '#fff',
+    bg: '#0A0AE6', ink: '#fff', bgSuave: '#7878F1', inkSuave: '#fff',
   },
   {
     n: 8, slug: 'geometria', titulo: 'Geometría Computacional',
     temas: 'Puntos, rectas, polígonos y envolvente convexa.',
     etiquetas: ['Puntos', 'Rectas', 'Polígonos'],
     tags: ['geometry', 'computational geometry', 'points', 'lines', 'polygons'],
-    bg: '#8B0018', ink: '#fff',
+    bg: '#8B041A', ink: '#fff', bgSuave: '#EF4A65', inkSuave: '#fff',
   },
   {
     n: 9, slug: 'sql', titulo: 'SQL',
     temas: 'Lenguajes de consulta: select, insert, update y create.',
     etiquetas: ['Select', 'Insert', 'Update'],
     tags: ['sql', 'database', 'databases'],
-    bg: '#C3BEE5', ink: '#000',
+    bg: '#A01DED', ink: '#fff', bgSuave: '#CB83F5', inkSuave: '#000',
   },
   {
     n: 10, slug: 'otros', titulo: 'Otros',
     temas: 'Problemas que todavía no tienen una categoría temática específica.',
     etiquetas: ['Clasificación pendiente'],
     tags: [],
-    bg: '#111', ink: '#fff',
+    bg: '#111', ink: '#fff', bgSuave: '#7C7C7C', inkSuave: '#fff',
   },
 ];
 

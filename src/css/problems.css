@@ -67,8 +67,10 @@
 .nb-pb-cat-count-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-top: 10px; }
 
 /* ---------- Listado de ejercicios de una categoría ---------- */
-.nb-pb-listbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: var(--sp-gap); }
-.nb-pb-listbar-title { font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; }
+.nb-pb-listbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: var(--sp-gap); }
+.nb-pb-listbar-title { flex: 0 0 auto; font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; }
+/* El buscador toma el espacio del medio y empuja el filtro contra el borde. */
+.nb-pb-search-inline { flex: 1 1 260px; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,16px); }
 .nb-pb-filtro { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,18px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: all 0.1s; }
 .nb-pb-filtro svg { width: clamp(13px,1vw,17px); height: auto; }
 .nb-pb-filtro:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
@@ -121,9 +123,21 @@
 
 .nb-ex-card { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
 .nb-ex-pad { padding: var(--sp-card); }
-.nb-ex-h2 { margin: 0 0 10px; font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; }
 .nb-ex-text { margin: 0 0 10px; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; }
 .nb-ex-text:last-child { margin-bottom: 0; }
+
+/* ---------- Bloques plegables del enunciado ----------
+   La cabecera entera es el botón. */
+.nb-ex-fold-head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; border: none; padding: var(--sp-card); font-family: inherit; color: #000; text-align: left; cursor: pointer; }
+.nb-ex-fold-head:hover .nb-ex-fold-title { color: var(--nb-blue); }
+.nb-ex-fold-head:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: -3px; }
+.nb-ex-fold-title { font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; }
+.nb-ex-fold-caret { flex: 0 0 auto; font-size: var(--fs-base); line-height: 1; color: var(--nb-blue); transition: transform 0.14s; }
+.nb-ex-fold.is-open .nb-ex-fold-caret { transform: rotate(180deg); }
+/* Cerrado no lleva línea: la tarjeta queda como una sola barra. */
+.nb-ex-fold.is-open .nb-ex-fold-head { border-bottom: 2px solid #000; }
+.nb-ex-fold-body { padding: var(--sp-card); }
+.nb-ex-h3 { margin: 0 0 8px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
 
 /* ---------- Nombre + número ---------- */
 .nb-ex-title-card { background: var(--cat-bg); color: var(--cat-ink); display: flex; align-items: center; gap: var(--sp-gap); padding: var(--sp-card); }
@@ -148,13 +162,10 @@
 .nb-ex-pre { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); line-height: 1.6; white-space: pre; overflow-x: auto; }
 
 /* ---------- Barra del editor ---------- */
-.nb-ex-toolbar { display: flex; flex-wrap: wrap; align-items: stretch; gap: clamp(8px, 0.7vw, 14px); }
+.nb-ex-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: clamp(8px, 0.7vw, 14px); }
 
-.nb-ex-reset,
-.nb-ex-send { flex: 0 0 auto; border: 2px solid #000; font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,15px) clamp(15px,1.2vw,26px); cursor: pointer; transition: all 0.1s; }
-.nb-ex-reset { background: #fff; color: #000; box-shadow: 4px 4px 0px #000; }
-.nb-ex-reset:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
-.nb-ex-send { background: var(--nb-blue); color: #fff; box-shadow: 4px 4px 0px #000; }
+/* "Reiniciar" se mudó a la cabecera del editor: Enviar toma todo el hueco. */
+.nb-ex-send { flex: 1 1 190px; border: 2px solid #000; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); cursor: pointer; transition: all 0.1s; background: var(--nb-blue); color: #fff; box-shadow: 4px 4px 0px #000; }
 .nb-ex-send:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
 
 /* ---------- Desplegable propio (reemplaza al <select> del navegador) ----------
@@ -180,9 +191,12 @@
 .nb-select-check { flex: 0 0 auto; }
 
 /* ---------- Editor ---------- */
-.nb-ex-editor { --ed-lh: 1.65; --ed-fs: clamp(12px, 0.28vw + 10.6px, 16px); --ed-bg: #0B0B0F; --ed-ink: #EAEAF2; --ed-gutter-bg: #15151C; --ed-gutter-ink: #6C7080; --ed-gutter-line: #2A2A38; --ed-caret: #7EA0FF; display: flex; flex-direction: column; background: var(--ed-bg); border: 2px solid #000; box-shadow: 4px 4px 0px #000; overflow: hidden; }
+.nb-ex-editor { --ed-lh: 1.65; --ed-fs: clamp(12px, 0.28vw + 10.6px, 16px); --ed-bg: #0B0B0F; --ed-gutter-bg: #15151C; --ed-gutter-ink: #6C7080; --ed-gutter-line: #2A2A38; --ed-caret: #7EA0FF; --ed-seleccion: rgba(38,79,120,0.6);
+  --tok-comentario: #6A9955; --tok-cadena: #CE9178; --tok-numero: #B5CEA8; --tok-literal: #569CD6; --tok-control: #C586C0; --tok-clave: #569CD6; --tok-tipo: #4EC9B0; --tok-funcion: #DCDCAA; --tok-preproc: #C586C0; --tok-operador: #D4D4D4; --tok-punt: #CCCCCC; --tok-plano: #9CDCFE;
+  display: flex; flex-direction: column; background: var(--ed-bg); border: 2px solid #000; box-shadow: 4px 4px 0px #000; overflow: hidden; }
 /* Modo claro del editor: solo cambian las variables de arriba. */
-.nb-ex-editor.is-light { --ed-bg: #fff; --ed-ink: #14161F; --ed-gutter-bg: #F1F3FB; --ed-gutter-ink: #767C90; --ed-gutter-line: #C9CEE4; --ed-caret: var(--nb-blue); }
+.nb-ex-editor.is-light { --ed-bg: #fff; --ed-gutter-bg: #F1F3FB; --ed-gutter-ink: #767C90; --ed-gutter-line: #C9CEE4; --ed-caret: var(--nb-blue); --ed-seleccion: rgba(0,120,215,0.28);
+  --tok-comentario: #008000; --tok-cadena: #A31515; --tok-numero: #098658; --tok-literal: #0000FF; --tok-control: #AF00DB; --tok-clave: #0000FF; --tok-tipo: #267F99; --tok-funcion: #795E26; --tok-preproc: #AF00DB; --tok-operador: #000000; --tok-punt: #3B3B3B; --tok-plano: #001080; }
 
 .nb-ex-editor-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #000; border-bottom: 2px solid #000; padding: clamp(7px,0.55vw,12px) clamp(11px,0.9vw,18px); }
 .nb-ex-editor-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: #fff; }
@@ -190,12 +204,36 @@
 .nb-ex-icon-btn { background: transparent; border: 2px solid #fff; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.4; padding: 4px 9px; cursor: pointer; }
 .nb-ex-icon-btn:hover { background: #fff; color: #000; }
 
+.nb-ex-icon-btn.is-square { display: grid; place-items: center; width: clamp(26px, 2vw, 32px); height: clamp(26px, 2vw, 32px); padding: 0; }
+
 .nb-ex-editor-body { display: flex; align-items: stretch; min-height: 0; }
 .nb-ex-gutter { flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: clamp(10px,0.8vw,16px) 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
 .nb-ex-gutter span { display: block; }
 /* El textarea manda en la altura; la regleta la sigue por scroll. */
-.nb-ex-code { flex: 1 1 auto; min-width: 0; height: clamp(320px, 46vh, 620px); border: none; outline: none; resize: vertical; background: transparent; color: var(--ed-ink); caret-color: var(--ed-caret); font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); padding: clamp(10px,0.8vw,16px) clamp(11px,0.9vw,18px); white-space: pre; overflow: auto; tab-size: 4; }
+/* Textarea y capa de color superpuestos: todo lo que traza texto va en las
+   dos, o el cursor no cae sobre su letra. */
+.nb-ex-code-wrap { position: relative; align-self: flex-start; flex: 1 1 auto; min-width: 0; display: flex; }
+.nb-ex-code,
+.nb-ex-highlight { margin: 0; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); padding: clamp(10px,0.8vw,16px) clamp(11px,0.9vw,18px); white-space: pre; tab-size: 4; border: none; }
+.nb-ex-highlight { position: absolute; inset: 0; overflow: hidden; pointer-events: none; color: var(--tok-plano); background: transparent; }
+.nb-ex-highlight code { font: inherit; }
+/* Texto invisible: se lee el de abajo, el cursor sigue siendo el de aquí. */
+.nb-ex-code { position: relative; z-index: 1; flex: 1 1 auto; min-width: 0; height: clamp(320px, 46vh, 620px); outline: none; resize: vertical; background: transparent; color: transparent; caret-color: var(--ed-caret); overflow: auto; }
+.nb-ex-code::selection { background: var(--ed-seleccion); }
 .nb-ex-editor.is-expanded .nb-ex-code { height: clamp(420px, 66vh, 900px); }
+
+/* ---------- Colores del resaltado: Dark+ y Light+ de VS Code ---------- */
+.tok-comentario { color: var(--tok-comentario); font-style: italic; }
+.tok-cadena     { color: var(--tok-cadena); }
+.tok-numero     { color: var(--tok-numero); }
+.tok-literal    { color: var(--tok-literal); }
+.tok-control    { color: var(--tok-control); }
+.tok-clave      { color: var(--tok-clave); }
+.tok-tipo       { color: var(--tok-tipo); }
+.tok-funcion    { color: var(--tok-funcion); }
+.tok-preproc    { color: var(--tok-preproc); }
+.tok-operador   { color: var(--tok-operador); }
+.tok-punt       { color: var(--tok-punt); }
 
 /* ---------- Retroalimentación ----------
    El panel entero va en azul oscuro: el gato es azul y sobre el blanco
@@ -235,6 +273,7 @@
 
 /* La fila del listado se reordena en dos líneas antes de apretarse */
 @media (max-width: 760px) {
+  .nb-pb-search-inline { flex: 1 1 100%; order: 3; }
   .nb-pb-row { flex-wrap: wrap; row-gap: 10px; }
   .nb-pb-row-main { flex: 1 1 100%; order: 1; }
   .nb-pb-row-num { order: 0; }
@@ -262,9 +301,7 @@
   .nb-ex-sample-col + .nb-ex-sample-col { border-left: none; border-top: 2px solid #000; }
   .nb-select { flex: 1 1 100%; }
   .nb-select-btn,
-  .nb-ex-reset,
   .nb-ex-send { box-shadow: 3px 3px 0px #000; }
-  .nb-ex-reset,
   .nb-ex-send { flex: 1 1 100%; }
   .nb-ex-cat { width: 42px; }
 }

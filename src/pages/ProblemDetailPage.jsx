@@ -6,24 +6,34 @@ import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS } from '../
 import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 import NbSelect from '../components/NbSelect';
+import { resaltar } from '../scripts/syntaxHighlight';
+import { ReloadIcon } from '../components/AppIcons';
 import { getProblem } from '../scripts/problemsApi';
 
 const MIN_LINEAS = 18;
 
-/* ── Editor: textarea con una regleta de números a la izquierda ──
-   No es un editor de verdad (sin resaltado ni autocompletado), pero
-   sí crece, se numera y se puede agrandar, que es lo que pide el diseño. */
-const Editor = ({ codigo, onChange, expandido, onExpandir, claro, onTema }) => {
+/* ── Editor ──
+   El resaltado no cabe en un <textarea>: se pinta en un <pre> detrás y el
+   textarea queda encima con el texto invisible. */
+const Editor = ({ codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar }) => {
   const regletaRef = useRef(null);
+  const resaltadoRef = useRef(null);
 
   const lineas = useMemo(() => {
     const total = Math.max(codigo.split('\n').length, MIN_LINEAS);
     return Array.from({ length: total }, (_, i) => i + 1);
   }, [codigo]);
 
-  // La regleta no tiene barra propia: sigue el desplazamiento del textarea.
+  const html = useMemo(() => resaltar(codigo, lenguajeId), [codigo, lenguajeId]);
+
+  // Ni la regleta ni la capa de color tienen barra propia: siguen al textarea.
   const sincronizarScroll = (e) => {
-    if (regletaRef.current) regletaRef.current.scrollTop = e.target.scrollTop;
+    const { scrollTop, scrollLeft } = e.target;
+    if (regletaRef.current) regletaRef.current.scrollTop = scrollTop;
+    if (resaltadoRef.current) {
+      resaltadoRef.current.scrollTop = scrollTop;
+      resaltadoRef.current.scrollLeft = scrollLeft;
+    }
   };
 
   return (
@@ -33,7 +43,16 @@ const Editor = ({ codigo, onChange, expandido, onExpandir, claro, onTema }) => {
         <div className="nb-ex-editor-tools">
           <button
             type="button"
-            className="nb-ex-icon-btn"
+            className="nb-ex-icon-btn is-square"
+            onClick={onReiniciar}
+            title="Reiniciar el código a la plantilla"
+            aria-label="Reiniciar el código"
+          >
+            <ReloadIcon />
+          </button>
+          <button
+            type="button"
+            className="nb-ex-icon-btn is-square"
             onClick={onTema}
             aria-pressed={claro}
             title={claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
@@ -56,18 +75,43 @@ const Editor = ({ codigo, onChange, expandido, onExpandir, claro, onTema }) => {
         <div className="nb-ex-gutter" ref={regletaRef} aria-hidden="true">
           {lineas.map((n) => <span key={n}>{n}</span>)}
         </div>
-        <textarea
-          className="nb-ex-code"
-          value={codigo}
-          onChange={(e) => onChange(e.target.value)}
-          onScroll={sincronizarScroll}
-          spellCheck="false"
-          autoComplete="off"
-          autoCorrect="off"
-          autoCapitalize="off"
-          aria-label="Editor de código"
-        />
+        <div className="nb-ex-code-wrap">
+          <pre className="nb-ex-highlight" ref={resaltadoRef} aria-hidden="true">
+            <code dangerouslySetInnerHTML={{ __html: html }} />
+          </pre>
+          <textarea
+            className="nb-ex-code"
+            value={codigo}
+            onChange={(e) => onChange(e.target.value)}
+            onScroll={sincronizarScroll}
+            spellCheck="false"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            aria-label="Editor de código"
+          />
+        </div>
       </div>
+    </div>
+  );
+};
+
+/* Bloque plegable del enunciado; solo la descripción viene abierta. */
+const Plegable = ({ titulo, abiertoInicial = false, children }) => {
+  const [abierto, setAbierto] = useState(abiertoInicial);
+
+  return (
+    <div className={`nb-ex-card nb-ex-fold${abierto ? ' is-open' : ''}`}>
+      <button
+        type="button"
+        className="nb-ex-fold-head"
+        onClick={() => setAbierto((v) => !v)}
+        aria-expanded={abierto}
+      >
+        <span className="nb-ex-fold-title">{titulo}</span>
+        <span className="nb-ex-fold-caret" aria-hidden="true">▾</span>
+      </button>
+      {abierto && <div className="nb-ex-fold-body">{children}</div>}
     </div>
   );
 };
@@ -176,7 +220,7 @@ const ProblemDetailPage = () => {
           {/* Nombre del ejercicio + número */}
           <div
             className="nb-ex-card nb-ex-title-card"
-            style={{ '--cat-bg': categoria?.bg || 'var(--nb-blue)', '--cat-ink': categoria?.ink || '#fff' }}
+            style={{ '--cat-bg': categoria?.bgSuave || 'var(--nb-blue)', '--cat-ink': categoria?.inkSuave || '#fff' }}
           >
             <div className="nb-ex-title-main">
               <div className="nb-ex-kicker">{categoria?.titulo || 'Problema'}</div>
@@ -220,30 +264,28 @@ const ProblemDetailPage = () => {
           </div>
 
           {/* Descripción */}
-          <div className="nb-ex-card nb-ex-pad">
-            <h2 className="nb-ex-h2">Descripción</h2>
+          <Plegable titulo="Descripción" abiertoInicial>
             {problema.descripcion.map((p) => (
               <p key={p} className="nb-ex-text">{p}</p>
             ))}
-          </div>
+          </Plegable>
 
           {/* Entrada y salida */}
-          <div className="nb-ex-card nb-ex-pad">
-            <h2 className="nb-ex-h2">Entrada</h2>
+          <Plegable titulo="Entrada y salida">
+            <h3 className="nb-ex-h3">Entrada</h3>
             <p className="nb-ex-text">{problema.entrada}</p>
-            <h2 className="nb-ex-h2" style={{ marginTop: 'var(--sp-gap)' }}>Salida</h2>
+            <h3 className="nb-ex-h3" style={{ marginTop: 'var(--sp-gap)' }}>Salida</h3>
             <p className="nb-ex-text">{problema.salida}</p>
-          </div>
+          </Plegable>
 
           {/* Ejemplos */}
-          <div className="nb-ex-card nb-ex-pad">
-            <h2 className="nb-ex-h2">Ejemplos</h2>
+          <Plegable titulo="Ejemplos">
             <div className="nb-ex-samples">
               {problema.ejemplos.map((ej, i) => (
                 <Ejemplo key={ej.salida} n={i + 1} entrada={ej.entrada} salida={ej.salida} />
               ))}
             </div>
-          </div>
+          </Plegable>
         </div>
 
         {/* ══ Columna derecha: el editor ══ */}
@@ -257,9 +299,6 @@ const ProblemDetailPage = () => {
               options={LENGUAJES.map((l) => ({ value: l.id, label: l.nombre }))}
             />
 
-            <button type="button" className="nb-ex-reset" onClick={reiniciar}>
-              Reiniciar
-            </button>
             <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando}>
               {evaluando ? 'Evaluando...' : 'Enviar'}
             </button>
@@ -267,6 +306,7 @@ const ProblemDetailPage = () => {
 
           <Editor
             codigo={codigo}
+            lenguajeId={lenguaje.id}
             onChange={(v) => {
               setCodigo(v);
               setEnviado(false);
@@ -277,6 +317,7 @@ const ProblemDetailPage = () => {
             onExpandir={() => setExpandido((v) => !v)}
             claro={temaClaro}
             onTema={() => setTemaClaro((v) => !v)}
+            onReiniciar={reiniciar}
           />
 
           {/* Espacio reservado para la retroalimentación de la IA. */}
