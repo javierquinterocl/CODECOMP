@@ -32,6 +32,18 @@ export interface Config {
   origenesPermitidos: string[];
   zonaHoraria: string;
   lenguajesPermitidos: Set<number>;
+
+  iaUrl: string;
+  iaApiKey: string;
+  iaModelo: string;
+  iaMaxTokens: number;
+  iaTimeoutMs: number;
+  iaMaxDiario: number;
+  iaMaxMensual: number;
+  iaEsperaSegundos: number;
+  iaMaxCodigo: number;
+  iaMaxEnunciado: number;
+  iaMaxError: number;
 }
 
 export const cargarConfig = (): Config => ({
@@ -64,6 +76,25 @@ export const cargarConfig = (): Config => ({
 
   // 51 C#, 54 C++, 62 Java, 63 JavaScript, 68 PHP, 71 Python.
   lenguajesPermitidos: enteros(env('JUDGE0_LENGUAJES'), [51, 54, 62, 63, 68, 71]),
+
+  // Tutor. DeepInfra habla el mismo dialecto que OpenAI.
+  iaUrl: env('IA_URL') ?? 'https://api.deepinfra.com/v1/openai',
+  iaApiKey: env('IA_API_KEY') ?? '',
+  iaModelo: env('IA_MODELO') ?? 'Qwen/Qwen3.6-35B-A3B',
+
+  // El techo de la factura: una pista son 3 o 4 frases, no un ensayo.
+  iaMaxTokens: num(env('IA_MAX_TOKENS'), 400),
+  iaTimeoutMs: num(env('IA_TIMEOUT_MS'), 25000),
+  iaMaxDiario: num(env('IA_MAX_DIARIO'), 200),
+  iaMaxMensual: num(env('IA_MAX_MENSUAL'), 2000),
+
+  // Freno por estudiante: que intente algo antes de volver a preguntar.
+  iaEsperaSegundos: num(env('IA_ESPERA_SEGUNDOS'), 60),
+
+  // Recortes de la entrada: ahi es donde de verdad se gastan tokens.
+  iaMaxCodigo: num(env('IA_MAX_CODIGO'), 3500),
+  iaMaxEnunciado: num(env('IA_MAX_ENUNCIADO'), 1200),
+  iaMaxError: num(env('IA_MAX_ERROR'), 400),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

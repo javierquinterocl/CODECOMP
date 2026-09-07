@@ -30,6 +30,16 @@ const STATUS_DESCRIPTIONS = Object.freeze({
   14: 'Exec Format Error',
 });
 
+/** El backend adaptativo devuelve el enum crudo; la vista lo muestra asi. */
+export const VEREDICTOS_ES = Object.freeze({
+  ACCEPTED: 'Respuesta aceptada',
+  WRONG_ANSWER: 'Respuesta incorrecta',
+  TIME_LIMIT_EXCEEDED: 'Tiempo excedido',
+  RUNTIME_ERROR: 'Error de ejecución',
+  COMPILATION_ERROR: 'Error de compilación',
+  PENDING: 'En proceso',
+});
+
 const formatMemory = (memory) => {
   if (memory === null || memory === undefined) return '-';
   const value = Number(memory);
