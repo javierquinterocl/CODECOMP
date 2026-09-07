@@ -238,14 +238,24 @@
 /* ---------- Retroalimentación ----------
    El panel entero va en azul oscuro: el gato es azul y sobre el blanco
    se perdía. Con el fondo oscuro el texto pasa a blanco. */
-.nb-ex-feedback { display: flex; align-items: flex-start; gap: clamp(11px, 0.9vw, 20px); background: var(--nb-blue-deep); color: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: var(--sp-card); min-height: clamp(120px, 12vh, 190px); }
+.nb-ex-feedback { display: flex; align-items: flex-start; gap: clamp(11px, 0.9vw, 20px); background: var(--nb-blue-deep); color: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: var(--sp-card); min-height: clamp(120px, 12vh, 190px); transition: background 0.15s; }
+/* El panel entero dice el resultado: verde si paso, rojo si no. */
+.nb-ex-feedback.is-fail { background: #B00A26; }
+/* Sobre el verde el blanco se queda en 2.8 de contraste: la tinta va en negro. */
+.nb-ex-feedback.is-ok { background: #0AB05D; }
+.nb-ex-feedback.is-ok .nb-ex-feedback-title,
+.nb-ex-feedback.is-ok .nb-ex-feedback-status strong,
+.nb-ex-feedback.is-ok .nb-ex-feedback-metrics strong { color: #000; }
+.nb-ex-feedback.is-ok .nb-ex-feedback-text,
+.nb-ex-feedback.is-ok .nb-ex-feedback-metrics { color: rgba(0,0,0,0.78); }
+.nb-ex-feedback.is-ok .nb-ex-feedback-status span,
+.nb-ex-feedback.is-ok .nb-ex-feedback-label { color: rgba(0,0,0,0.62); }
 .nb-ex-cat { flex: 0 0 auto; display: block; width: clamp(48px, 4vw, 78px); height: auto; image-rendering: pixelated; }
 .nb-ex-feedback-main { flex: 1 1 auto; min-width: 0; }
 .nb-ex-feedback-title { font-weight: 700; font-size: var(--fs-lg); line-height: 1.3; letter-spacing: -0.01em; margin-bottom: 10px; color: #fff; }
-.nb-ex-feedback-title.is-success { color: #B8F5C8; }
-.nb-ex-feedback-title.is-error { color: #FFD0D0; }
 .nb-ex-feedback-text { margin: 0; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; color: rgba(255,255,255,0.82); }
 .nb-ex-feedback-error { color: #FFD0D0; }
+.nb-ex-feedback.is-fail .nb-ex-feedback-error { color: #FFE3E3; }
 .nb-ex-feedback-result { display: flex; flex-direction: column; gap: 10px; }
 .nb-ex-feedback-status { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; font-size: var(--fs-sm); color: rgba(255,255,255,0.82); }
 .nb-ex-feedback-status span,
@@ -254,6 +264,14 @@
 .nb-ex-feedback-metrics { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--fs-xs); color: rgba(255,255,255,0.74); }
 .nb-ex-feedback-metrics strong { color: #fff; }
 .nb-ex-feedback-output { margin-top: 2px; }
+/* ---------- Tutor ---------- */
+.nb-ex-tutor { margin-top: 4px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.nb-ex-tutor-btn { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(7px,0.6vw,12px) clamp(12px,1vw,20px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-ex-tutor-btn:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px var(--nb-blue); }
+.nb-ex-tutor-btn:disabled { opacity: 0.65; cursor: wait; }
+.nb-ex-tutor-pista { border-left: 3px solid var(--nb-blue); padding-left: clamp(10px,0.8vw,16px); }
+.nb-ex-tutor-pista .nb-ex-feedback-text { margin-top: 5px; color: #fff; }
+
 .nb-ex-feedback-output pre { margin: 5px 0 0; max-height: 180px; overflow: auto; padding: 10px 12px; background: #080A12; border: 1px solid rgba(255,255,255,0.35); color: #F5F7FF; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 /* ============================================================

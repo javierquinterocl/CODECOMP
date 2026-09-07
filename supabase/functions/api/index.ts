@@ -10,6 +10,7 @@ import { judge0 } from '../_compartido/rutas/judge0.ts';
 import { adaptativo } from '../_compartido/rutas/adaptativo.ts';
 import { detalleProblema, listarProblemas } from '../_compartido/rutas/problemas.ts';
 import { progreso, recomendaciones, sincronizarUsuario } from '../_compartido/rutas/progreso.ts';
+import { tutor } from '../_compartido/rutas/tutor.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -53,6 +54,8 @@ Deno.serve(async (req: Request) => {
         return await judge0(ctx);
       case 'adaptive':
         return await adaptativo(ctx);
+      case 'tutor':
+        return await tutor(ctx);
       case 'sync-user':
         return await sincronizarUsuario(ctx);
       case 'recommendations':

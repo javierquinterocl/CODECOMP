@@ -2,15 +2,19 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
-import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS } from '../scripts/judge0Service';
+import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 import NbSelect from '../components/NbSelect';
 import { resaltar } from '../scripts/syntaxHighlight';
 import { ReloadIcon } from '../components/AppIcons';
 import { getProblem } from '../scripts/problemsApi';
+import { pedirPista } from '../scripts/tutorApi';
 
 const MIN_LINEAS = 18;
+// Espera entre pistas. El backend la impone de verdad (database/009); aqui
+// solo se muestra la cuenta atras para no dejar el boton mintiendo.
+const ESPERA_PISTA = 60;
 
 /* ── Editor ──
    El resaltado no cabe en un <textarea>: se pinta en un <pre> detrás y el
@@ -146,11 +150,27 @@ const ProblemDetailPage = () => {
   const [errorEnvio, setErrorEnvio] = useState('');
   const [problemaReal, setProblemaReal] = useState(null);
   const [errorCarga, setErrorCarga] = useState('');
+  const [pista, setPista] = useState('');
+  const [pidiendoPista, setPidiendoPista] = useState(false);
+  const [errorPista, setErrorPista] = useState('');
+  const [pistaHasta, setPistaHasta] = useState(0);
+  const [ahora, setAhora] = useState(() => Date.now());
 
   useEffect(() => {
     if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
     getProblem(numero).then(setProblemaReal).catch((e) => setErrorCarga(e.message));
   }, [numero]);
+
+  useEffect(() => {
+    if (!pistaHasta) return undefined;
+    const tic = setInterval(() => {
+      if (Date.now() >= pistaHasta) setPistaHasta(0);
+      else setAhora(Date.now());
+    }, 500);
+    return () => clearInterval(tic);
+  }, [pistaHasta]);
+
+  const esperaPista = pistaHasta ? Math.max(0, Math.ceil((pistaHasta - ahora) / 1000)) : 0;
 
   const problema = problemaReal || ejercicio;
   if (!problema) {
@@ -179,11 +199,43 @@ const ProblemDetailPage = () => {
     setLenguaje(siguiente);
   };
 
+  const limpiarPista = () => {
+    setPista('');
+    setErrorPista('');
+  };
+
   const reiniciar = () => {
     setCodigo(lenguaje.plantilla);
     setEnviado(false);
     setResultado(null);
     setErrorEnvio('');
+    limpiarPista();
+  };
+
+  /* La pista se pide aparte del envio: no todos la quieren y cada llamada
+     cuesta, asi que sale solo cuando el estudiante la pulsa. */
+  const solicitarPista = async () => {
+    setPidiendoPista(true);
+    setErrorPista('');
+    // La espera arranca al pulsar, no al responder: un fallo del tutor ya
+    // consumio presupuesto, asi que reintentar de inmediato tampoco conviene.
+    setAhora(Date.now());
+    setPistaHasta(Date.now() + ESPERA_PISTA * 1000);
+    try {
+      const texto = await pedirPista({
+        user,
+        problemNumber: Number(problema.numero),
+        sourceCode: codigo,
+        verdict: resultado?.verdict,
+        judgeOutput: resultado?.errorDetails || resultado?.stdout || '',
+        language: lenguaje.nombre,
+      });
+      setPista(texto);
+    } catch (error) {
+      setErrorPista(error.message || 'No se pudo pedir la pista.');
+    } finally {
+      setPidiendoPista(false);
+    }
   };
 
   const enviarCodigo = async () => {
@@ -191,6 +243,7 @@ const ProblemDetailPage = () => {
     setEnviado(false);
     setResultado(null);
     setErrorEnvio('');
+    limpiarPista();
 
     try {
       const lenguajeId = JUDGE0_LANGUAGE_IDS[lenguaje.id];
@@ -312,6 +365,7 @@ const ProblemDetailPage = () => {
               setEnviado(false);
               setResultado(null);
               setErrorEnvio('');
+              limpiarPista();
             }}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
@@ -320,12 +374,15 @@ const ProblemDetailPage = () => {
             onReiniciar={reiniciar}
           />
 
-          {/* Espacio reservado para la retroalimentación de la IA. */}
-          <div className="nb-ex-feedback">
+          <div className={`nb-ex-feedback${errorEnvio ? ' is-fail' : enviado && resultado?.verdict ? (resultado.verdict === 'ACCEPTED' ? ' is-ok' : ' is-fail') : ''}`}>
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" aria-hidden="true" />
             <div className="nb-ex-feedback-main">
-              <div className={`nb-ex-feedback-title${errorEnvio ? ' is-error' : enviado && resultado?.verdict === 'ACCEPTED' ? ' is-success' : ''}`}>
-                {errorEnvio ? 'No se pudo evaluar' : enviado ? resultado?.verdict : '¡Resuélvelo primero, vamos!'}
+              <div className="nb-ex-feedback-title">
+                {errorEnvio
+                  ? 'No se pudo evaluar'
+                  : enviado
+                    ? (VEREDICTOS_ES[resultado?.verdict] || resultado?.verdict)
+                    : '¡Resuélvelo primero, vamos!'}
               </div>
               {errorEnvio && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorEnvio}</p>}
               {!errorEnvio && !enviado && <p className="nb-ex-feedback-text">Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.</p>}
@@ -346,6 +403,34 @@ const ProblemDetailPage = () => {
                     </div>
                   )}
                   {resultado.errorDetails && <p className="nb-ex-feedback-text nb-ex-feedback-error">{resultado.errorDetails}</p>}
+
+                  {/* El tutor solo entra cuando hay algo que orientar. */}
+                  {resultado.verdict && resultado.verdict !== 'ACCEPTED' && (
+                    <div className="nb-ex-tutor">
+                      {!pista && (
+                        <button
+                          type="button"
+                          className="nb-ex-tutor-btn"
+                          onClick={solicitarPista}
+                          disabled={pidiendoPista || esperaPista > 0}
+                          title={esperaPista > 0 ? 'Intenta algo mas antes de pedir otra pista' : undefined}
+                        >
+                          {pidiendoPista
+                            ? 'Pensando...'
+                            : esperaPista > 0
+                              ? `Espera ${esperaPista} s`
+                              : 'Pedir retroalimentación'}
+                        </button>
+                      )}
+                      {errorPista && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorPista}</p>}
+                      {pista && (
+                        <div className="nb-ex-tutor-pista">
+                          <span className="nb-ex-feedback-label">Retroalimentación</span>
+                          <p className="nb-ex-feedback-text">{pista}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
