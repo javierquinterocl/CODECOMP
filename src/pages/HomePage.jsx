@@ -5,6 +5,8 @@ import { LENGUAJES } from '../scripts/problemsData';
 import imgMaraton2026 from '../assets/noticias/maraton-nacional-2026.jpg';
 import imgCalendario2026 from '../assets/noticias/calendario-rpc-2026.jpg';
 import imgEquipos2025 from '../assets/noticias/equipos-maraton-2025.jpg';
+import imgEdificio from '../assets/hero-edificio-ingenieria.webp';
+import logoUfps from '../assets/logo-ufps-blanco.png';
 
 // Enlaces del navbar: cada uno baja hasta la seccion que lleva ese id.
 const NAV_LINKS = [
@@ -79,19 +81,6 @@ const NOTICIAS = [
 const mono = "'JetBrains Mono',monospace";
 const press = "'Press Start 2P',monospace";
 const grotesk = "'Space Grotesk',sans-serif";
-
-const FloatCard = ({ style, filename, className = '', children }) => (
-  <div className={className} style={{ position:'absolute', background:'rgba(255,255,255,0.12)', border:'2px solid rgba(255,255,255,0.45)', boxShadow:'6px 6px 0px rgba(255,255,255,0.14)', textAlign:'left', overflow:'hidden', ...style }}>
-    <div style={{ display:'flex', alignItems:'center', gap:6, background:'rgba(255,255,255,0.22)', padding:'5px 8px' }}>
-      <span style={{ width:7, height:7, background:'rgba(255,255,255,0.7)', display:'block' }}></span>
-      <span style={{ width:7, height:7, background:'rgba(255,255,255,0.4)', display:'block' }}></span>
-      <span style={{ fontFamily:mono, fontSize:'clamp(7px,0.6vw,10px)', fontWeight:700, color:'rgba(255,255,255,0.8)', letterSpacing:'0.1em', marginLeft:'auto' }}>{filename}</span>
-    </div>
-    <pre style={{ margin:0, padding:'9px 10px', fontFamily:mono, fontSize:'clamp(7px,0.64vw,11px)', lineHeight:1.65, color:'rgba(255,255,255,0.75)', whiteSpace:'pre' }}>{children}</pre>
-  </div>
-);
-
-const kw = txt => <span style={{ color:'rgba(255,255,255,0.95)' }}>{txt}</span>;
 
 const SectionTag = ({ n, label }) => (
   <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:28 }}>
@@ -194,25 +183,13 @@ const HomePage = () => {
 
           {/* Hero */}
           <section className="nb-hero">
-            {/* Grid overlay */}
+            {/* Dibujo del edificio de Ingeniería, bajo la cuadrícula */}
+            <div className="nb-hero-foto" style={{ backgroundImage: `url(${imgEdificio})` }} />
             <div className="nb-hero-grid" />
+            <img className="nb-hero-ufps" src={logoUfps} alt="UFPS Ocaña" />
 
-            {/* Floating code cards */}
+            {/* Floating text snippets */}
             <div className="nb-hero-deco" aria-hidden="true">
-              <FloatCard className="nb-hero-card nb-hero-card-1" filename="main.cpp" style={{ right:'1.5%', top:'6%', width:'clamp(118px,13vw,208px)', animation:'om-float-b 8.5s ease-in-out infinite' }}>
-                {kw('int')}{' main() {\n  '}{kw('int')}{' n;\n  cin >> n;\n  solve(n);\n  '}{kw('return')}{' 0;\n}'}
-              </FloatCard>
-              <FloatCard className="nb-hero-card nb-hero-card-2" filename="solve.py" style={{ left:'3%', top:'14%', width:'clamp(120px,13.5vw,214px)', animation:'om-float-a 7.5s ease-in-out infinite' }}>
-                {kw('def')}{' solve(n):\n  dp = [0] * (n+1)\n  '}{kw('for')}{' i '}{kw('in')}{' range(n):\n    dp[i+1] = dp[i] + i\n  '}{kw('return')}{' dp[n]'}
-              </FloatCard>
-              <FloatCard className="nb-hero-card nb-hero-card-3" filename="judge.log" style={{ right:'5%', bottom:'8%', width:'clamp(104px,11.5vw,182px)', animation:'om-float-c 9.5s ease-in-out infinite' }}>
-                {kw('AC')}{'  0.42s  12MB\n'}{kw('AC')}{'  0.31s  11MB\nTLE 2.00s  --\n'}{kw('AC')}{'  0.18s  10MB'}
-              </FloatCard>
-              <FloatCard className="nb-hero-card nb-hero-card-4" filename="Main.java" style={{ left:'6%', bottom:'9%', width:'clamp(96px,10.5vw,168px)', animation:'om-float-b 8.8s ease-in-out infinite' }}>
-                {kw('class')}{' Main {\n  '}{kw('void')}{' main() {\n    solve();\n  }\n}'}
-              </FloatCard>
-
-              {/* Floating text snippets */}
               {[
                 { t:'#include <bits/stdc++.h>', s:{ left:'23%', top:'8%', animation:'om-float-c 10s ease-in-out infinite', fontSize:'clamp(8px,0.85vw,14px)', color:'rgba(255,255,255,0.34)' } },
                 { t:'O(n log n)',              s:{ right:'24%', top:'9%', animation:'om-float-a 9s ease-in-out infinite', fontSize:'clamp(10px,1.1vw,18px)', color:'rgba(255,255,255,0.4)' } },

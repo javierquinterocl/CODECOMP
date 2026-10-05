@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
@@ -6,133 +6,13 @@ import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS
 import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra } from '../components/ProblemBits';
 import NbSelect from '../components/NbSelect';
-import { resaltar } from '../scripts/syntaxHighlight';
-import { ReloadIcon } from '../components/AppIcons';
+import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
 import { pedirPista } from '../scripts/tutorApi';
 
-const MIN_LINEAS = 18;
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
 const ESPERA_PISTA = 60;
-
-/* ── Editor ──
-   El resaltado no cabe en un <textarea>: se pinta en un <pre> detrás y el
-   textarea queda encima con el texto invisible. */
-const Editor = ({ codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar }) => {
-  const regletaRef = useRef(null);
-  const resaltadoRef = useRef(null);
-
-  const lineas = useMemo(() => {
-    const total = Math.max(codigo.split('\n').length, MIN_LINEAS);
-    return Array.from({ length: total }, (_, i) => i + 1);
-  }, [codigo]);
-
-  const html = useMemo(() => resaltar(codigo, lenguajeId), [codigo, lenguajeId]);
-
-  // Ni la regleta ni la capa de color tienen barra propia: siguen al textarea.
-  const sincronizarScroll = (e) => {
-    const { scrollTop, scrollLeft } = e.target;
-    if (regletaRef.current) regletaRef.current.scrollTop = scrollTop;
-    if (resaltadoRef.current) {
-      resaltadoRef.current.scrollTop = scrollTop;
-      resaltadoRef.current.scrollLeft = scrollLeft;
-    }
-  };
-
-  return (
-    <div className={`nb-ex-editor${expandido ? ' is-expanded' : ''}${claro ? ' is-light' : ''}`}>
-      <div className="nb-ex-editor-head">
-        <span className="nb-ex-editor-label">Código fuente</span>
-        <div className="nb-ex-editor-tools">
-          <button
-            type="button"
-            className="nb-ex-icon-btn is-square"
-            onClick={onReiniciar}
-            title="Reiniciar el código a la plantilla"
-            aria-label="Reiniciar el código"
-          >
-            <ReloadIcon />
-          </button>
-          <button
-            type="button"
-            className="nb-ex-icon-btn is-square"
-            onClick={onTema}
-            aria-pressed={claro}
-            title={claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
-          >
-            {claro ? '🌙' : '☀'}
-          </button>
-          <button
-            type="button"
-            className="nb-ex-icon-btn"
-            onClick={onExpandir}
-            aria-pressed={expandido}
-            title={expandido ? 'Reducir el editor' : 'Agrandar el editor'}
-          >
-            {expandido ? '⤡ Reducir' : '⤢ Agrandar'}
-          </button>
-        </div>
-      </div>
-
-      <div className="nb-ex-editor-body">
-        <div className="nb-ex-gutter" ref={regletaRef} aria-hidden="true">
-          {lineas.map((n) => <span key={n}>{n}</span>)}
-        </div>
-        <div className="nb-ex-code-wrap">
-          <pre className="nb-ex-highlight" ref={resaltadoRef} aria-hidden="true">
-            <code dangerouslySetInnerHTML={{ __html: html }} />
-          </pre>
-          <textarea
-            className="nb-ex-code"
-            value={codigo}
-            onChange={(e) => onChange(e.target.value)}
-            onScroll={sincronizarScroll}
-            spellCheck="false"
-            autoComplete="off"
-            autoCorrect="off"
-            autoCapitalize="off"
-            aria-label="Editor de código"
-          />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* Bloque plegable del enunciado; solo la descripción viene abierta. */
-const Plegable = ({ titulo, abiertoInicial = false, children }) => {
-  const [abierto, setAbierto] = useState(abiertoInicial);
-
-  return (
-    <div className={`nb-ex-card nb-ex-fold${abierto ? ' is-open' : ''}`}>
-      <button
-        type="button"
-        className="nb-ex-fold-head"
-        onClick={() => setAbierto((v) => !v)}
-        aria-expanded={abierto}
-      >
-        <span className="nb-ex-fold-title">{titulo}</span>
-        <span className="nb-ex-fold-caret" aria-hidden="true">▾</span>
-      </button>
-      {abierto && <div className="nb-ex-fold-body">{children}</div>}
-    </div>
-  );
-};
-
-/* ── Bloque de ejemplo: entrada y salida lado a lado ── */
-const Ejemplo = ({ n, entrada, salida }) => (
-  <div className="nb-ex-sample">
-    <div className="nb-ex-sample-col">
-      <div className="nb-ex-sample-label">Entrada {n}</div>
-      <pre className="nb-ex-pre">{entrada || '(sin entrada)'}</pre>
-    </div>
-    <div className="nb-ex-sample-col">
-      <div className="nb-ex-sample-label">Salida {n}</div>
-      <pre className="nb-ex-pre">{salida}</pre>
-    </div>
-  </div>
-);
 
 const ProblemDetailPage = () => {
   const { slug, numero } = useParams();
@@ -260,7 +140,7 @@ const ProblemDetailPage = () => {
   };
 
   return (
-    <div className="nb-dash-inner">
+    <div className="nb-dash-inner is-wide">
       <Link to={`/dashboard/problemas/${slug}`} className="nb-pb-back">
         ← Volver a {volverA}
       </Link>
@@ -372,6 +252,7 @@ const ProblemDetailPage = () => {
             claro={temaClaro}
             onTema={() => setTemaClaro((v) => !v)}
             onReiniciar={reiniciar}
+            tabulador
           />
 
           <div className={`nb-ex-feedback${errorEnvio ? ' is-fail' : enviado && resultado?.verdict ? (resultado.verdict === 'ACCEPTED' ? ' is-ok' : ' is-fail') : ''}`}>

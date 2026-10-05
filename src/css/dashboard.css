@@ -26,7 +26,7 @@
   --side-w:   clamp(216px, 15vw, 320px);
   --header-h: clamp(58px, 1.5vw + 50px, 84px);
 
-  background: #E9EDFB;
+  background: var(--nb-canvas);
   font-family: 'Space Grotesk', Helvetica, sans-serif;
   color: #000;
   min-height: 100vh;
@@ -67,11 +67,11 @@
 /* z-index: sin esto, cualquier tarjeta con position:relative posterior en
    el DOM le pinta encima a la barra (ambas quedan en z-index auto). */
 .nb-dash-side { position: sticky; top: var(--header-h); z-index: 40; width: var(--side-w); flex: 0 0 var(--side-w); align-self: flex-start; background: #fff; border-right: 2px solid #000; display: flex; flex-direction: column; min-height: calc(100vh - var(--header-h)); }
-.nb-dash-side-head { padding: clamp(14px,1vw,24px) clamp(14px,1vw,22px); border-bottom: 2px solid #000; font-size: var(--fs-xs); font-weight: 700; line-height: 1.5; color: #5A6070; }
+.nb-dash-side-head { padding: clamp(14px,1vw,24px) clamp(14px,1vw,22px); border-bottom: 2px solid #000; font-size: var(--fs-xs); font-weight: 700; line-height: 1.5; color: var(--nb-ink-mute); }
 .nb-dash-nav { display: flex; flex-direction: column; border-bottom: 2px solid #000; }
 /* La altura de la fila la pone el cuadro de 52px, no el relleno. */
 .nb-dash-navitem { display: flex; align-items: center; gap: clamp(10px,0.8vw,14px); border-left: 4px solid transparent; border-bottom: 1px solid #000; padding: clamp(10px,0.7vw,16px) clamp(14px,1vw,22px); font-weight: 600; font-size: var(--fs-sm); color: #000; }
-.nb-dash-navitem:hover { background: #F2F4FD; color: var(--nb-blue); }
+.nb-dash-navitem:hover { background: var(--nb-hover); color: var(--nb-blue); }
 
 .nb-dash-navicon { flex: 0 0 auto; width: 52px; height: 52px; display: grid; place-items: center; background: #fff; border: 2px solid #000; color: var(--nb-blue); }
 .nb-dash-navicon svg { display: block; width: 52%; height: 52%; }
@@ -85,8 +85,8 @@
 
 /* Marcadores sin ruta todavía */
 .nb-dash-soon { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: calc(var(--fs-xs) * 0.85); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; border: 1px solid currentColor; padding: 3px 6px; opacity: 0.65; }
-.nb-dash-navitem.is-soon { color: #5A6070; cursor: default; }
-.nb-dash-navitem.is-soon:hover { background: transparent; color: #5A6070; }
+.nb-dash-navitem.is-soon { color: var(--nb-ink-mute); cursor: default; }
+.nb-dash-navitem.is-soon:hover { background: transparent; color: var(--nb-ink-mute); }
 .nb-dash-tutorial.is-soon { cursor: default; opacity: 0.75; }
 .nb-dash-tutorial.is-soon:hover { opacity: 0.75; }
 
@@ -94,6 +94,8 @@
    no se estiren tanto que cueste seguirlas. */
 .nb-dash-main { flex: 1 1 auto; min-width: 0; padding: var(--sp-main) var(--sp-main) calc(var(--sp-main) * 1.6); }
 .nb-dash-inner { width: 100%; max-width: 1680px; margin: 0 auto; }
+/* Vista de ejercicio: enunciado y editor aprovechan todo el ancho. */
+.nb-dash-inner.is-wide { max-width: none; }
 .nb-dash-stack { display: flex; flex-direction: column; gap: var(--sp-gap); }
 
 /* ---------- Banner de bienvenida ---------- */
@@ -196,12 +198,48 @@
 .nb-dash-footer-note { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: #fff; opacity: 0.7; }
 .nb-dash-footer-text { margin: 0; color: #fff; font-size: var(--fs-sm); font-weight: 500; max-width: 44em; line-height: 1.55; }
 
+/* ── Sidebar plegado a solo iconos ──
+   Solo en las vistas de ejercicio y solo en escritorio: por debajo de 900px
+   el sidebar ya es una fila de pestañas y no hay ancho que recuperar.
+   Al plegar no se quita ni se mueve nada: el contenido conserva su ancho y
+   el sidebar lo recorta, así la animación es solo un cambio de anchura. */
+.nb-dash-side-toggle { display: none; }
+
+@media (min-width: 901px) {
+  .nb-dash-side { --side-pad: clamp(14px, 1vw, 22px); overflow: hidden; transition: width 0.2s, flex-basis 0.2s; }
+  .nb-dash-side-head,
+  .nb-dash-side-toggle,
+  .nb-dash-nav,
+  .nb-dash-side-foot { flex: 0 0 auto; width: var(--side-w); }
+  .nb-dash-side-head,
+  .nb-dash-side-foot,
+  .nb-dash-navlabel,
+  .nb-dash-soon { transition: opacity 0.15s, color 0.15s; }
+
+  /* El icono ocupa la misma columna de 52px que los iconos del menú. */
+  .nb-dash-side-toggle { display: flex; align-items: center; background: var(--nb-hover); border: none; border-bottom: 2px solid #000; padding: 9px var(--side-pad) 9px calc(var(--side-pad) + 4px); font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #000; text-align: left; cursor: pointer; }
+  .nb-dash-side-toggle:hover { background: var(--nb-blue); color: #fff; }
+  .nb-dash-side-toggle:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: -3px; }
+  .nb-dash-side-toggle svg { flex: 0 0 auto; display: block; width: 20px; height: 20px; margin: 0 16px; }
+  .nb-dash-side-toggle .nb-dash-navlabel { margin-left: clamp(10px,0.8vw,14px); white-space: nowrap; }
+
+  /* Ancho plegado = borde activo + relleno + icono + relleno. */
+  .nb-dash-side.is-collapsed { --side-plegado: calc(56px + var(--side-pad) * 2); width: var(--side-plegado); flex-basis: var(--side-plegado); }
+  .nb-dash-side.is-collapsed .nb-dash-side-head { color: transparent; }
+  .nb-dash-side.is-collapsed .nb-dash-navlabel,
+  .nb-dash-side.is-collapsed .nb-dash-soon,
+  .nb-dash-side.is-collapsed .nb-dash-side-foot { opacity: 0; }
+  .nb-dash-side.is-collapsed .nb-dash-side-foot { visibility: hidden; }
+}
+
 /* ============================================================
    Responsive
    ============================================================ */
 @media (max-width: 900px) {
   /* La barra lateral se convierte en una fila de pestañas bajo la cabecera */
   .nb-dash-body { flex-direction: column; }
+  /* En columna, align-items: flex-start encogía el área central a su contenido. */
+  .nb-dash-main { align-self: stretch; }
   .nb-dash-side {
     top: var(--header-h); width: 100%; flex: none; min-height: 0;
     flex-direction: row; align-items: stretch; overflow-x: auto;

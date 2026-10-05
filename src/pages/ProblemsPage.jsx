@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CATEGORIAS as CATEGORIAS_LOCALES, problemaPerteneceCategoria, normalizarTexto } from '../scripts/problemsData';
 import { getAllProblems } from '../scripts/problemsApi';
+import { getProgress } from '../scripts/progressApi';
+import { useAuth } from '../context/AuthContext';
 
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square">
@@ -44,6 +46,18 @@ const ProblemsPage = () => {
   const [problemas, setProblemas] = useState([]);
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(ADAPTIVO);
+  const { user } = useAuth();
+  const [resueltos, setResueltos] = useState(0);
+
+  // El mismo dato que muestra el tablero de inicio.
+  useEffect(() => {
+    if (!ADAPTIVO || !user) return undefined;
+    let vigente = true;
+    getProgress(user)
+      .then((datos) => { if (vigente) setResueltos(datos?.user?.solved_count ?? 0); })
+      .catch(() => {});
+    return () => { vigente = false; };
+  }, [user]);
 
   useEffect(() => {
     if (!ADAPTIVO) return undefined;
@@ -115,7 +129,7 @@ const ProblemsPage = () => {
           </div>
           <div className="nb-pb-hstat">
             <div className="nb-pb-hstat-label">Resueltos</div>
-            <div className="nb-pb-hstat-value">0</div>
+            <div className="nb-pb-hstat-value">{resueltos}</div>
           </div>
         </div>
       </div>

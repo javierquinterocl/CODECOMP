@@ -4,6 +4,7 @@ import './css/index.css'
 import './css/neubrutalism.css'
 import './css/dashboard.css'
 import './css/problems.css'
+import './css/fundamentos.css'
 import App from './App'
 
 createRoot(document.getElementById('root')).render(
