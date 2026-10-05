@@ -77,7 +77,8 @@ const Ejercicio = ({ nivel, ejercicio }) => {
 
   const [codigo, setCodigo] = useState(PLANTILLA_PSEINT);
   const [expandido, setExpandido] = useState(false);
-  const [temaClaro, setTemaClaro] = useState(false);
+  // PSeInt es claro por defecto; aquí el editor arranca igual.
+  const [temaClaro, setTemaClaro] = useState(true);
   const [enviado, setEnviado] = useState(false);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);

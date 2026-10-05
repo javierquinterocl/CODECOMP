@@ -207,8 +207,11 @@
 .nb-ex-icon-btn.is-square { display: grid; place-items: center; width: clamp(26px, 2vw, 32px); height: clamp(26px, 2vw, 32px); padding: 0; }
 
 .nb-ex-editor-body { display: flex; align-items: stretch; min-height: 0; }
-.nb-ex-gutter { flex: 0 0 auto; display: flex; flex-direction: column; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: clamp(10px,0.8vw,16px) 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
+.nb-ex-gutter { position: relative; flex: 0 0 auto; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
 .nb-ex-gutter span { display: block; }
+/* Solo da el ancho: el número más largo, sin alto. */
+.nb-ex-gutter-ancho { height: 0; visibility: hidden; }
+.nb-ex-gutter-nums { position: absolute; top: 0; left: 0; right: 0; padding: clamp(10px,0.8vw,16px) 10px; }
 /* El textarea manda en la altura; la regleta la sigue por scroll. */
 /* Textarea y capa de color superpuestos: todo lo que traza texto va en las
    dos, o el cursor no cae sobre su letra. */

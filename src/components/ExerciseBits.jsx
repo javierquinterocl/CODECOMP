@@ -83,7 +83,7 @@ export const Editor = ({
   // Ni la regleta ni la capa de color tienen barra propia: siguen al textarea.
   const sincronizarScroll = (e) => {
     const { scrollTop, scrollLeft } = e.target;
-    if (regletaRef.current) regletaRef.current.scrollTop = scrollTop;
+    if (regletaRef.current) regletaRef.current.style.transform = `translateY(${-scrollTop}px)`;
     if (resaltadoRef.current) {
       resaltadoRef.current.scrollTop = scrollTop;
       resaltadoRef.current.scrollLeft = scrollLeft;
@@ -144,8 +144,13 @@ export const Editor = ({
       </div>
 
       <div className="nb-ex-editor-body">
-        <div className="nb-ex-gutter" ref={regletaRef} aria-hidden="true">
-          {lineas.map((n) => <span key={n}>{n}</span>)}
+        {/* Los números van fuera del flujo: si contaran para la altura, un
+            código largo estiraría el editor por debajo del textarea. */}
+        <div className="nb-ex-gutter" aria-hidden="true">
+          <span className="nb-ex-gutter-ancho">{lineas.length}</span>
+          <div className="nb-ex-gutter-nums" ref={regletaRef}>
+            {lineas.map((n) => <span key={n}>{n}</span>)}
+          </div>
         </div>
         <div className="nb-ex-code-wrap">
           <pre className="nb-ex-highlight" ref={resaltadoRef} aria-hidden="true">
