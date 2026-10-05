@@ -144,7 +144,7 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-lateral { --fd-lat-w: clamp(264px, 20vw, 380px); --fd-lat-pad: clamp(12px, 0.9vw, 18px); --fd-lat-btn: 36px; position: sticky; top: var(--header-h); flex: 0 0 var(--fd-lat-w); width: var(--fd-lat-w); height: calc(100vh - var(--header-h)); display: flex; flex-direction: column; overflow: hidden; background: #fff; border-left: 2px solid #000; transition: width 0.2s, flex-basis 0.2s; }
 .nb-fd-lateral-head,
 .nb-fd-lateral-body { flex: 0 0 auto; width: var(--fd-lat-w); }
-.nb-fd-lateral-head { display: flex; align-items: center; gap: var(--fd-lat-pad); background: var(--nb-hover); border-bottom: 2px solid #000; padding: var(--fd-lat-pad); }
+.nb-fd-lateral-head { display: flex; align-items: center; gap: var(--fd-lat-pad); background: #fff; border-bottom: 2px solid #000; padding: var(--fd-lat-pad); }
 .nb-fd-lateral-toggle { flex: 0 0 auto; width: var(--fd-lat-btn); height: var(--fd-lat-btn); display: grid; place-items: center; background: #fff; border: 2px solid #000; color: #000; cursor: pointer; }
 .nb-fd-lateral-toggle:hover { background: var(--nb-blue); color: #fff; }
 .nb-fd-lateral-toggle:focus-visible,
@@ -154,7 +154,7 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-lateral-nombre { font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; }
 .nb-fd-lateral-tema { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
 
-.nb-fd-lateral-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: clamp(12px, 0.9vw, 18px); padding: var(--fd-lat-pad); background: var(--nb-canvas); overflow-y: auto; transition: opacity 0.15s; }
+.nb-fd-lateral-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: clamp(12px, 0.9vw, 18px); padding: var(--fd-lat-pad); background: #fff; overflow-y: auto; transition: opacity 0.15s; }
 .nb-fd-msg { display: flex; align-items: flex-start; gap: 9px; }
 .nb-fd-gato-avatar { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; background: #fff; border: 2px solid #000; }
 .nb-fd-gato-avatar img { display: block; width: 78%; height: 78%; object-fit: contain; image-rendering: pixelated; }

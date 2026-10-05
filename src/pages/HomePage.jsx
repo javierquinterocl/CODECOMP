@@ -382,7 +382,10 @@ const HomePage = () => {
         {/* ── Footer ── */}
         <footer style={{ background:'#000', borderTop:'3px solid #000', padding:'40px 28px 24px' }}>
           <div style={{ maxWidth:1120, margin:'0 auto', display:'flex', flexWrap:'wrap', alignItems:'center', justifyContent:'space-between', gap:20, paddingBottom:22, borderBottom:'2px solid #fff' }}>
-            <span style={{ fontFamily:press, fontSize:15, color:'#fff' }}>CODECOMP</span>
+            <div style={{ display:'flex', alignItems:'center', gap:16 }}>
+              <img className="nb-footer-ufps" src={logoUfps} alt="UFPS Ocaña" />
+              <span style={{ fontFamily:press, fontSize:15, color:'#fff' }}>CODECOMP</span>
+            </div>
             <div style={{ display:'flex', flexWrap:'wrap', gap:24 }}>
               {NAV_LINKS.map(({ label, id }) => (
                 <button key={id} type="button" className="nb-footer-link nb-footer-btn" onClick={() => scrollToSection(id)}>{label}</button>

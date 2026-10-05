@@ -605,8 +605,9 @@ export const EJERCICIOS = [
   },
 ];
 
-// Niveles del módulo, en el orden del slider. Los colores son los de Ad-Hoc
-// y Estructuras de Datos del catálogo (problemsData.js); el tercero va en negro.
+// Niveles del módulo, en el orden del slider. El morado del primero lo eligió
+// Javier; el rojo es el de Estructuras de Datos del catálogo (problemsData.js)
+// y el tercero va en negro.
 // `codigo` es el adorno de la tarjeta: un fragmento de PSeInt, sin relación
 // con ningún ejercicio.
 export const NIVELES_FUNDAMENTOS = [
@@ -615,7 +616,7 @@ export const NIVELES_FUNDAMENTOS = [
     n: 1,
     titulo: 'Fundamentos de programación',
     texto: 'Ejercicios cortos para aprender cada instrucción de PSeInt, de lo más simple a matrices.',
-    color: { bg: '#F97110', ink: '#fff', bgSuave: '#FF8936', inkSuave: '#000' },
+    color: { bg: '#5410F9', ink: '#fff', bgSuave: '#7A45FF', inkSuave: '#fff' },
     ejercicios: EJERCICIOS,
     logros: LOGROS,
     codigo: ['Algoritmo saludo\n    Escribir "Hola"\nFinAlgoritmo', 'Si nota >= 30 Entonces\n    Escribir "Bien"\nFinSi'],

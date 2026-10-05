@@ -50,6 +50,7 @@
 .nb-card { transition: all 0.1s; }
 .nb-card:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000 !important; }
 
+.nb-footer-ufps { flex: 0 0 auto; width: clamp(30px, 2.6vw, 44px); height: auto; }
 .nb-footer-link { color: #DDE3FF; }
 .nb-footer-link:hover { color: #fff; }
 .nb-footer-btn { font-family: inherit; font-size: 15px; font-weight: 500; background: none; border: none; padding: 0; cursor: pointer; }
@@ -82,7 +83,7 @@
 .nb-hero-title {
   font-family: 'Press Start 2P', monospace;
   color: #fff;
-  text-shadow: 0.07em 0.07em 0px #281B79;
+  text-shadow: 0.07em 0.07em 0px #0D0F45;
   font-size: clamp(20px, 7.8vw, 140px);
   line-height: 1;
   margin: 0 0 clamp(18px,3vh,38px);
