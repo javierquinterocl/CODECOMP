@@ -97,7 +97,30 @@ const LENGUAJES = {
       'Map', 'Set', 'Promise', 'BigInt', 'Symbol'],
     literal: ['true', 'false', 'null', 'undefined', 'NaN', 'Infinity'],
   }),
+
+  // PSeInt no pasa por comunes(): ahí todo lo que empieza en mayúscula se
+  // pinta como tipo, y en pseudocódigo casi todo empieza en mayúscula.
+  pseint: [
+    ['tok-comentario', String.raw`\/\/[^\n]*`],
+    ['tok-cadena', String.raw`"[^"\n]*"?|'[^'\n]*'?`],
+    ['tok-numero', String.raw`\b\d+(?:\.\d+)?\b`],
+    ['tok-literal', palabras(['Verdadero', 'Falso'])],
+    ['tok-control', palabras(['FinSi', 'Sino', 'Si', 'Entonces', 'FinSeg[uú]n', 'Seg[uú]n',
+      String.raw`De\s+Otro\s+Modo`, 'FinMientras', 'Mientras', 'Hacer', 'Repetir',
+      String.raw`Hasta\s+Que`, 'FinPara', 'Para', String.raw`Con\s+Paso`, 'Hasta'])],
+    ['tok-clave', palabras(['FinAlgoritmo', 'Algoritmo', 'FinProceso', 'Proceso',
+      'FinSubProceso', 'SubProceso', 'FinFunci[oó]n', 'Funci[oó]n', 'Definir', 'Como',
+      'Leer', 'Escribir', String.raw`Sin\s+Saltar`, 'Dimensi[oó]n', 'MOD'])],
+    ['tok-tipo', palabras(['Entero', 'Real', 'N[uú]mero', 'Num[eé]rico', 'Car[aá]cter',
+      'Cadena', 'Texto', 'L[oó]gico'])],
+    ['tok-funcion', String.raw`\b[A-Za-z_]\w*(?=\s*\()`],
+    ['tok-operador', String.raw`<-|[+\-*/%^=<>&|~!]+`],
+    ['tok-punt', String.raw`[()\[\];,:]`],
+  ],
 };
+
+// PSeInt no distingue mayúsculas de minúsculas.
+const BANDERAS = { pseint: 'gmi' };
 
 // Una sola expresión por lenguaje, armada una vez y reutilizada.
 const CACHE = new Map();
@@ -105,7 +128,7 @@ const CACHE = new Map();
 const regexDe = (id) => {
   if (CACHE.has(id)) return CACHE.get(id);
   const reglas = LENGUAJES[id] || LENGUAJES.javascript;
-  const regex = new RegExp(reglas.map(([, patron]) => `(${patron})`).join('|'), 'gm');
+  const regex = new RegExp(reglas.map(([, patron]) => `(${patron})`).join('|'), BANDERAS[id] || 'gm');
   const entrada = { regex, clases: reglas.map(([clase]) => clase) };
   CACHE.set(id, entrada);
   return entrada;

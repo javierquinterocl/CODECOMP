@@ -16,6 +16,9 @@ import HomePage from './pages/HomePage';
 import ProblemsPage from './pages/ProblemsPage';
 import ProblemsCategoryPage from './pages/ProblemsCategoryPage';
 import ProblemDetailPage from './pages/ProblemDetailPage';
+import FundamentosPage from './pages/FundamentosPage';
+import FundamentosListPage from './pages/FundamentosListPage';
+import FundamentosDetailPage from './pages/FundamentosDetailPage';
 import DashboardLayout from './components/DashboardLayout';
 
 
@@ -95,6 +98,9 @@ function App() {
           <Route path="/dashboard/problemas"        element={<ProblemsPage />} />
           <Route path="/dashboard/problemas/:slug" element={<ProblemsCategoryPage />} />
           <Route path="/dashboard/problemas/:slug/:numero" element={<ProblemDetailPage />} />
+          <Route path="/dashboard/fundamentos"                    element={<FundamentosPage />} />
+          <Route path="/dashboard/fundamentos/:nivel"             element={<FundamentosListPage />} />
+          <Route path="/dashboard/fundamentos/:nivel/:numero"     element={<FundamentosDetailPage />} />
           <Route path="/dashboard/retos"    element={<DailyChallengesPage />} />
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/grupos"   element={<GruposPage />} />

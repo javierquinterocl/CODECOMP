@@ -1,0 +1,215 @@
+/* ============================================================
+   Módulo Fundamentos
+   Hereda variables y tipografías de dashboard.css; la vista del
+   ejercicio reutiliza las clases nb-ex-* de problems.css.
+   ============================================================ */
+
+/* ---------- Inicio: presentación del módulo ---------- */
+/* Comparte columna con la tarjeta del nivel; el margen derecho iguala el
+   relleno que las diapositivas reservan para su sombra. */
+.nb-fd-hero { grid-column: 2; margin-right: 7px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: clamp(10px, 1vw, 20px) var(--sp-gap); padding: clamp(12px, 0.9vw, 20px) var(--sp-card); }
+.nb-fd-hero-main { flex: 1 1 420px; min-width: 0; }
+.nb-fd-kicker { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: var(--nb-blue); margin-bottom: 8px; }
+.nb-fd-title { margin: 0 0 6px; font-family: 'Press Start 2P', monospace; font-size: clamp(12px, 0.6vw + 8px, 20px); line-height: 1.6; }
+.nb-fd-hero-text { margin: 0; max-width: 46em; font-size: var(--fs-sm); font-weight: 500; line-height: 1.5; color: var(--nb-ink-soft); }
+.nb-fd-hero-stats { flex: 0 0 auto; display: flex; flex-wrap: wrap; gap: clamp(6px, 0.5vw, 12px); }
+.nb-fd-hero-stats .nb-pb-hstat { min-width: 0; box-shadow: none; padding: 6px clamp(10px, 0.8vw, 16px); }
+.nb-fd-hero-stats .nb-pb-hstat-value { font-size: clamp(12px, 0.4vw + 9px, 18px); margin-top: 6px; }
+
+/* ---------- Inicio: slider de niveles ---------- */
+.nb-fd-slider { --fd-card-h: clamp(340px, 56vh, 680px); --fd-flecha: clamp(44px, 3.4vw, 64px); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--sp-gap) clamp(8px, 1vw, 22px); align-items: start; }
+
+/* Las flechas se centran contra la tarjeta, no contra toda la diapositiva. */
+.nb-fd-flecha { width: var(--fd-flecha); height: var(--fd-flecha); margin-top: calc((var(--fd-card-h) - var(--fd-flecha)) / 2); display: grid; place-items: center; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-fd-flecha svg { display: block; width: 52%; height: 52%; }
+.nb-fd-flecha:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; background: var(--nb-blue); color: #fff; }
+.nb-fd-flecha:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 3px; }
+.nb-fd-flecha:disabled { opacity: 0.35; cursor: default; box-shadow: none; }
+
+/* Fila 1: presentación. Fila 2: flecha, tarjeta, flecha. */
+.nb-fd-hero { grid-row: 1; }
+.nb-fd-flecha { grid-row: 2; }
+.nb-fd-viewport { grid-column: 2; grid-row: 2; overflow: hidden; }
+.nb-fd-track { display: flex; transition: transform 0.38s cubic-bezier(0.2, 0.7, 0.2, 1); }
+/* El relleno deja sitio a las sombras duras, que el viewport recortaría. */
+.nb-fd-slide { flex: 0 0 100%; min-width: 0; box-sizing: border-box; padding: 0 7px 7px 0; display: flex; flex-direction: column; gap: var(--sp-gap); }
+
+/* Tarjeta del nivel. El color llega por --cat-bg / --cat-ink desde los datos.
+   Todo el contenido va por encima del adorno; el enlace de play se estira
+   sobre la tarjeta entera y "Continuar" queda encima con su z-index. */
+.nb-fd-card { position: relative; overflow: hidden; min-height: var(--fd-card-h); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(12px, 1vw, 22px); padding: var(--sp-card); text-align: center; background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; transition: all 0.1s; }
+.nb-fd-card:not(.is-soon):hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #000; }
+.nb-fd-card > :not(.nb-fd-card-deco) { position: relative; }
+.nb-fd-card-kicker { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; opacity: 0.9; }
+.nb-fd-card-title { margin: 0; font-family: 'Press Start 2P', monospace; font-size: clamp(14px, 1.2vw + 8px, 34px); line-height: 1.6; }
+.nb-fd-card-text { margin: 0; max-width: 34em; font-size: var(--fs-base); font-weight: 600; line-height: 1.55; }
+
+/* `position: static` a propósito: así su ::after toma la tarjeta como marco. */
+.nb-fd-card > .nb-fd-play { position: static; }
+.nb-fd-play { width: clamp(58px, 5vw, 96px); height: clamp(58px, 5vw, 96px); display: grid; place-items: center; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; color: #000; }
+.nb-fd-play svg { display: block; width: 50%; height: 50%; }
+a.nb-fd-play::after { content: ''; position: absolute; inset: 0; }
+a.nb-fd-play:hover { color: #000; }
+a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
+.nb-fd-card.is-soon { cursor: default; }
+
+/* Adorno: ventanitas de código inclinadas en las esquinas. */
+.nb-fd-card-deco { position: absolute; inset: 0; pointer-events: none; }
+.nb-fd-code { max-width: 30%; overflow: hidden; }
+.nb-fd-code pre { font-size: clamp(10px, 0.72vw, 15px); color: rgba(255,255,255,0.9); text-align: left; }
+.nb-fd-code.is-izq { left: 3.5%; top: 9%; transform: rotate(-4deg); }
+.nb-fd-code.is-der { right: 3.5%; bottom: 9%; transform: rotate(3deg); }
+.nb-fd-code-barra { display: flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.22); padding: 5px 8px; }
+.nb-fd-code-barra span { display: block; width: 7px; height: 7px; background: rgba(255,255,255,0.75); }
+.nb-fd-code-barra span + span { background: rgba(255,255,255,0.4); }
+
+/* Avance: dónde quedó el estudiante y el botón para seguir. */
+.nb-fd-avance { z-index: 1; width: min(100%, 620px); display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 0.7vw, 14px); margin-top: clamp(4px, 0.6vw, 12px); padding: clamp(12px, 1vw, 20px); border: 2px solid currentColor; text-align: left; }
+.nb-fd-avance-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.nb-fd-avance-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.nb-fd-avance-tema { font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-fd-avance-barra { height: 14px; padding: 2px; background: #fff; border: 2px solid #000; }
+.nb-fd-avance-barra > div { height: 100%; min-width: 4px; background: var(--cat-bg); }
+.nb-fd-continuar { align-self: center; min-width: min(100%, 220px); background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: clamp(8px,0.6vw,13px) clamp(16px,1.6vw,32px); font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; text-align: center; white-space: nowrap; transition: all 0.1s; }
+.nb-fd-continuar:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; color: #000; }
+.nb-fd-continuar:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
+
+/* ---------- Inicio: logros desbloqueables ---------- */
+@keyframes fd-titilar {
+  0%, 100% { opacity: 0.18; transform: scale(0.7) rotate(0deg); }
+  50%      { opacity: 0.9;  transform: scale(1.15) rotate(18deg); }
+}
+
+/* Es un Plegable (nb-ex-fold) pintado de azul, con las estrellas detrás. */
+.nb-fd-logros { position: relative; overflow: hidden; background: var(--nb-blue); color: #fff; }
+.nb-fd-logros .nb-ex-fold-head { position: relative; color: #fff; }
+.nb-fd-logros .nb-ex-fold-title { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.nb-fd-logros .nb-ex-fold-head:hover .nb-ex-fold-title,
+.nb-fd-logros .nb-ex-fold-caret { color: #fff; }
+.nb-fd-logros .nb-ex-fold-head:focus-visible { outline-color: #fff; }
+.nb-fd-logros .nb-ex-fold-body { position: relative; }
+.nb-fd-logros-cielo { position: absolute; inset: 0; pointer-events: none; }
+.nb-fd-estrella { position: absolute; display: block; color: #fff; opacity: 0.18; animation: fd-titilar 3.2s ease-in-out infinite; }
+.nb-fd-estrella svg { display: block; width: 100%; height: 100%; }
+
+.nb-fd-logros-cuenta { flex: 0 0 auto; background: #fff; border: 2px solid #000; color: #000; padding: 5px 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+.nb-fd-logros-vacio { margin: 0; font-size: var(--fs-base); font-weight: 500; }
+
+.nb-fd-logros-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(clamp(200px, 17vw, 300px), 1fr)); gap: clamp(8px, 0.8vw, 16px); }
+.nb-fd-logro { display: flex; align-items: center; gap: 12px; background: var(--nb-blue-dark); border: 2px solid #000; padding: clamp(9px, 0.7vw, 14px); transition: background 0.1s; }
+.nb-fd-logro:hover { background: var(--nb-blue-deep); }
+.nb-fd-logro-icono { flex: 0 0 auto; width: clamp(36px, 2.6vw, 46px); height: clamp(36px, 2.6vw, 46px); display: grid; place-items: center; background: #fff; border: 2px solid #000; color: var(--nb-blue); }
+.nb-fd-logro-icono svg { display: block; width: 62%; height: 62%; transition: transform 0.14s; }
+.nb-fd-logro:hover .nb-fd-logro-icono svg { transform: rotate(72deg) scale(1.15); }
+.nb-fd-logro-main { min-width: 0; }
+.nb-fd-logro-titulo { font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; }
+.nb-fd-logro-texto { font-size: var(--fs-xs); font-weight: 500; line-height: 1.45; color: rgba(255,255,255,0.8); margin-top: 3px; }
+
+/* ---------- Inicio: temas ---------- */
+.nb-fd-temas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.nb-fd-tema { display: flex; align-items: center; gap: clamp(10px, 0.9vw, 18px); padding: clamp(9px, 0.7vw, 14px) 0; border-bottom: 1px solid #000; }
+.nb-fd-tema:first-child { padding-top: 0; }
+.nb-fd-tema:last-child { border-bottom: none; padding-bottom: 0; }
+.nb-fd-tema-n { flex: 0 0 auto; width: clamp(28px, 2.2vw, 38px); height: clamp(28px, 2.2vw, 38px); display: grid; place-items: center; background: var(--nb-blue); border: 2px solid #000; color: #fff; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-sm); }
+.nb-fd-tema-main { flex: 1 1 auto; min-width: 0; }
+.nb-fd-tema-titulo { font-weight: 700; font-size: var(--fs-base); line-height: 1.3; }
+.nb-fd-tema-texto { font-size: var(--fs-sm); font-weight: 500; color: var(--nb-ink-soft); line-height: 1.45; margin-top: 2px; }
+.nb-fd-tema-total { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); white-space: nowrap; }
+
+/* ---------- Listado: un bloque por tema ---------- */
+.nb-fd-grupo { margin-top: calc(var(--sp-gap) * 1.3); }
+.nb-fd-grupo:first-of-type { margin-top: 0; }
+.nb-fd-grupo-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; padding-bottom: 8px; margin-bottom: clamp(10px, 0.8vw, 16px); border-bottom: 3px solid #000; }
+.nb-fd-grupo-title { margin: 0; font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; }
+.nb-fd-grupo-text { font-size: var(--fs-sm); font-weight: 500; color: var(--nb-ink-soft); }
+
+/* ---------- Ejercicio ----------
+   La vista se sale del relleno de .nb-dash-main para que el panel del gato
+   quede pegado al borde derecho, como el sidebar al izquierdo. Tampoco usa
+   el ancho máximo de .nb-dash-inner: enunciado y editor llenan lo que haya. */
+.nb-fd-vista { display: flex; align-items: flex-start; margin: calc(var(--sp-main) * -1) calc(var(--sp-main) * -1) calc(var(--sp-main) * -1.6) 0; }
+.nb-fd-vista-main { flex: 1 1 auto; min-width: 0; padding: var(--sp-main) var(--sp-main) calc(var(--sp-main) * 1.6) 0; }
+.nb-fd-ex .nb-ex-code { height: clamp(380px, 58vh, 980px); }
+.nb-fd-ex .nb-ex-editor.is-expanded .nb-ex-code { height: clamp(460px, 70vh, 1100px); }
+
+.nb-fd-lenguaje { flex: 1 1 190px; min-width: 0; }
+.nb-fd-lenguaje-valor { display: block; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); font-weight: 700; font-size: var(--fs-sm); }
+
+/* Enviar con candado: se ve apagado y no responde al cursor. */
+.nb-ex-send.is-locked { display: flex; align-items: center; justify-content: center; gap: 9px; background: #fff; color: #000; cursor: not-allowed; font-variant-numeric: tabular-nums; }
+.nb-ex-send.is-locked:hover { transform: none; box-shadow: 4px 4px 0px #000; }
+.nb-ex-send.is-locked svg { flex: 0 0 auto; display: block; width: 1.35em; height: 1.35em; }
+
+/* ── Panel del gato: sidebar derecho ── */
+.nb-fd-lateral { --fd-lat-w: clamp(264px, 20vw, 380px); --fd-lat-pad: clamp(12px, 0.9vw, 18px); --fd-lat-btn: 36px; position: sticky; top: var(--header-h); flex: 0 0 var(--fd-lat-w); width: var(--fd-lat-w); height: calc(100vh - var(--header-h)); display: flex; flex-direction: column; overflow: hidden; background: #fff; border-left: 2px solid #000; transition: width 0.2s, flex-basis 0.2s; }
+.nb-fd-lateral-head,
+.nb-fd-lateral-body { flex: 0 0 auto; width: var(--fd-lat-w); }
+.nb-fd-lateral-head { display: flex; align-items: center; gap: var(--fd-lat-pad); background: var(--nb-hover); border-bottom: 2px solid #000; padding: var(--fd-lat-pad); }
+.nb-fd-lateral-toggle { flex: 0 0 auto; width: var(--fd-lat-btn); height: var(--fd-lat-btn); display: grid; place-items: center; background: #fff; border: 2px solid #000; color: #000; cursor: pointer; }
+.nb-fd-lateral-toggle:hover { background: var(--nb-blue); color: #fff; }
+.nb-fd-lateral-toggle:focus-visible,
+.nb-fd-lateral-cara:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 2px; }
+.nb-fd-lateral-toggle svg { display: block; width: 56%; height: 56%; }
+.nb-fd-lateral-quien { min-width: 0; display: flex; flex-direction: column; gap: 4px; transition: opacity 0.15s; }
+.nb-fd-lateral-nombre { font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; }
+.nb-fd-lateral-tema { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+
+.nb-fd-lateral-body { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: clamp(12px, 0.9vw, 18px); padding: var(--fd-lat-pad); background: var(--nb-canvas); overflow-y: auto; transition: opacity 0.15s; }
+.nb-fd-msg { display: flex; align-items: flex-start; gap: 9px; }
+.nb-fd-gato-avatar { flex: 0 0 auto; width: 36px; height: 36px; display: grid; place-items: center; background: #fff; border: 2px solid #000; }
+.nb-fd-gato-avatar img { display: block; width: 78%; height: 78%; object-fit: contain; image-rendering: pixelated; }
+.nb-fd-burbuja { flex: 1 1 auto; min-width: 0; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: 9px 11px; }
+.nb-fd-burbuja p { margin: 0; font-size: var(--fs-sm); font-weight: 500; line-height: 1.5; }
+.nb-fd-burbuja pre { margin: 8px 0 0; padding: 8px 10px; background: var(--nb-editor); color: #9CDCFE; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Plegado: queda una tira con el botón y la cara del gato. */
+.nb-fd-lateral-cara { position: absolute; left: var(--fd-lat-pad); top: calc(var(--fd-lat-pad) * 3 + var(--fd-lat-btn) + 2px); padding: 0; background: none; border: none; cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.15s; }
+.nb-fd-lateral.is-collapsed { --fd-lat-plegado: calc(var(--fd-lat-btn) + var(--fd-lat-pad) * 2 + 2px); flex-basis: var(--fd-lat-plegado); width: var(--fd-lat-plegado); }
+.nb-fd-lateral.is-collapsed .nb-fd-lateral-quien,
+.nb-fd-lateral.is-collapsed .nb-fd-lateral-body { opacity: 0; }
+.nb-fd-lateral.is-collapsed .nb-fd-lateral-body { visibility: hidden; }
+.nb-fd-lateral.is-collapsed .nb-fd-lateral-cara { opacity: 1; visibility: visible; }
+
+/* Sin sitio para dos columnas y un panel: el gato baja y ocupa todo el ancho. */
+@media (max-width: 1024px) {
+  .nb-fd-vista { flex-direction: column; align-items: stretch; margin: 0; }
+  .nb-fd-vista-main { padding: 0; }
+  .nb-fd-lateral { position: static; flex: none; width: auto; height: auto; margin-top: var(--sp-gap); border: 2px solid #000; box-shadow: 4px 4px 0px #000; transition: none; }
+  .nb-fd-lateral.is-collapsed { width: auto; }
+  .nb-fd-lateral-head,
+  .nb-fd-lateral-body { width: auto; }
+  .nb-fd-lateral.is-collapsed .nb-fd-lateral-quien { opacity: 1; }
+  .nb-fd-lateral.is-collapsed .nb-fd-lateral-body,
+  .nb-fd-lateral-cara { display: none; }
+  .nb-fd-lateral.is-collapsed .nb-fd-lateral-head { border-bottom: none; }
+  .nb-fd-lateral-toggle svg { transform: rotate(90deg); }
+}
+
+/* Con menos ancho las ventanitas tocarían el título. */
+@media (max-width: 1279px) {
+  .nb-fd-card-deco { display: none; }
+}
+
+@media (max-width: 640px) {
+  .nb-fd-slider { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  /* En pantallas angostas las flechas bajan y la tarjeta usa todo el ancho. */
+  .nb-fd-hero { grid-column: 1 / -1; grid-row: auto; order: -2; }
+  .nb-fd-viewport { grid-column: 1 / -1; grid-row: auto; order: -1; }
+  .nb-fd-flecha { grid-row: auto; }
+  .nb-fd-flecha { width: 100%; margin-top: 0; box-shadow: 3px 3px 0px #000; }
+  .nb-fd-flecha svg { width: auto; height: 52%; }
+  .nb-fd-card,
+  .nb-fd-lateral,
+  .nb-fd-lenguaje-valor { box-shadow: 3px 3px 0px #000; }
+  .nb-fd-hero-stats { flex: 1 1 100%; }
+  .nb-fd-tema { flex-wrap: wrap; }
+  .nb-fd-tema-total { flex: 1 1 100%; padding-left: calc(clamp(28px, 2.2vw, 38px) + clamp(10px, 0.9vw, 18px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-fd-track,
+  .nb-fd-card,
+  .nb-fd-lateral { transition: none; }
+  .nb-fd-estrella { animation: none; opacity: 0.4; }
+  .nb-fd-logro:hover .nb-fd-logro-icono svg { transform: none; }
+}
