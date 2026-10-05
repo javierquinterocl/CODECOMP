@@ -70,7 +70,11 @@
 
 /* ---- Hero ---- */
 .nb-hero-wrap { height: 100dvh; display: flex; flex-direction: column; }
-.nb-hero { background: var(--nb-blue); border-bottom: 3px solid #000; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+/* Azul del dibujo de fondo, un punto más oscuro que --nb-blue. */
+.nb-hero { background: #0A30D0; border-bottom: 3px solid #000; flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+/* inset negativo: el desenfoque deja los bordes transparentes y así quedan fuera. */
+.nb-hero-foto { position: absolute; inset: -12px; pointer-events: none; background-size: cover; background-position: center; background-repeat: no-repeat; filter: blur(5px); opacity: 0.5; }
+.nb-hero-ufps { position: absolute; left: clamp(12px, 1.6vw, 28px); top: clamp(12px, 1.6vw, 28px); width: clamp(30px, 10.8vw, 103px); height: auto; opacity: 0.75; pointer-events: none; }
 .nb-hero-grid { position: absolute; inset: 0; pointer-events: none; background-image:
   repeating-linear-gradient(0deg,  rgba(255,255,255,0.16) 0 1px, transparent 1px 56px),
   repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 56px); }
@@ -78,7 +82,7 @@
 .nb-hero-title {
   font-family: 'Press Start 2P', monospace;
   color: #fff;
-  text-shadow: 0.07em 0.07em 0px #3A1FE8;
+  text-shadow: 0.07em 0.07em 0px #281B79;
   font-size: clamp(20px, 7.8vw, 140px);
   line-height: 1;
   margin: 0 0 clamp(18px,3vh,38px);
