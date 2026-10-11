@@ -93,7 +93,7 @@ const FundamentosListPage = () => {
             type="search"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por número, título o tema..."
+            placeholder="Buscar por número, título o tema…"
             aria-label={`Buscar un ejercicio de ${nivel.titulo}`}
           />
           {busqueda && (

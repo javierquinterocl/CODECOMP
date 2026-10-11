@@ -313,7 +313,7 @@ const TournamentForm = ({ mode, tournament, isSubmitting, onCancel, onSubmit }) 
           <button type="button" onClick={onCancel} className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Cancelar</button>
           <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
             <PlusIcon />
-            {isSubmitting ? 'Guardando...' : isEditMode ? 'Actualizar torneo' : 'Guardar torneo'}
+            {isSubmitting ? 'Guardando…' : isEditMode ? 'Actualizar torneo' : 'Guardar torneo'}
           </button>
         </div>
       </form>
@@ -561,29 +561,29 @@ const TournamentsPage = () => {
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Total de torneos</p>
-              <p className="mt-3 text-3xl font-bold text-slate-900">{loading ? '...' : tournaments.length}</p>
+              <p className="mt-3 text-3xl font-bold text-slate-900">{loading ? '…' : tournaments.length}</p>
             </div>
             <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-500">Torneos activos</p>
-              <p className="mt-3 text-3xl font-bold text-emerald-700">{loading ? '...' : activeTournaments}</p>
+              <p className="mt-3 text-3xl font-bold text-emerald-700">{loading ? '…' : activeTournaments}</p>
             </div>
             <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-500">Torneos completos</p>
-              <p className="mt-3 text-3xl font-bold text-rose-700">{loading ? '...' : fullTournaments}</p>
+              <p className="mt-3 text-3xl font-bold text-rose-700">{loading ? '…' : fullTournaments}</p>
             </div>
             <div className="rounded-2xl border border-slate-300 bg-slate-100 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Torneos cancelados</p>
-              <p className="mt-3 text-3xl font-bold text-slate-700">{loading ? '...' : cancelledTournaments}</p>
+              <p className="mt-3 text-3xl font-bold text-slate-700">{loading ? '…' : cancelledTournaments}</p>
             </div>
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-amber-500">Torneos borrador</p>
-              <p className="mt-3 text-3xl font-bold text-amber-700">{loading ? '...' : draftTournaments}</p>
+              <p className="mt-3 text-3xl font-bold text-amber-700">{loading ? '…' : draftTournaments}</p>
             </div>
             <div className="rounded-2xl border border-blue-200 bg-blue-50 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-500">Equipos inscritos</p>
-              <p className="mt-3 text-3xl font-bold text-blue-700">{loading ? '...' : totalRegisteredTeams}</p>
+              <p className="mt-3 text-3xl font-bold text-blue-700">{loading ? '…' : totalRegisteredTeams}</p>
               <p className="mt-1 text-xs text-blue-600">
-                Capacidad configurada: {loading ? '...' : hasConfiguredCapacity ? totalCapacity : 'No configurada'}
+                Capacidad configurada: {loading ? '…' : hasConfiguredCapacity ? totalCapacity : 'No configurada'}
               </p>
             </div>
           </div>
@@ -606,15 +606,15 @@ const TournamentsPage = () => {
                 <div className="mt-5 flex flex-wrap gap-3">
                   <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Disponibles</p>
-                    <p className="mt-1 text-2xl font-bold text-white">{loading ? '...' : publicTournaments.length}</p>
+                    <p className="mt-1 text-2xl font-bold text-white">{loading ? '…' : publicTournaments.length}</p>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Cupos abiertos</p>
-                    <p className="mt-1 text-2xl font-bold text-white">{loading ? '...' : openSlots}</p>
+                    <p className="mt-1 text-2xl font-bold text-white">{loading ? '…' : openSlots}</p>
                   </div>
                   <div className="rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-sm">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Próximo cierre</p>
-                    <p className="mt-1 text-lg font-bold text-white">{loading ? '...' : featuredTournament ? formatDate(featuredTournament.registrationDeadline) : 'Sin torneos'}</p>
+                    <p className="mt-1 text-lg font-bold text-white">{loading ? '…' : featuredTournament ? formatDate(featuredTournament.registrationDeadline) : 'Sin torneos'}</p>
                   </div>
                 </div>
               </div>
@@ -779,7 +779,7 @@ const TournamentsPage = () => {
               <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                 <button type="button" onClick={handleDeleteCancel} disabled={isDeletingTournament} className="inline-flex items-center justify-center rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60">Cancelar</button>
                 <button type="button" onClick={handleDeleteConfirm} disabled={isDeletingTournament} className="inline-flex items-center justify-center rounded-lg bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60">
-                  {isDeletingTournament ? 'Procesando...' : 'Confirmar eliminación'}
+                  {isDeletingTournament ? 'Procesando…' : 'Confirmar eliminación'}
                 </button>
               </div>
             </div>

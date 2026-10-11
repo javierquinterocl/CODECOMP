@@ -1,7 +1,7 @@
 
 
 const Stroke = ({ children }) => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden="true" focusable="false">
     {children}
   </svg>
 );
@@ -16,6 +16,8 @@ export const TargetIcon = () => <Stroke><circle cx="12" cy="12" r="9" /><circle 
 export const UsersIcon  = () => <Stroke><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1.5A4.5 4.5 0 0 1 7 14h4a4.5 4.5 0 0 1 4.5 4.5V20" /><path d="M16 5.2a3.5 3.5 0 0 1 0 6.6M17.5 14h.5a4.5 4.5 0 0 1 4.5 4.5V20" /></Stroke>;
 export const ReloadIcon = () => <Stroke><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 3.5V9h-5.5" /></Stroke>;
 export const LockIcon   = () => <Stroke><rect x="5" y="11" width="14" height="10" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /><path d="M12 15v2" /></Stroke>;
+/* Cronómetro: el temporizador de práctica de Fundamentos. */
+export const ClockIcon  = () => <Stroke><circle cx="12" cy="13.5" r="7.5" /><path d="M12 9.5v4l2.5 2" /><path d="M9.5 2.5h5" /></Stroke>;
 export const PlayIcon   = () => <Stroke><path d="M7 4v16l13-8L7 4Z" /></Stroke>;
 export const ArrowLeftIcon  = () => <Stroke><path d="M20 12H4" /><path d="M10 6l-6 6 6 6" /></Stroke>;
 export const ArrowRightIcon = () => <Stroke><path d="M4 12h16" /><path d="M14 6l6 6-6 6" /></Stroke>;

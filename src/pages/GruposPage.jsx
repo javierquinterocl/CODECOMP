@@ -307,7 +307,7 @@ const GruposPage = () => {
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><SearchIcon /></span>
             <input
               type="text"
-              placeholder="Buscar grupos..."
+              placeholder="Buscar grupos…"
               value={searchFilter}
               onChange={e => setSearchFilter(e.target.value)}
               className="w-56 rounded-xl border border-slate-200 bg-white py-2 pl-9 pr-4 font-['Inter'] text-sm text-slate-700 shadow-sm outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
@@ -457,7 +457,7 @@ const GruposPage = () => {
                     onChange={e => setForm(f => ({ ...f, torneoId: e.target.value }))}
                     className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 font-['Inter'] text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100"
                   >
-                    <option value="">Selecciona un torneo...</option>
+                    <option value="">Selecciona un torneo…</option>
                     {torneos
                       .filter(t => t.status === 'active' || t.status === 'draft')
                       .map(t => (
@@ -504,7 +504,7 @@ const GruposPage = () => {
                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"><SearchIcon /></span>
                               <input
                                 type="text"
-                                placeholder="Buscar por nombre o código..."
+                                placeholder="Buscar por nombre o código…"
                                 value={slot.busqueda}
                                 onChange={e => updateBusqueda(idx, e.target.value)}
                                 onFocus={() => setOpenSlotIdx(idx)}
@@ -566,7 +566,7 @@ const GruposPage = () => {
                 className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-700 to-blue-500 px-5 py-2.5 font-['Space_Grotesk'] text-sm font-bold text-white shadow-sm transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {saving ? (
-                  <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Guardando...</>
+                  <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Guardando…</>
                 ) : (
                   <>{editingId ? 'Guardar cambios' : 'Crear grupo'}</>
                 )}
@@ -600,7 +600,7 @@ const GruposPage = () => {
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-red-500 py-2.5 font-['Space_Grotesk'] text-sm font-bold text-white transition hover:bg-red-600 disabled:opacity-60"
               >
                 {deleteModal.deleting
-                  ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Eliminando...</>
+                  ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />Eliminando…</>
                   : 'Eliminar'}
               </button>
             </div>

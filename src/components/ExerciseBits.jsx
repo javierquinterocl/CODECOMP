@@ -51,7 +51,7 @@ const tabular = (texto, inicio, fin, quitar) => {
    textarea queda encima con el texto invisible. */
 export const Editor = ({
   codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar,
-  bloquearPegado = false, tabulador = false,
+  bloquearPegado = false, tabulador = false, extra = null,
 }) => {
   const regletaRef = useRef(null);
   const resaltadoRef = useRef(null);
@@ -113,6 +113,7 @@ export const Editor = ({
           {aviso ? 'Pegar está desactivado: escríbelo tú' : 'Código fuente'}
         </span>
         <div className="nb-ex-editor-tools">
+          {extra}
           <button
             type="button"
             className="nb-ex-icon-btn is-square"
@@ -126,10 +127,10 @@ export const Editor = ({
             type="button"
             className="nb-ex-icon-btn is-square"
             onClick={onTema}
-            aria-pressed={claro}
             title={claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
+            aria-label={claro ? 'Cambiar a modo oscuro' : 'Cambiar a modo claro'}
           >
-            {claro ? '🌙' : '☀'}
+            <span aria-hidden="true">{claro ? '🌙' : '☀'}</span>
           </button>
           <button
             type="button"

@@ -92,7 +92,7 @@ const RecoverPage = () => {
                 maxWidth={480}
                 decorated
             >
-                <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <form onSubmit={handleSubmit} noValidate className="nb-form">
                     <div className="nb-field">
                         <label htmlFor="email" className="nb-label">Correo electrónico</label>
                         <input
@@ -109,7 +109,7 @@ const RecoverPage = () => {
                     </div>
 
                     <button type="submit" disabled={isLoading} className="nb-submit">
-                        {isLoading ? 'Enviando...' : 'Recuperar contraseña'}
+                        {isLoading ? 'Enviando…' : 'Recuperar contraseña'}
                     </button>
 
                     <div className="nb-panel-foot">

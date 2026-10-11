@@ -6,12 +6,13 @@ import {
   buscarEjercicioDe,
   buscarNivel,
   buscarTema,
+  minutosTemporizador,
 } from '../scripts/fundamentosData';
-import { aperturaDe, registrarVisita } from '../scripts/fundamentosProgreso';
+import { aperturaDe, registrarVisita, temporizadorActivo } from '../scripts/fundamentosProgreso';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
-import { LockIcon, CollapseIcon, ExpandIcon } from '../components/AppIcons';
+import { LockIcon, CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
 
 const reloj = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 
@@ -53,13 +54,13 @@ const PanelGato = ({ tema, extra, oculto, onAlternar }) => {
         title={accion}
         aria-label={accion}
       >
-        <span className="nb-fd-gato-avatar"><img src="/cat-pixel.png" alt="" /></span>
+        <span className="nb-fd-gato-avatar"><img src="/cat-pixel.png" alt="" width="512" height="512" /></span>
       </button>
 
       <div className="nb-fd-lateral-body" inert={oculto}>
         {mensajes.map((m) => (
           <div key={m.texto} className="nb-fd-msg">
-            <span className="nb-fd-gato-avatar" aria-hidden="true"><img src="/cat-pixel.png" alt="" /></span>
+            <span className="nb-fd-gato-avatar" aria-hidden="true"><img src="/cat-pixel.png" alt="" width="512" height="512" /></span>
             <div className="nb-fd-burbuja">
               <p>{m.texto}</p>
               {m.codigo && <pre>{m.codigo}</pre>}
@@ -85,8 +86,16 @@ const Ejercicio = ({ nivel, ejercicio }) => {
   const [desbloqueoEn] = useState(() => aperturaDe(nivel.slug, ejercicio.numero) + ESPERA_ENVIO * 1000);
   const [ahora, setAhora] = useState(() => Date.now());
 
+  // Temporizador de práctica: se enciende desde la tarjeta del nivel y corre
+  // desde que se abre el ejercicio. Al acabarse solo avisa; no bloquea nada.
+  const [conReloj] = useState(temporizadorActivo);
+  const [finRelojEn] = useState(() => Date.now() + minutosTemporizador(ejercicio.nivel) * 60 * 1000);
+
   const restante = Math.max(0, Math.ceil((desbloqueoEn - ahora) / 1000));
   const bloqueado = restante > 0;
+  const quedan = Math.max(0, Math.ceil((finRelojEn - ahora) / 1000));
+  const tiempoAgotado = conReloj && quedan === 0;
+  const corriendo = bloqueado || (conReloj && !tiempoAgotado);
 
   // La tarjeta del nivel usa esto para ofrecer "Continuar".
   useEffect(() => {
@@ -94,10 +103,10 @@ const Ejercicio = ({ nivel, ejercicio }) => {
   }, [nivel.slug, ejercicio.numero]);
 
   useEffect(() => {
-    if (!bloqueado) return undefined;
-    const tic = setInterval(() => setAhora(Date.now()), 500);
+    if (!corriendo) return undefined;
+    const tic = setInterval(() => setAhora(Date.now()), 1000);
     return () => clearInterval(tic);
-  }, [bloqueado]);
+  }, [corriendo]);
 
   const reiniciar = () => {
     setCodigo(PLANTILLA_PSEINT);
@@ -199,18 +208,31 @@ const Ejercicio = ({ nivel, ejercicio }) => {
             onReiniciar={reiniciar}
             bloquearPegado
             tabulador
+            extra={conReloj && (
+              <span
+                className={`nb-fd-timer${tiempoAgotado ? ' is-done' : ''}`}
+                role="timer"
+                title={`Temporizador de práctica: ${minutosTemporizador(ejercicio.nivel)} minutos`}
+              >
+                <ClockIcon /> {reloj(quedan)}
+              </span>
+            )}
           />
 
           <div className="nb-ex-feedback">
-            <img className="nb-ex-cat" src="/cat-pixel.png" alt="" aria-hidden="true" />
-            <div className="nb-ex-feedback-main">
+            <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
+            <div className="nb-ex-feedback-main" aria-live="polite">
               <div className="nb-ex-feedback-title">
-                {enviado ? 'El juez de PSeInt llegará pronto' : '¡Resuélvelo primero, vamos!'}
+                {enviado
+                  ? 'El juez de PSeInt llegará pronto'
+                  : tiempoAgotado ? 'Se acabó el tiempo' : '¡Resuélvelo primero, vamos!'}
               </div>
               <p className="nb-ex-feedback-text">
                 {enviado
                   ? 'Tu solución todavía no se puede evaluar aquí, así que no se calificó ni se guardó. Mientras tanto, pruébala en PSeInt con los ejemplos del enunciado.'
-                  : bloqueado
+                  : tiempoAgotado
+                    ? 'Tranquilo, esto es solo práctica: puedes seguir editando y enviar cuando quieras.'
+                    : bloqueado
                     ? 'Tómate este tiempo para leer el enunciado y pensar los pasos. El envío se desbloquea cuando termine la cuenta.'
                     : 'Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.'}
               </p>

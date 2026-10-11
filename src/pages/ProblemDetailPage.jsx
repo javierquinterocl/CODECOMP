@@ -233,7 +233,7 @@ const ProblemDetailPage = () => {
             />
 
             <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando}>
-              {evaluando ? 'Evaluando...' : 'Enviar'}
+              {evaluando ? 'Evaluando…' : 'Enviar'}
             </button>
           </div>
 
@@ -256,7 +256,7 @@ const ProblemDetailPage = () => {
           />
 
           <div className={`nb-ex-feedback${errorEnvio ? ' is-fail' : enviado && resultado?.verdict ? (resultado.verdict === 'ACCEPTED' ? ' is-ok' : ' is-fail') : ''}`}>
-            <img className="nb-ex-cat" src="/cat-pixel.png" alt="" aria-hidden="true" />
+            <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
             <div className="nb-ex-feedback-main">
               <div className="nb-ex-feedback-title">
                 {errorEnvio
@@ -297,7 +297,7 @@ const ProblemDetailPage = () => {
                           title={esperaPista > 0 ? 'Intenta algo mas antes de pedir otra pista' : undefined}
                         >
                           {pidiendoPista
-                            ? 'Pensando...'
+                            ? 'Pensando…'
                             : esperaPista > 0
                               ? `Espera ${esperaPista} s`
                               : 'Pedir retroalimentación'}

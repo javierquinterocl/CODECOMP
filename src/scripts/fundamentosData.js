@@ -10,6 +10,11 @@ export const PLANTILLA_PSEINT = 'Algoritmo solucion\n    // Escribe tu solución
 /** Segundos que el botón de enviar pasa bloqueado al abrir un ejercicio. */
 export const ESPERA_ENVIO = 120;
 
+// Minutos del temporizador de práctica según la dificultad (1 a 5). El más
+// fácil tiene el mínimo, 5 minutos. No bloquea nada: al acabarse solo avisa.
+const MINUTOS_TEMPORIZADOR = { 1: 5, 2: 8, 3: 10, 4: 15, 5: 20 };
+export const minutosTemporizador = (nivel) => MINUTOS_TEMPORIZADOR[nivel] || 5;
+
 // `conceptos` son los mensajes del gato: aclaran el tema, nunca el ejercicio.
 // Van pocos y cortos a propósito: un panel cargado agobia más de lo que ayuda.
 export const TEMAS = [
