@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { NIVELES_FUNDAMENTOS, TEMAS, buscarTema, temasDeNivel } from '../scripts/fundamentosData';
-import { ultimaVisita } from '../scripts/fundamentosProgreso';
+import { guardarTemporizador, temporizadorActivo, ultimaVisita } from '../scripts/fundamentosProgreso';
 import { Plegable } from '../components/ExerciseBits';
 import { StarIcon } from '../components/ProblemBits';
-import { ArrowLeftIcon, ArrowRightIcon, PlayIcon, LockIcon } from '../components/AppIcons';
+import { ArrowLeftIcon, ArrowRightIcon, PlayIcon, LockIcon, ClockIcon } from '../components/AppIcons';
 
 const TOTAL_EJERCICIOS = NIVELES_FUNDAMENTOS.reduce((total, n) => total + n.ejercicios.length, 0);
 
@@ -79,73 +79,99 @@ const Logros = ({ logros }) => (
   </Plegable>
 );
 
-/* Dónde quedó el estudiante. No aparece la primera vez: sin visitas no hay
-   nada que continuar. Marca el último ejercicio abierto, no los resueltos. */
-const Avance = ({ nivel, numero }) => {
-  const ejercicio = nivel.ejercicios.find((e) => e.numero === numero);
-  if (!ejercicio) return null;
-
+/* Pie de la tarjeta: dónde quedó el estudiante, el botón para seguir y el
+   interruptor del temporizador. Marca el último ejercicio abierto, no los
+   resueltos; sin visitas la barra va vacía y el botón lleva al primero. */
+const PieNivel = ({ nivel, numero, temporizador, onTemporizador }) => {
   const total = nivel.ejercicios.length;
-  const tema = buscarTema(ejercicio.tema);
+  const ejercicio = nivel.ejercicios.find((e) => e.numero === numero);
+  const actual = ejercicio ? numero : 0;
+  const destino = ejercicio ? numero : nivel.ejercicios[0]?.numero;
+  const accionReloj = temporizador ? 'Desactivar el temporizador' : 'Activar el temporizador';
 
   return (
-    <div className="nb-fd-avance">
-      <div className="nb-fd-avance-info">
-        <span className="nb-fd-avance-label">Vas en el ejercicio {numero} de {total}</span>
-        <span className="nb-fd-avance-tema">{tema.titulo} · {ejercicio.titulo}</span>
+    <div className="nb-fd-card-foot">
+      <div className="nb-fd-avance">
+        {!nivel.pronto && (
+          <div className="nb-fd-avance-info">
+            <span className="nb-fd-avance-label">
+              {ejercicio ? `Vas en el ejercicio ${actual} de ${total}` : `Ejercicio 0 de ${total}`}
+            </span>
+            {ejercicio && (
+              <span className="nb-fd-avance-tema">{buscarTema(ejercicio.tema).titulo} · {ejercicio.titulo}</span>
+            )}
+          </div>
+        )}
+        <div
+          className="nb-fd-avance-barra"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={actual}
+          aria-label={`Ejercicio ${actual} de ${total}`}
+        >
+          {actual > 0 && <div style={{ width: `${(actual / total) * 100}%` }} />}
+        </div>
       </div>
-      <div
-        className="nb-fd-avance-barra"
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={total}
-        aria-valuenow={numero}
-        aria-label={`Ejercicio ${numero} de ${total}`}
-      >
-        <div style={{ width: `${(numero / total) * 100}%` }} />
-      </div>
-      <Link to={`/dashboard/fundamentos/${nivel.slug}/${numero}`} className="nb-fd-continuar">
-        Continuar <span aria-hidden="true">→</span>
-      </Link>
+
+      {!nivel.pronto && (
+        <div className="nb-fd-card-acciones">
+          <Link to={`/dashboard/fundamentos/${nivel.slug}/${destino}`} className="nb-fd-continuar">
+            {ejercicio ? 'Continuar' : 'Empezar'} <span aria-hidden="true">→</span>
+          </Link>
+          <button
+            type="button"
+            className={`nb-fd-reloj${temporizador ? ' is-on' : ''}`}
+            onClick={onTemporizador}
+            aria-pressed={temporizador}
+            aria-label="Temporizador de práctica"
+            title={accionReloj}
+          >
+            <ClockIcon />
+          </button>
+        </div>
+      )}
     </div>
   );
 };
 
-const TarjetaNivel = ({ nivel, visita }) => (
+/* Tres franjas: el nivel arriba, la presentación al centro (texto a la
+   izquierda, ventana de código a la derecha) y el avance abajo. */
+const TarjetaNivel = ({ nivel, visita, temporizador, onTemporizador }) => (
   <div
     className={`nb-fd-card${nivel.pronto ? ' is-soon' : ''}`}
-    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink }}
+    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.bgSuave }}
   >
-    {/* Adorno: dos ventanitas de código que no dicen nada del ejercicio. */}
-    <div className="nb-fd-card-deco" aria-hidden="true">
-      {nivel.codigo.map((fragmento, i) => (
-        <div key={fragmento} className={`nb-dash-code-float nb-fd-code is-${i === 0 ? 'izq' : 'der'}`}>
-          <div className="nb-fd-code-barra"><span /><span /></div>
-          <pre>{fragmento}</pre>
-        </div>
-      ))}
+    <div className="nb-fd-card-top">
+      <span className="nb-fd-card-kicker">Nivel {nivel.n}</span>
+      <span className="nb-fd-card-kicker">
+        {nivel.pronto ? 'Pronto' : `${nivel.ejercicios.length} ejercicios`}
+      </span>
     </div>
 
-    <div className="nb-fd-card-kicker">Nivel {nivel.n}</div>
-    <h2 className="nb-fd-card-title">{nivel.titulo}</h2>
+    <div className="nb-fd-card-body">
+      <div className="nb-fd-card-main">
+        <h2 className="nb-fd-card-title">{nivel.titulo}</h2>
+        <p className="nb-fd-card-text">{nivel.texto}</p>
 
-    {nivel.pronto ? (
-      <span className="nb-fd-play" aria-hidden="true"><LockIcon /></span>
-    ) : (
-      // El enlace se estira sobre toda la tarjeta con ::after.
-      <Link
-        to={`/dashboard/fundamentos/${nivel.slug}`}
-        className="nb-fd-play"
-        aria-label={`Ver los ejercicios de ${nivel.titulo}`}
-        title="Ver los ejercicios"
-      >
-        <PlayIcon />
-      </Link>
-    )}
+        {nivel.pronto ? (
+          <span className="nb-fd-play is-locked"><LockIcon /> Pronto</span>
+        ) : (
+          // El enlace se estira sobre toda la tarjeta con ::after.
+          <Link to={`/dashboard/fundamentos/${nivel.slug}`} className="nb-fd-play">
+            <PlayIcon /> Ver los ejercicios
+          </Link>
+        )}
+      </div>
 
-    <p className="nb-fd-card-text">{nivel.texto}</p>
+      {/* Adorno: una ventana de código que no dice nada del ejercicio. */}
+      <div className="nb-fd-code" aria-hidden="true">
+        <div className="nb-fd-code-barra"><span /><span /></div>
+        <pre>{nivel.codigo.join('\n\n')}</pre>
+      </div>
+    </div>
 
-    {visita && <Avance nivel={nivel} numero={visita} />}
+    <PieNivel nivel={nivel} numero={visita} temporizador={temporizador} onTemporizador={onTemporizador} />
   </div>
 );
 
@@ -155,6 +181,12 @@ const FundamentosPage = () => {
   const [visitas] = useState(() => Object.fromEntries(
     NIVELES_FUNDAMENTOS.map((n) => [n.slug, ultimaVisita(n.slug)]),
   ));
+  // Una sola preferencia para todos los niveles; el editor la lee al abrir un ejercicio.
+  const [temporizador, setTemporizador] = useState(temporizadorActivo);
+  const alternarTemporizador = () => setTemporizador((v) => {
+    guardarTemporizador(!v);
+    return !v;
+  });
   const ultimo = NIVELES_FUNDAMENTOS.length - 1;
 
   return (
@@ -206,7 +238,12 @@ const FundamentosPage = () => {
               return (
                 // `inert` saca del tabulador a la diapositiva que no se ve.
                 <section key={nivel.slug} className="nb-fd-slide" aria-hidden={!visible} inert={!visible}>
-                  <TarjetaNivel nivel={nivel} visita={visitas[nivel.slug]} />
+                  <TarjetaNivel
+                    nivel={nivel}
+                    visita={visitas[nivel.slug]}
+                    temporizador={temporizador}
+                    onTemporizador={alternarTemporizador}
+                  />
 
                   <Logros logros={nivel.logros} />
 

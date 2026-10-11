@@ -24,7 +24,7 @@ const CategoryCard = ({ categoria }) => (
 
     <div className="nb-pb-card-head">
       <span className="nb-pb-badge">{categoria.n}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div className="nb-dash-grow">
         <h3 className="nb-pb-card-title">{categoria.titulo}</h3>
         <p className="nb-pb-card-topics">{categoria.temas}</p>
       </div>
@@ -96,17 +96,14 @@ const ProblemsPage = () => {
       {/* ── Encabezado del módulo ── */}
       <div className="nb-dash-hero nb-pb-hero">
         <div className="nb-dash-hero-deco" aria-hidden="true">
-          <div className="nb-dash-code-float" style={{ right: '3%', top: '14%', width: 'clamp(120px,10vw,225px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.22)', padding: '5px 8px' }}>
-              <span style={{ width: 7, height: 7, background: 'rgba(255,255,255,0.7)', display: 'block' }} />
-              <span style={{ width: 7, height: 7, background: 'rgba(255,255,255,0.4)', display: 'block' }} />
-            </div>
+          <div className="nb-dash-code-float nb-pb-hero-code">
+            <div className="nb-dash-code-bar"><span /><span /></div>
             <pre>
-              <span style={{ color: 'rgba(255,255,255,0.95)' }}>sort</span>{'(v.begin(),\n     v.end());\n'}
-              <span style={{ color: 'rgba(255,255,255,0.95)' }}>while</span>{' (l <= r) {\n  m = (l + r) / 2;\n}'}
+              <span className="nb-dash-code-kw">sort</span>{'(v.begin(),\n     v.end());\n'}
+              <span className="nb-dash-code-kw">while</span>{' (l <= r) {\n  m = (l + r) / 2;\n}'}
             </pre>
           </div>
-          <span className="nb-dash-float-text" style={{ left: '2%', bottom: '8%', fontSize: 'clamp(9px,0.7vw,16px)', color: 'rgba(255,255,255,0.26)' }}>O(n log n)</span>
+          <span className="nb-dash-float-text nb-pb-hero-float">O(n log n)</span>
         </div>
 
         <div className="nb-pb-hero-main">
@@ -142,7 +139,7 @@ const ProblemsPage = () => {
             type="search"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por tema: grafos, dp, cadenas..."
+            placeholder="Buscar por tema: grafos, dp, cadenas…"
             aria-label="Buscar categoría de problemas"
           />
           {busqueda && (

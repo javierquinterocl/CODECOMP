@@ -151,7 +151,7 @@ const ChallengeForm = ({ mode, challenge, isSubmitting, onCancel, onSubmit }) =>
             Cancelar
           </button>
           <button type="submit" disabled={isSubmitting} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60">
-            {isSubmitting ? 'Guardando...' : mode === 'edit' ? 'Guardar cambios' : 'Crear reto'}
+            {isSubmitting ? 'Guardando…' : mode === 'edit' ? 'Guardar cambios' : 'Crear reto'}
           </button>
         </div>
       </div>
@@ -402,7 +402,7 @@ const DailyChallengesPage = () => {
             <p className="mt-2 text-sm text-slate-600">Visualiza los retos que puedes resolver hoy. Los admins ven además borradores y retos archivados.</p>
           </div>
           <div className="text-sm text-slate-500">
-            {loading ? 'Cargando retos...' : `${totalChallenges} retos encontrados`}
+            {loading ? 'Cargando retos…' : `${totalChallenges} retos encontrados`}
           </div>
         </div>
 
@@ -415,7 +415,7 @@ const DailyChallengesPage = () => {
         ) : null}
 
         {loading ? (
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-10 text-center text-slate-500">Cargando retos...</div>
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-10 text-center text-slate-500">Cargando retos…</div>
         ) : null}
 
         {!loading && challenges.length === 0 ? (

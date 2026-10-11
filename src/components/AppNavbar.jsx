@@ -21,7 +21,7 @@ const ESTRELLA = 'M0 -10 L2.47 -3.4 L9.51 -3.09 L3.99 1.3 L5.88 8.09 L0 4.2 L-5.
 
 const BrandCat = () => (
   <span className="nb-dash-brand-cat" aria-hidden="true">
-    <img src="/cat-pixel.png" alt="" />
+    <img src="/cat-pixel.png" alt="" width="512" height="512" />
     <svg className="nb-dash-brand-stars" viewBox="0 0 100 100">
       <g fill="#FFD100">
         <path d={ESTRELLA} transform="translate(13 21) scale(0.78)" />
@@ -62,7 +62,7 @@ const AppNavbar = () => {
         </div>
 
         <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="nb-dash-logout">
-          {isLoggingOut ? '...' : 'Salir'}
+          {isLoggingOut ? '…' : 'Salir'}
         </button>
       </div>
     </header>

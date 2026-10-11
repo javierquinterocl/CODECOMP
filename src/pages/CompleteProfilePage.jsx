@@ -88,7 +88,7 @@ const CompleteProfilePage = () => {
       maxWidth={480}
       decorated
     >
-      <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+      <form onSubmit={handleSubmit} noValidate className="nb-form">
         <div className="nb-row">
           <div className="nb-field">
             <label htmlFor="nombre" className="nb-label">Nombre</label>
@@ -141,7 +141,7 @@ const CompleteProfilePage = () => {
         {submitError && <div className="nb-note nb-note-error">{submitError}</div>}
 
         <button type="submit" disabled={isSubmitting} className="nb-submit">
-          {isSubmitting ? 'Guardando...' : 'Continuar al dashboard'}
+          {isSubmitting ? 'Guardando…' : 'Continuar al dashboard'}
         </button>
       </form>
     </AuthShell>

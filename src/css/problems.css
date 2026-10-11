@@ -12,6 +12,9 @@
 /* ---------- Encabezado del módulo ---------- */
 .nb-pb-hero { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--sp-gap); }
 .nb-pb-hero-main { position: relative; flex: 1 1 380px; min-width: 0; }
+/* Adorno del encabezado */
+.nb-pb-hero-code { right: 3%; top: 14%; width: clamp(120px,10vw,225px); }
+.nb-pb-hero-float { left: 2%; bottom: 8%; font-size: clamp(9px,0.7vw,16px); color: rgba(255,255,255,0.26); }
 .nb-pb-hero-stats { position: relative; display: flex; flex-wrap: wrap; gap: clamp(8px, 0.7vw, 16px); }
 .nb-pb-hstat { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(8px,0.6vw,14px) clamp(12px,1vw,20px); min-width: clamp(92px, 7vw, 140px); }
 .nb-pb-hstat-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
@@ -25,13 +28,13 @@
 .nb-pb-search input::placeholder { color: var(--nb-ink-mute); }
 .nb-pb-clear { flex: 0 0 auto; border: 2px solid #000; background: #fff; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-xs); line-height: 1; padding: 5px 8px; color: #000; }
 .nb-pb-clear:hover { background: #000; color: #fff; }
-.nb-pb-all { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 10px; background: #000; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); padding: clamp(9px,0.7vw,15px) clamp(16px,1.3vw,28px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; font-family: inherit; cursor: pointer; transition: all 0.1s; }
+.nb-pb-all { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 10px; background: #000; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); padding: clamp(9px,0.7vw,15px) clamp(16px,1.3vw,28px); color: #fff; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; font-family: inherit; cursor: pointer; transition: var(--nb-tr); }
 .nb-pb-all:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px var(--nb-blue); color: #fff; }
 
 /* ---------- Rejilla de categorías ---------- */
 .nb-pb-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--sp-gap); }
 
-.nb-pb-card { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: clamp(170px, 14vw, 264px); background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; transition: all 0.1s; }
+.nb-pb-card { position: relative; overflow: hidden; display: flex; flex-direction: column; min-height: clamp(170px, 14vw, 264px); background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; transition: var(--nb-tr); }
 .nb-pb-card:hover { transform: translate(3px, 3px); box-shadow: 2px 2px 0px #000; color: var(--cat-ink); }
 .nb-pb-card:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 
@@ -71,14 +74,14 @@
 .nb-pb-listbar-title { flex: 0 0 auto; font-weight: 700; font-size: var(--fs-lg); letter-spacing: -0.01em; }
 /* El buscador toma el espacio del medio y empuja el filtro contra el borde. */
 .nb-pb-search-inline { flex: 1 1 260px; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,16px); }
-.nb-pb-filtro { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,18px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-pb-filtro { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: clamp(7px,0.6vw,12px) clamp(11px,0.9vw,18px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: var(--nb-tr); }
 .nb-pb-filtro svg { width: clamp(13px,1vw,17px); height: auto; }
 .nb-pb-filtro:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
 .nb-pb-filtro.is-on { background: var(--nb-blue); color: #fff; }
 
 .nb-pb-list { display: flex; flex-direction: column; gap: clamp(10px, 0.8vw, 16px); }
 
-.nb-pb-row { position: relative; display: flex; align-items: center; gap: clamp(11px, 0.9vw, 22px); background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(11px,0.9vw,20px) clamp(13px,1vw,24px); transition: all 0.1s; }
+.nb-pb-row { position: relative; display: flex; align-items: center; gap: clamp(11px, 0.9vw, 22px); background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(11px,0.9vw,20px) clamp(13px,1vw,24px); transition: var(--nb-tr); }
 .nb-pb-row:hover { transform: translate(3px, 3px); box-shadow: 1px 1px 0px #000; }
 .nb-pb-row:focus-within { box-shadow: 4px 4px 0px var(--nb-blue); }
 
@@ -97,7 +100,7 @@
 .nb-pb-nivel-seg.is-on { background: var(--nb-blue); }
 
 /* Botón de favorito: por encima del enlace estirado */
-.nb-pb-fav { position: relative; z-index: 1; flex: 0 0 auto; display: grid; place-items: center; width: clamp(34px, 2.6vw, 46px); aspect-ratio: 1; border: 2px solid #000; background: #fff; color: #000; cursor: pointer; padding: 0; transition: all 0.1s; }
+.nb-pb-fav { position: relative; z-index: 1; flex: 0 0 auto; display: grid; place-items: center; width: clamp(34px, 2.6vw, 46px); aspect-ratio: 1; border: 2px solid #000; background: #fff; color: #000; cursor: pointer; padding: 0; transition: var(--nb-tr); }
 .nb-pb-fav svg { width: 62%; height: 62%; }
 .nb-pb-fav:hover { background: var(--nb-pink); }
 .nb-pb-fav.is-on { background: var(--nb-pink); }
@@ -165,7 +168,7 @@
 .nb-ex-toolbar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: clamp(8px, 0.7vw, 14px); }
 
 /* "Reiniciar" se mudó a la cabecera del editor: Enviar toma todo el hueco. */
-.nb-ex-send { flex: 1 1 190px; border: 2px solid #000; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); cursor: pointer; transition: all 0.1s; background: var(--nb-blue); color: #fff; box-shadow: 4px 4px 0px #000; }
+.nb-ex-send { flex: 1 1 190px; border: 2px solid #000; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); cursor: pointer; transition: var(--nb-tr); background: var(--nb-blue); color: #fff; box-shadow: 4px 4px 0px #000; }
 .nb-ex-send:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
 
 /* ---------- Desplegable propio (reemplaza al <select> del navegador) ----------
@@ -195,6 +198,9 @@
   --tok-comentario: #6A9955; --tok-cadena: #CE9178; --tok-numero: #B5CEA8; --tok-literal: #569CD6; --tok-control: #C586C0; --tok-clave: #569CD6; --tok-tipo: #4EC9B0; --tok-funcion: #DCDCAA; --tok-preproc: #C586C0; --tok-operador: #D4D4D4; --tok-punt: #CCCCCC; --tok-plano: #9CDCFE;
   display: flex; flex-direction: column; background: var(--ed-bg); border: 2px solid #000; box-shadow: 4px 4px 0px #000; overflow: hidden; }
 /* Modo claro del editor: solo cambian las variables de arriba. */
+/* El textarea no lleva contorno propio: el foco se marca en todo el editor
+   con la sombra azul, como en el desplegable. */
+.nb-ex-editor:has(.nb-ex-code:focus-visible) { box-shadow: 4px 4px 0px var(--nb-blue); }
 .nb-ex-editor.is-light { --ed-bg: #fff; --ed-gutter-bg: #F1F3FB; --ed-gutter-ink: #767C90; --ed-gutter-line: #C9CEE4; --ed-caret: var(--nb-blue); --ed-seleccion: rgba(0,120,215,0.28);
   --tok-comentario: #008000; --tok-cadena: #A31515; --tok-numero: #098658; --tok-literal: #0000FF; --tok-control: #AF00DB; --tok-clave: #0000FF; --tok-tipo: #267F99; --tok-funcion: #795E26; --tok-preproc: #AF00DB; --tok-operador: #000000; --tok-punt: #3B3B3B; --tok-plano: #001080; }
 
@@ -269,7 +275,7 @@
 .nb-ex-feedback-output { margin-top: 2px; }
 /* ---------- Tutor ---------- */
 .nb-ex-tutor { margin-top: 4px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-.nb-ex-tutor-btn { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(7px,0.6vw,12px) clamp(12px,1vw,20px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-ex-tutor-btn { background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(7px,0.6vw,12px) clamp(12px,1vw,20px); font-family: inherit; font-weight: 700; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; color: #000; cursor: pointer; transition: var(--nb-tr); }
 .nb-ex-tutor-btn:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px var(--nb-blue); }
 .nb-ex-tutor-btn:disabled { opacity: 0.65; cursor: wait; }
 .nb-ex-tutor-pista { border-left: 3px solid var(--nb-blue); padding-left: clamp(10px,0.8vw,16px); }
@@ -325,4 +331,10 @@
   .nb-ex-send { box-shadow: 3px 3px 0px #000; }
   .nb-ex-send { flex: 1 1 100%; }
   .nb-ex-cat { width: 42px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nb-select-menu { animation: none; }
+  .nb-ex-fold-caret,
+  .nb-select-caret { transition: none; }
 }

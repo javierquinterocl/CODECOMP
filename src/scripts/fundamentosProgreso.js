@@ -4,6 +4,7 @@
 
 const CLAVE_APERTURAS = 'codecomp:fundamentos:aperturas';
 const CLAVE_VISITAS = 'codecomp:fundamentos:ultimo';
+const CLAVE_TEMPORIZADOR = 'codecomp:fundamentos:temporizador';
 
 const leer = (clave) => {
   try {
@@ -46,4 +47,11 @@ export const registrarVisita = (nivelSlug, numero) => {
 export const ultimaVisita = (nivelSlug) => {
   const numero = Number(leer(CLAVE_VISITAS)[nivelSlug]);
   return Number.isInteger(numero) && numero > 0 ? numero : null;
+};
+
+/** El temporizador de práctica viene apagado: lo enciende el estudiante. */
+export const temporizadorActivo = () => leer(CLAVE_TEMPORIZADOR).activo === true;
+
+export const guardarTemporizador = (activo) => {
+  guardar(CLAVE_TEMPORIZADOR, { activo: Boolean(activo) });
 };

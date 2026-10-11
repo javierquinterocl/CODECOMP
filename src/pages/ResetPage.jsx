@@ -142,10 +142,10 @@ const ResetPage = () => {
                 maxWidth={480}
                 decorated
             >
-                <form onSubmit={handleSubmit} noValidate style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                <form onSubmit={handleSubmit} noValidate className="nb-form">
                     <div className="nb-field">
                         <label htmlFor="newPassword" className="nb-label">Contraseña nueva</label>
-                        <div style={{ position: 'relative' }}>
+                        <div className="nb-eye-wrap">
                             <input
                                 id="newPassword"
                                 name="newPassword"
@@ -154,8 +154,7 @@ const ResetPage = () => {
                                 placeholder="••••••••••"
                                 value={formData.newPassword}
                                 onChange={handleInputChange}
-                                className={`nb-input${errors.newPassword ? ' is-error' : ''}`}
-                                style={{ paddingRight: 62 }}
+                                className={`nb-input has-eye${errors.newPassword ? ' is-error' : ''}`}
                             />
                             {eyeButton}
                         </div>
@@ -164,7 +163,7 @@ const ResetPage = () => {
 
                     <div className="nb-field">
                         <label htmlFor="confirmPassword" className="nb-label">Confirmar contraseña</label>
-                        <div style={{ position: 'relative' }}>
+                        <div className="nb-eye-wrap">
                             <input
                                 id="confirmPassword"
                                 name="confirmPassword"
@@ -173,8 +172,7 @@ const ResetPage = () => {
                                 placeholder="••••••••••"
                                 value={formData.confirmPassword}
                                 onChange={handleInputChange}
-                                className={`nb-input${errors.confirmPassword ? ' is-error' : ''}`}
-                                style={{ paddingRight: 62 }}
+                                className={`nb-input has-eye${errors.confirmPassword ? ' is-error' : ''}`}
                             />
                             {eyeButton}
                         </div>
@@ -182,7 +180,7 @@ const ResetPage = () => {
                     </div>
 
                     <button type="submit" disabled={isLoading} className="nb-submit">
-                        {isLoading ? 'Cambiando...' : 'Cambiar contraseña'}
+                        {isLoading ? 'Cambiando…' : 'Cambiar contraseña'}
                     </button>
 
                     <div className="nb-panel-foot">

@@ -110,9 +110,9 @@ const MemberRow = ({ pos, nombre, codigo, tiempo, envios, puntos, me = false, in
     <div className="nb-dash-member-av">{inicial}</div>
     <div className="nb-dash-member-main">
       <div className="nb-dash-member-name">
-        {nombre}{me && <span className="nb-mono" style={{ fontWeight: 400 }}> (tú)</span>}
+        {nombre}{me && <span className="nb-dash-member-you"> (tú)</span>}
       </div>
-      <div className="nb-dash-member-code" style={{ opacity: me ? 0.85 : 1 }}>{codigo}</div>
+      <div className="nb-dash-member-code">{codigo}</div>
     </div>
     <MemberField label="Tiempo inscrito" value={tiempo} />
     <MemberField label="Envíos" value={envios} />
@@ -157,19 +157,16 @@ const DashboardPage = () => {
       {/* ── Banner de bienvenida ── */}
       <div className="nb-dash-hero">
         <div className="nb-dash-hero-deco" aria-hidden="true">
-          <div className="nb-dash-code-float" style={{ right: '2.5%', top: '12%', width: 'clamp(120px,11vw,240px)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.22)', padding: '5px 8px' }}>
-              <span style={{ width: 7, height: 7, background: 'rgba(255,255,255,0.7)', display: 'block' }} />
-              <span style={{ width: 7, height: 7, background: 'rgba(255,255,255,0.4)', display: 'block' }} />
-            </div>
+          <div className="nb-dash-code-float nb-dash-hero-code">
+            <div className="nb-dash-code-bar"><span /><span /></div>
             <pre>
-              <span style={{ color: 'rgba(255,255,255,0.95)' }}>for</span>{' i '}
-              <span style={{ color: 'rgba(255,255,255,0.95)' }}>in</span>{' range(n):\n  dp[i] = min(\n    dp[i-1] + 1,\n    dp[i-2] + w)'}
+              <span className="nb-dash-code-kw">for</span>{' i '}
+              <span className="nb-dash-code-kw">in</span>{' range(n):\n  dp[i] = min(\n    dp[i-1] + 1,\n    dp[i-2] + w)'}
             </pre>
           </div>
-          <span className="nb-dash-float-text" style={{ right: '2.5%', top: '4%', fontSize: 'clamp(9px,0.7vw,16px)', color: 'rgba(255,255,255,0.34)' }}>O(n log n)</span>
-          <span className="nb-dash-float-text" style={{ right: '2.5%', bottom: '20%', fontSize: 'clamp(9px,0.7vw,17px)', color: 'rgba(255,255,255,0.3)' }}>while (l &lt;= r)</span>
-          <span className="nb-dash-float-text" style={{ right: '2.5%', bottom: '6%', fontWeight: 400, fontSize: 'clamp(8px,0.6vw,15px)', color: 'rgba(255,255,255,0.24)' }}>#include &lt;bits/stdc++.h&gt;</span>
+          <span className="nb-dash-float-text is-a">O(n log n)</span>
+          <span className="nb-dash-float-text is-b">while (l &lt;= r)</span>
+          <span className="nb-dash-float-text is-c">#include &lt;bits/stdc++.h&gt;</span>
         </div>
 
         <div className="nb-dash-hero-inner">
@@ -186,14 +183,14 @@ const DashboardPage = () => {
         {/* ── Perfil + módulos ── */}
         <div className="nb-dash-row">
 
-          <div className="nb-dash-card nb-dash-pad" style={{ flex: '5 1 360px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-gap)' }}>
-            <div style={{ display: 'flex', gap: 'var(--sp-gap)', alignItems: 'stretch' }}>
+          <div className="nb-dash-card nb-dash-pad nb-dash-profile">
+            <div className="nb-dash-profile-top">
               <div className="nb-dash-photo">
                 {photo && !photoError
                   ? <img src={photo} alt="Foto de perfil" onError={() => setPhotoError(true)} />
-                  : <img src="/cat-pixel.png" alt="Foto de perfil" style={{ imageRendering: 'pixelated' }} />}
+                  : <img src="/cat-pixel.png" alt="Foto de perfil" width="512" height="512" className="is-pixel" />}
               </div>
-              <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-gap)' }}>
+              <div className="nb-dash-metrics">
                 <div className="nb-dash-metric">
                   <span className="nb-dash-metric-label">Rating</span>
                   <span className="nb-dash-metric-value">{progress?.user?.global_rating ?? 1000}</span>
@@ -205,9 +202,9 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-gap)', alignItems: 'stretch' }}>
-              <div style={{ flex: '1 1 170px', minWidth: 0, border: '2px solid #000', display: 'flex', alignItems: 'stretch' }}>
-                <div style={{ flex: '1 1 0', minWidth: 0, padding: 'clamp(11px,0.9vw,20px) clamp(12px,1vw,22px)' }}>
+            <div className="nb-dash-profile-bottom">
+              <div className="nb-dash-idcard">
+                <div className="nb-dash-idcard-text">
                   <h3 className="nb-dash-name">{displayName}</h3>
                   <div className="nb-dash-email">{user?.email}</div>
                 </div>
@@ -217,11 +214,8 @@ const DashboardPage = () => {
               </div>
 
               <div className="nb-dash-title-card">
-                <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }} aria-hidden="true">
-                  <span style={{ position: 'absolute', right: '8%', top: '12%', fontSize: '1.7em', lineHeight: 1, color: 'rgba(255,255,255,0.22)' }}>★</span>
-                  <span style={{ position: 'absolute', right: '26%', top: '52%', fontSize: '1.1em', lineHeight: 1, color: 'rgba(255,255,255,0.16)' }}>★</span>
-                  <span style={{ position: 'absolute', right: '3%', bottom: '8%', fontSize: '0.9em', lineHeight: 1, color: 'rgba(255,255,255,0.2)' }}>★</span>
-                  <span style={{ position: 'absolute', left: '6%', bottom: '6%', fontSize: '0.75em', lineHeight: 1, color: 'rgba(255,255,255,0.14)' }}>★</span>
+                <div className="nb-dash-title-stars" aria-hidden="true">
+                  <span>★</span><span>★</span><span>★</span><span>★</span>
                 </div>
                 <div className="nb-dash-title-label">Título</div>
                 <div className="nb-dash-title-value">&quot;Programador más rápido&quot;</div>
@@ -229,29 +223,29 @@ const DashboardPage = () => {
             </div>
 
             <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="nb-dash-danger">
-              {isLoggingOut ? 'Cerrando...' : 'Cerrar sesión'}
+              {isLoggingOut ? 'Cerrando…' : 'Cerrar sesión'}
             </button>
           </div>
 
-          <div className="nb-dash-col" style={{ flex: '7 1 420px' }}>
-            <Link to="/dashboard/problemas" className="nb-dash-card nb-dash-link-card nb-dash-pad" style={{ flex: 1, display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center' }}>
+          <div className="nb-dash-col is-7">
+            <Link to="/dashboard/problemas" className="nb-dash-card nb-dash-link-card nb-dash-pad nb-dash-module">
               <div className="nb-dash-icon"><CpuIcon /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="nb-dash-grow">
                 <div className="nb-dash-kicker">Módulo</div>
-                <h3 className="nb-dash-h3" style={{ marginBottom: 8 }}>Problemas</h3>
+                <h3 className="nb-dash-h3 is-gap">Problemas</h3>
                 <p className="nb-dash-body-text">Explora nuestro repositorio de problemas para prepararte en la programacion competitiva.</p>
               </div>
-              <span className="nb-mono" style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>↗</span>
+              <span className="nb-dash-module-go" aria-hidden="true">↗</span>
             </Link>
 
-            <div className="nb-dash-pad" style={{ flex: 1, background: '#E9EDFB', border: '3px dashed #000', display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center' }}>
-              <div className="nb-dash-icon" style={{ background: '#fff', color: '#000' }}><TrophyIcon /></div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                  <span className="nb-mono" style={{ fontSize: 'var(--fs-xs)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.14em' }}>Módulo</span>
+            <div className="nb-dash-pad nb-dash-module is-soon">
+              <div className="nb-dash-icon is-white"><TrophyIcon /></div>
+              <div className="nb-dash-grow">
+                <div className="nb-dash-kicker-row">
+                  <span className="nb-dash-kicker is-ink">Módulo</span>
                   <span className="nb-dash-tag">Próximamente</span>
                 </div>
-                <h3 className="nb-dash-h3" style={{ marginBottom: 8 }}>Competencias</h3>
+                <h3 className="nb-dash-h3 is-gap">Competencias</h3>
                 <p className="nb-dash-body-text">Este módulo se activa en la feria de proyectos de la UFPSO.</p>
               </div>
             </div>
@@ -259,11 +253,11 @@ const DashboardPage = () => {
         </div>
 
         {/* ── Nivel en progreso ── */}
-        <div className="nb-dash-card nb-dash-pad" style={{ display: 'flex', gap: 'var(--sp-gap)', alignItems: 'center', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+        <div className="nb-dash-card nb-dash-pad nb-dash-level">
+          <div className="nb-dash-level-main">
             <div className="nb-dash-badge">En progreso</div>
             <h2 className="nb-dash-level-title">Rating actual: {progress?.user?.global_rating ?? 1000}</h2>
-            <p className="nb-dash-body-text" style={{ marginBottom: 16, fontSize: 'var(--fs-base)' }}>
+            <p className="nb-dash-body-text is-lead">
               Has resuelto {progress?.user?.solved_count ?? 0} problemas de {progress?.user?.attempted_count ?? 0} intentos registrados. Continúa practicando para fortalecer tus tags más débiles.
             </p>
             <div className="nb-dash-progress"><div style={{ width: `${Math.min(100, ((progress?.user?.solved_count || 0) / Math.max(progress?.user?.attempted_count || 1, 1)) * 100)}%` }} /></div>
@@ -271,20 +265,17 @@ const DashboardPage = () => {
           </div>
 
           <div className="nb-dash-terminal">
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-              <span style={{ width: 8, height: 8, background: '#fff', display: 'block' }} />
-              <span style={{ width: 8, height: 8, background: '#0736FE', display: 'block' }} />
-            </div>
+            <div className="nb-dash-terminal-dots"><span /><span /></div>
             <pre>
-              <span style={{ color: '#7EA0FF' }}>const</span>{' useData = () => {\n  '}
-              <span style={{ color: '#7EA0FF' }}>const</span>{' [data,\n    setData]\n  = useState('}
-              <span style={{ color: '#7EA0FF' }}>null</span>{');\n  ...\n}'}
+              <span className="nb-dash-terminal-kw">const</span>{' useData = () => {\n  '}
+              <span className="nb-dash-terminal-kw">const</span>{' [data,\n    setData]\n  = useState('}
+              <span className="nb-dash-terminal-kw">null</span>{');\n  ...\n}'}
             </pre>
           </div>
         </div>
 
         <div className="nb-dash-card nb-dash-pad">
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+          <div className="nb-dash-sechead">
             <div>
               <div className="nb-dash-badge">Ruta adaptativa</div>
               <h2 className="nb-dash-section-title">Problemas recomendados</h2>
@@ -313,29 +304,29 @@ const DashboardPage = () => {
 
         {/* ── Recursos + eventos ── */}
         <div className="nb-dash-row">
-          <div className="nb-dash-col" style={{ flex: '5 1 320px' }}>
+          <div className="nb-dash-col is-5">
             {RECURSOS.map((r) => (
-              <div key={r.titulo} className="nb-dash-card nb-dash-pad" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 'var(--sp-gap)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-gap)' }}>
-                  <div className="nb-dash-icon" style={r.oscuro ? { background: '#000', fontWeight: 700, fontSize: 'var(--fs-lg)' } : undefined}>
+              <div key={r.titulo} className="nb-dash-card nb-dash-pad nb-dash-resource">
+                <div className="nb-dash-resource-head">
+                  <div className={`nb-dash-icon${r.oscuro ? ' is-dark' : ''}`}>
                     {r.icono}
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="nb-dash-grow">
                     <div className="nb-dash-kicker">Recursos</div>
                     <h3 className="nb-dash-h3">{r.titulo}</h3>
                   </div>
                   <span className="nb-dash-tag">Pronto</span>
                 </div>
                 <p className="nb-dash-body-text">{r.texto}</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                <div className="nb-dash-chips">
                   {r.chips.map((c) => <span key={c} className="nb-dash-chip">{c}</span>)}
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="nb-dash-card nb-dash-pad" style={{ flex: '7 1 420px', minWidth: 0 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+          <div className="nb-dash-card nb-dash-pad nb-dash-events">
+            <div className="nb-dash-sechead is-top">
               <div>
                 <h3 className="nb-dash-section-title">Competencias RPC 2026</h3>
                 <div className="nb-dash-section-sub">Red de Programación Competitiva</div>
@@ -343,15 +334,15 @@ const DashboardPage = () => {
               <a href="https://www.facebook.com/RedProgramacionCompetitiva" target="_blank" rel="noopener noreferrer" className="nb-dash-outline">Ver RPC ↗</a>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div className="nb-dash-list">
               {RPC_EVENTS.map((e) => (
                 <div key={e.titulo} className="nb-dash-event">
                   <div className={`nb-dash-date${e.destacado ? '' : ' is-past'}`}>
                     <span className="nb-dash-date-m">{e.mes}</span>
                     <span className="nb-dash-date-d">{e.dia}</span>
                   </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginBottom: 6 }}>
+                  <div className="nb-dash-grow">
+                    <div className="nb-dash-event-head">
                       <span className="nb-dash-event-title">{e.titulo}</span>
                       <span className="nb-dash-tag">{e.estado}</span>
                     </div>
@@ -366,12 +357,12 @@ const DashboardPage = () => {
 
         {/* ── Grupo estable ── */}
         <div className="nb-dash-card nb-dash-pad">
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: 14, marginBottom: 18 }}>
+          <div className="nb-dash-sechead">
             <div>
               <h3 className="nb-dash-section-title">Grupo Estable</h3>
               <div className="nb-dash-section-sub">Maratón de Programación · UFPSO</div>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+            <div className="nb-dash-stats">
               {[['Integrantes', 5], ['Sesiones', 24], ['Envíos totales', 454]].map(([label, value]) => (
                 <div key={label} className="nb-dash-stat">
                   <div className="nb-dash-stat-label">{label}</div>
@@ -381,7 +372,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="nb-dash-list is-tight">
             <MemberRow
               me pos="01" inicial={inicial}
               nombre={displayName}

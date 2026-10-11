@@ -15,7 +15,19 @@
   --nb-ink-soft: #3B4252;    /* texto secundario sobre blanco */
   --nb-danger: #B00020;      /* errores de formulario */
   --nb-editor: #0B0B0F;      /* fondo del editor y de los bloques de codigo */
+  /* Hundimiento y cambio de color de lo pulsable. Se listan las propiedades:
+     con `all` el navegador vigila tambien las que no cambian. */
+  --nb-tr: transform 0.1s, box-shadow 0.1s, background-color 0.1s, color 0.1s;
 }
+
+/* ---------- Foco de teclado ----------
+   :where() deja la especificidad en la de :focus-visible sola, asi cualquier
+   pieza con su propio contorno (negro sobre color, hacia dentro) le gana. */
+:where(.nb-page, .nb-auth, .nb-login, .nb-dash) :where(a, button, [tabindex]):focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 3px; }
+/* Sobre azul el contorno es negro; sobre negro, blanco. */
+.nb-hero :where(a, button):focus-visible,
+.nb-login :where(a, button):focus-visible { outline-color: #000; }
+.nb-foot :where(a, button):focus-visible { outline-color: #fff; }
 
 /* ---------- Animaciones ---------- */
 @keyframes om-marquee  { from { transform: translateX(0); }   to { transform: translateX(-50%); } }
@@ -37,18 +49,51 @@
 .nb-nav-link { font-family: inherit; background: none; border: none; border-bottom: 2px solid transparent; color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; cursor: pointer; padding: 4px 2px; }
 .nb-nav-link:hover { color: var(--nb-blue); }
 
-.nb-btn-white { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #000; display: inline-block; transition: all 0.1s; }
+.nb-btn-white { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #000; display: inline-block; transition: var(--nb-tr); }
 .nb-btn-white:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #000; }
-.nb-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; display: inline-block; transition: all 0.1s; }
+.nb-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 18px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em; color: #fff; display: inline-block; transition: var(--nb-tr); }
 .nb-btn-blue:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; color: #fff; }
 
-.nb-hero-btn-white { background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #000; display: inline-flex; align-items: center; gap: 10px; transition: all 0.1s; }
+.nb-hero-btn-white { background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #000; display: inline-flex; align-items: center; gap: 10px; transition: var(--nb-tr); }
 .nb-hero-btn-white:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; color: #000; }
-.nb-hero-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #fff; display: inline-block; transition: all 0.1s; }
+.nb-hero-btn-blue { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(12px,1.5vw,20px) clamp(20px,2.6vw,38px); font-weight: 700; font-size: clamp(13px,1.25vw,19px); text-transform: uppercase; letter-spacing: 0.06em; color: #fff; display: inline-block; transition: var(--nb-tr); }
 .nb-hero-btn-blue:hover { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; color: #fff; }
 
-.nb-card { transition: all 0.1s; }
-.nb-card:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000 !important; }
+.nb-btn-white, .nb-btn-blue, .nb-hero-btn-white, .nb-hero-btn-blue { cursor: pointer; font-family: inherit; }
+
+.nb-card { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; transition: var(--nb-tr); }
+.nb-card:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-card.is-pad { padding: 28px; }
+.nb-card.is-col { display: flex; flex-direction: column; }
+.nb-card-title { font-size: clamp(19px,1.7vw,26px); font-weight: 700; margin: 0 0 10px; letter-spacing: -0.02em; }
+.nb-card-title.is-tool { font-size: clamp(18px,1.6vw,25px); letter-spacing: normal; }
+.nb-card-title.is-news { font-size: clamp(18px,1.6vw,24px); margin-bottom: 12px; line-height: 1.25; }
+.nb-card-text { margin: 0; font-size: clamp(14px,1.1vw,17px); line-height: 1.55; font-weight: 500; }
+.nb-card-text.is-grow { flex: 1; margin-bottom: 22px; }
+.nb-feature-icon { width: 64px; height: 64px; background: var(--nb-blue); color: #fff; border: 2px solid #000; display: grid; place-items: center; font-family: 'Press Start 2P', monospace; font-size: 18px; margin-bottom: 22px; }
+.nb-meter { height: 20px; border: 2px solid #000; background: #fff; padding: 2px; margin-top: 20px; }
+.nb-meter > div { height: 100%; width: 92%; background: var(--nb-blue); }
+.nb-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.nb-chips.is-tight { gap: 8px; margin-top: 18px; }
+.nb-chip { background: var(--nb-blue); color: #fff; border: 2px solid #000; padding: 6px 12px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 12px; }
+.nb-chip.is-tag { padding: 5px 11px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.nb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+.nb-grid.is-wide { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.nb-lead-panel + .nb-grid { margin-top: 24px; }
+
+/* Ficha de caracteristicas al pie de las tarjetas de herramientas */
+.nb-spec { border-bottom: 2px solid #000; }
+.nb-spec-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 2px solid #000; padding: 10px 0; }
+.nb-spec-label { font-weight: 700; font-size: 15px; }
+.nb-spec-value { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; letter-spacing: 0.1em; text-transform: uppercase; background: var(--nb-blue); color: #fff; padding: 4px 9px; white-space: nowrap; }
+
+/* Noticias */
+.nb-news { overflow: hidden; }
+.nb-news-img { border-bottom: 2px solid #000; background: var(--nb-blue); }
+.nb-news-img img { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.nb-news-body { padding: 26px; display: flex; flex-direction: column; flex: 1; }
+.nb-news-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.nb-news-date { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11.5px; letter-spacing: 0.1em; color: #555; }
 
 .nb-footer-ufps { flex: 0 0 auto; width: clamp(30px, 2.6vw, 44px); height: auto; }
 .nb-footer-link { color: #DDE3FF; }
@@ -57,17 +102,33 @@
 .nb-social-btn { width: 44px; height: 44px; background: #fff; border: 2px solid #000; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--nb-blue); }
 .nb-social-btn:hover { background: var(--nb-blue-dark); color: #fff; }
 
+.nb-nav { background: #fff; border-bottom: 3px solid #000; flex: 0 0 auto; z-index: 50; }
+.nb-nav-left { display: flex; align-items: center; gap: 36px; }
+.nb-nav-actions { display: flex; align-items: center; gap: 12px; }
 .nb-nav-inner { max-width: 1280px; margin: 0 auto; padding: 18px 28px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .nb-nav-links { display: flex; gap: 22px; }
 
 /* ---- Secciones de contenido (01 a 04) ---- */
 .nb-sec { max-width: 1120px; margin: 0 auto; padding: 72px 28px 84px; scroll-margin-top: 20px; }
 .nb-sec-tight { padding-top: 0; }
+.nb-sec.is-narrow { max-width: 820px; }
+.nb-sectag { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+.nb-sectag-label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: clamp(11px,0.95vw,15px); text-transform: uppercase; letter-spacing: 0.16em; color: #fff; background: var(--nb-blue); padding: 6px 12px; }
+.nb-sectag-rule { flex: 1; height: 3px; background: #000; display: block; }
+.nb-sec-title { font-family: 'Press Start 2P', monospace; color: #000; margin: 0; }
+.nb-sec-title.is-tools { font-size: clamp(20px,3.4vw,46px); text-shadow: 3px 3px 0px var(--nb-blue), -2px -2px 0px var(--nb-blue), 2px -2px 0px var(--nb-blue), -2px 2px 0px var(--nb-blue), 5px 5px 0px #000; margin-bottom: 40px; line-height: 1.35; max-width: 720px; }
+.nb-sec-title.is-news { font-size: clamp(17px,2.4vw,32px); text-shadow: 3px 3px 0px var(--nb-blue); margin-bottom: 36px; line-height: 1.4; max-width: 640px; }
+.nb-sec-title.is-faq { font-size: clamp(18px,2.8vw,38px); text-shadow: 4px 4px 0px var(--nb-blue); line-height: 1.4; }
 
 /* Panel destacado de la seccion 01: texto a la izquierda, lenguajes a la derecha */
 .nb-lead-panel { background: var(--nb-blue); border: 2px solid #000; box-shadow: 6px 6px 0px #000;
   padding: clamp(24px, 3vw, 40px); display: grid; grid-template-columns: 1.15fr 1fr;
   gap: clamp(24px, 3vw, 40px); align-items: center; }
+.nb-lead-kicker { display: inline-block; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; background: #fff; border: 2px solid #000; padding: 6px 12px; margin-bottom: 18px; }
+.nb-lead-title { font-family: 'Press Start 2P', monospace; font-size: clamp(16px,2.1vw,30px); color: #fff; text-shadow: 3px 3px 0px #000; margin: 0 0 16px; line-height: 1.45; }
+.nb-lead-text { margin: 0; color: #fff; font-size: clamp(14px,1.15vw,18px); line-height: 1.6; font-weight: 500; }
+.nb-lead-langs { display: flex; flex-wrap: wrap; gap: 12px; align-content: center; }
+.nb-lead-lang { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 9px 17px; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14.5px; }
 
 /* ---- Hero ---- */
 .nb-hero-wrap { height: 100dvh; display: flex; flex-direction: column; }
@@ -80,6 +141,12 @@
   repeating-linear-gradient(0deg,  rgba(255,255,255,0.16) 0 1px, transparent 1px 56px),
   repeating-linear-gradient(90deg, rgba(255,255,255,0.16) 0 1px, transparent 1px 56px); }
 .nb-hero-deco { position: absolute; inset: 0; pointer-events: none; }
+/* Posicion, tamano y ritmo de cada texto vienen de HERO_TEXTS (HomePage). */
+.nb-hero-text { position: absolute; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; animation: var(--nb-float, om-float-a) var(--nb-dur, 9s) ease-in-out infinite; }
+.nb-hero-lead { margin: 0 auto clamp(20px,3.6vh,40px); font-size: clamp(15px,1.6vw,24px); line-height: 1.6; color: #fff; font-weight: 500; max-width: min(760px,88%); }
+.nb-hero-cat { width: clamp(46px,4.6vw,78px); align-self: center; pointer-events: none; }
+/* El gato se mece igual en el hero, en el panel de sesion y en las tarjetas de registro. */
+.nb-cat-float { height: auto; image-rendering: pixelated; animation: om-float-b 6s ease-in-out infinite; }
 .nb-hero-title {
   font-family: 'Press Start 2P', monospace;
   color: #fff;
@@ -97,24 +164,69 @@
 .nb-hero-inner { position: relative; width: 100%; max-width: 1400px; margin: 0 auto; padding: clamp(28px,5vh,72px) clamp(16px,3vw,32px); text-align: center; }
 .nb-hero-actions { display: flex; flex-wrap: wrap; gap: clamp(12px,1.4vw,20px); justify-content: center; margin-bottom: clamp(20px,3.4vh,38px); }
 .nb-terminal { display: inline-flex; align-items: center; gap: 10px; max-width: 100%; background: #000; border: 2px solid #000; box-shadow: 5px 5px 0px var(--nb-blue); padding: clamp(8px,1.1vw,14px) clamp(12px,1.6vw,22px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: clamp(11px,1.05vw,16px); color: #fff; }
+.nb-terminal-caret { width: 0.6em; height: 1.1em; background: #fff; display: inline-block; animation: om-blink 1s steps(1) infinite; }
 .nb-stats { display: flex; flex-wrap: wrap; gap: clamp(10px,1.4vw,20px); justify-content: center; margin-top: clamp(18px,3.2vh,36px); }
+.nb-stat { background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: clamp(8px,1vw,14px) clamp(10px,1.2vw,18px); text-align: left; }
+.nb-stat-label { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: clamp(8px,0.7vw,11px); letter-spacing: 0.16em; text-transform: uppercase; color: var(--nb-blue); margin-bottom: 4px; }
+.nb-stat-value { font-family: 'Press Start 2P', monospace; font-size: clamp(10px,1.1vw,17px); color: #000; }
 
 /* FAQ: se expande a la altura real del texto en vez de un máximo fijo,
    que en móvil recortaba las respuestas largas. */
 .nb-faq-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows 260ms ease-out; }
 .nb-faq-body.is-open { grid-template-rows: 1fr; }
 .nb-faq-body > div { overflow: hidden; }
+.nb-faq-head { text-align: center; margin-bottom: 36px; }
+.nb-faq-head .nb-sectag-label { display: inline-block; margin-bottom: 20px; }
+.nb-faq-list { display: flex; flex-direction: column; gap: 16px; }
+.nb-faq-item { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
+.nb-faq-q { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 16px; text-align: left; padding: 18px 20px; background: transparent; border: none; cursor: pointer; font-family: 'Space Grotesk', sans-serif; font-size: clamp(15px,1.4vw,20px); font-weight: 700; color: #000; }
+.nb-faq-q:focus-visible { outline-offset: -3px; }
+.nb-faq-mark { width: 32px; height: 32px; flex-shrink: 0; background: var(--nb-blue); color: #fff; border: 2px solid #000; display: grid; place-items: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; }
+.nb-faq-a { margin: 0; padding: 16px 20px 20px; font-size: clamp(14px,1.1vw,17px); line-height: 1.6; font-weight: 500; border-top: 2px solid #000; }
 
-/* ---------- Modal de inicio de sesión ---------- */
+/* ---------- Pie del inicio ---------- */
+.nb-foot { background: #000; border-top: 3px solid #000; padding: 40px 28px 24px; }
+.nb-foot-top { max-width: 1120px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 20px; padding-bottom: 22px; border-bottom: 2px solid #fff; }
+.nb-foot-brand { display: flex; align-items: center; gap: 16px; }
+.nb-foot-name { font-family: 'Press Start 2P', monospace; font-size: 15px; color: #fff; }
+.nb-foot-links { display: flex; flex-wrap: wrap; gap: 24px; }
+.nb-foot-bottom { max-width: 1120px; margin: 0 auto; padding-top: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.nb-foot-copy { margin: 0; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+.nb-foot-small { font-family: 'JetBrains Mono', monospace; font-size: 12.5px; }
+
+/* ---------- Modal de inicio de sesión ----------
+   --login-top es el alto medido del navbar: el panel arranca justo debajo.
+   En móvil ocupa toda la pantalla. */
+.nb-login { position: fixed; left: 0; right: 0; bottom: 0; top: var(--login-top, 0px); z-index: 200; font-family: 'Space Grotesk', Helvetica, sans-serif; }
+.nb-login-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); animation: om-fade-in 0.25s ease-out both; }
+.nb-login-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(420px, 92vw); border-left: 3px solid #000; display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; background: var(--nb-blue); animation: om-slide-in 0.3s cubic-bezier(0.2,0.8,0.3,1) both; }
+@media (max-width: 720px) {
+  .nb-login { top: 0; }
+  .nb-login-panel { width: 100%; }
+}
+.nb-login-head { position: relative; flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 14px; border-bottom: 3px solid #000; padding: 16px 22px; }
+.nb-login-kicker { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; color: #fff; }
+.nb-login-brand { position: relative; flex: 0 0 auto; border-bottom: 3px solid #000; padding: 20px 22px; display: flex; align-items: center; gap: 16px; }
+.nb-login-brand > img { width: 62px; }
+.nb-login-brand > div { min-width: 0; }
+.nb-login-name { font-family: 'Press Start 2P', monospace; font-size: 12px; line-height: 1.7; color: #fff; }
+.nb-login-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fff; opacity: 0.85; margin-top: 8px; }
+.nb-login-form { position: relative; padding: 24px 22px; display: flex; flex-direction: column; gap: 16px; }
+.nb-login-link { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; font-weight: 700; color: #fff; text-decoration: underline; align-self: flex-start; }
+.nb-login-sep { display: flex; align-items: center; gap: 12px; margin-top: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fff; }
+.nb-login-sep::before, .nb-login-sep::after { content: ''; flex: 1; height: 2px; background: #000; }
+.nb-login-oauth { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.nb-login-foot { border-top: 2px solid #000; padding-top: 14px; font-size: 13px; font-weight: 500; color: #fff; }
+.nb-login-foot a { font-weight: 700; color: #fff; text-decoration: underline; }
 .nb-modal-close { width: 32px; height: 32px; flex: 0 0 32px; border: 2px solid #000; background: #fff; display: flex; align-items: center; justify-content: center; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; color: #000; cursor: pointer; }
 .nb-modal-close:hover { background: #000; color: #fff; }
-.nb-modal-input:focus { box-shadow: 4px 4px 0px #000; }
-.nb-modal-submit { margin-top: 4px; text-align: center; background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: all 0.1s; }
+.nb-modal-submit { margin-top: 4px; text-align: center; background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #000; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; font-family: 'Space Grotesk', sans-serif; transition: var(--nb-tr); }
 .nb-modal-submit:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; }
 .nb-modal-submit:disabled { opacity: 0.65; cursor: not-allowed; }
-.nb-modal-oauth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #000; cursor: pointer; transition: all 0.1s; }
+.nb-modal-oauth { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: 12px 6px; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #000; cursor: pointer; transition: var(--nb-tr); }
 .nb-modal-oauth:hover:not(:disabled) { transform: translate(1.5px, 1.5px); box-shadow: 1.5px 1.5px 0px #000; }
 .nb-modal-oauth:disabled { opacity: 0.6; cursor: not-allowed; }
+.nb-modal-oauth svg { width: 18px; height: 18px; }
 
 /* ============================================================
    Páginas de autenticación (registro / recuperar / cambiar)
@@ -143,33 +255,40 @@ a.nb-brand:hover { color: var(--nb-blue); }
 /* Se esconde cuando ya no hay margen libre a los lados del formulario */
 @media (max-width: 1040px) { .nb-auth-deco { display: none; } }
 
+/* Posicion, tamano y ritmo vienen de los datos de AuthShell. */
+.nb-deco-card, .nb-deco-text { animation: var(--nb-float, om-float-a) var(--nb-dur, 9s) ease-in-out infinite; }
 .nb-deco-card { position: absolute; background: #fff; border: 2px solid rgba(0,0,0,0.6); box-shadow: 5px 5px 0px rgba(7,54,254,0.18); overflow: hidden; }
 .nb-deco-bar { display: flex; align-items: center; gap: 6px; background: rgba(7,54,254,0.10); padding: 5px 8px; border-bottom: 1px solid rgba(0,0,0,0.3); }
 .nb-deco-dot { width: 7px; height: 7px; display: block; background: rgba(0,0,0,0.35); }
+.nb-deco-dot + .nb-deco-dot { opacity: 0.55; }
 .nb-deco-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; color: rgba(0,0,0,0.55); letter-spacing: 0.1em; margin-left: auto; }
 .nb-deco-code { margin: 0; padding: 9px 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; line-height: 1.65; color: rgba(0,0,0,0.5); white-space: pre; }
 .nb-deco-kw { color: var(--nb-blue); font-weight: 700; }
 .nb-deco-text { position: absolute; font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.02em; white-space: nowrap; color: rgba(7,54,254,0.22); }
 
-/* Respeta a quien pidió menos movimiento en el sistema */
-@media (prefers-reduced-motion: reduce) {
-  .nb-deco-card, .nb-deco-text { animation: none !important; }
-}
-
 /* Tarjeta blanca del formulario */
-.nb-panel { width: 100%; background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000; }
+.nb-panel { position: relative; z-index: 1; width: 100%; background: #fff; border: 3px solid #000; box-shadow: 8px 8px 0px #000; }
 .nb-panel-head { background: var(--nb-blue); border-bottom: 3px solid #000; padding: 20px 24px; display: flex; align-items: center; gap: 16px; }
+.nb-panel-head > img { width: 54px; }
+.nb-panel-head > div { min-width: 0; }
 .nb-panel-title { font-family: 'Press Start 2P', monospace; font-size: clamp(11px,1.5vw,15px); line-height: 1.6; color: #fff; text-shadow: 2px 2px 0px #000; margin: 0; }
 .nb-panel-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #fff; opacity: 0.9; margin: 8px 0 0; }
 .nb-panel-body { padding: clamp(20px,3vw,30px) clamp(18px,3vw,26px); display: flex; flex-direction: column; gap: 18px; }
 
 /* Campos */
+.nb-form { display: flex; flex-direction: column; gap: 18px; }
 .nb-field { display: flex; flex-direction: column; gap: 7px; }
 .nb-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: #000; }
 .nb-input { width: 100%; border: 2px solid #000; padding: 12px 14px; font-family: 'JetBrains Mono', monospace; font-size: 14px; color: #000; background: #fff; outline: none; transition: box-shadow 0.1s; }
 .nb-input:focus { box-shadow: 4px 4px 0px var(--nb-blue); }
 .nb-input.is-error { border-color: var(--nb-danger); }
 .nb-input.is-error:focus { box-shadow: 4px 4px 0px var(--nb-danger); }
+.nb-input.has-eye { padding-right: 62px; }
+.nb-eye-wrap { position: relative; }
+/* Dentro del panel azul de sesion: letra blanca y sombra de foco negra. */
+.nb-login .nb-label { color: #fff; }
+.nb-login .nb-error { color: #FFE8E8; }
+.nb-login .nb-input:focus { box-shadow: 4px 4px 0px #000; }
 .nb-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--nb-danger); }
 .nb-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (max-width: 620px) { .nb-row { grid-template-columns: 1fr; } }
@@ -178,9 +297,10 @@ a.nb-brand:hover { color: var(--nb-blue); }
 .nb-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--nb-blue); }
 
 /* Botón principal */
-.nb-submit { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: all 0.1s; }
+.nb-submit { background: var(--nb-blue); border: 2px solid #000; box-shadow: 5px 5px 0px #000; padding: 14px; color: #fff; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.08em; cursor: pointer; transition: var(--nb-tr); }
 .nb-submit:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 3px 3px 0px #000; }
 .nb-submit:disabled { opacity: 0.65; cursor: not-allowed; }
+.nb-submit.is-error { background: var(--nb-danger); }
 
 /* Avisos en línea */
 .nb-note { border: 2px solid #000; padding: 10px 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; }
@@ -227,12 +347,6 @@ a.nb-brand:hover { color: var(--nb-blue); }
      más pequeña y arrinconada en las bandas vacías de arriba y abajo. */
   .nb-hero-deco { opacity: 0.55; }
   .nb-hero-text.hide-sm { display: none; }
-
-  .nb-hero-card { width: 106px !important; }
-  .nb-hero-card-1 { top: 1.5% !important; right: 2% !important; }
-  .nb-hero-card-2 { top: 1.5% !important; left: 2% !important; }
-  .nb-hero-card-3 { bottom: 1.5% !important; right: 2% !important; }
-  .nb-hero-card-4 { bottom: 1.5% !important; left: 2% !important; }
 }
 
 /* --- El panel destacado de la 01 no cabe a dos columnas --- */
@@ -253,13 +367,13 @@ a.nb-brand:hover { color: var(--nb-blue); }
   .nb-hero-actions { flex-direction: column; align-items: stretch; }
   .nb-hero-actions .nb-hero-btn-white,
   .nb-hero-actions .nb-hero-btn-blue { width: 100%; justify-content: center; text-align: center; }
-  .nb-hero-cat { align-self: center !important; width: 64px !important; }
+  .nb-hero-cat { width: 64px; }
 
   .nb-terminal { flex-wrap: wrap; justify-content: center; word-break: break-word; font-size: 11px; }
 
   /* Rejilla de 2 columnas: con flex-wrap quedaban filas desparejas */
   .nb-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .nb-stats > div { box-shadow: 3px 3px 0px #000 !important; }
+  .nb-stat { box-shadow: 3px 3px 0px #000; }
 
   .nb-sec { padding: 52px 18px 60px; }
   .nb-sec-tight { padding-top: 0; }
@@ -271,12 +385,25 @@ a.nb-brand:hover { color: var(--nb-blue); }
 
 /* --- Pantallas muy angostas: el nombre y los botones ya no caben juntos --- */
 @media (max-width: 460px) {
-  .nb-nav-inner > div:first-child { gap: 0; }
+  .nb-nav-left { gap: 0; }
   .nb-brand { font-size: 12px; }
   .nb-btn-white,
   .nb-btn-blue { padding: 7px 10px; font-size: 11px; }
   .nb-authnav-inner { gap: 8px; }
-  .nb-panel-head img { width: 44px !important; }
+  .nb-panel-head > img { width: 44px; }
   .nb-panel-body { padding: 18px 16px; }
   .nb-hero-inner { padding: 24px 14px; }
+}
+
+/* ============================================================
+   Menos movimiento
+   Quien lo pide en su sistema ve la pagina quieta: sin textos flotando,
+   sin gato meciendose y sin cursores parpadeando. El titulo queda escrito.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .nb-deco-card, .nb-deco-text,
+  .nb-hero-text, .nb-cat-float, .nb-terminal-caret, .nb-hero-title,
+  .nb-login-backdrop, .nb-login-panel,
+  .nb-dialog-backdrop, .nb-dialog { animation: none; }
+  .nb-faq-body { transition: none; }
 }

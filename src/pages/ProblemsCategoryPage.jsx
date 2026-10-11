@@ -153,7 +153,7 @@ const ProblemsCategoryPage = () => {
               type="search"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar por número o título..."
+              placeholder="Buscar por número o título…"
               aria-label="Buscar un ejercicio de esta categoría"
             />
             {busqueda && (
@@ -176,7 +176,7 @@ const ProblemsCategoryPage = () => {
       )}
 
       <div className="nb-pb-list">
-        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas...</p></div>}
+        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas…</p></div>}
         {error && <div className="nb-pb-empty"><p className="nb-dash-body-text">{error}</p></div>}
         {visibles.map((e) => (
           <ProblemRow
