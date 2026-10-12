@@ -37,6 +37,11 @@ def crear_slug(title, problem_id):
     return f"{slug}-{str(problem_id).lower()}"[:220]
 
 
+def salida_recortada(output):
+    # Las salidas recortadas del dataset terminan en tres puntos.
+    return re.search(r"[^.]\.\.\.$", output.rstrip(" \n\r\t")) is not None
+
+
 def valores_casos(item):
     input_output = item.get("input_output") or {}
     if not isinstance(input_output, list):
@@ -44,7 +49,9 @@ def valores_casos(item):
     return [
         (str(case.get("input", "")), str(case.get("output", "")), index > 1)
         for index, case in enumerate(input_output)
-        if isinstance(case, dict) and "output" in case
+        if isinstance(case, dict)
+        and "output" in case
+        and not salida_recortada(str(case.get("output", "")))
     ]
 
 
@@ -99,7 +106,8 @@ def cargar_y_migrar():
                     if item.get(field)
                 )
                 rating_key = (item.get("contestId"), str(problem_key).strip().casefold())
-                difficulty_rating = ratings.get(rating_key, 1200)
+                rating_oficial = ratings.get(rating_key)
+                difficulty_rating = rating_oficial or 1200
                 time_limit = limite_numerico(item.get("time-limit"), 2.0)
                 memory_limit = int(limite_numerico(item.get("memory-limit"), 256))
 
@@ -113,13 +121,15 @@ def cargar_y_migrar():
                                             problem_number = EXCLUDED.problem_number,
                       title = EXCLUDED.title,
                       description_markdown = EXCLUDED.description_markdown,
-                      difficulty_rating = EXCLUDED.difficulty_rating,
+                      difficulty_rating = CASE WHEN %s THEN EXCLUDED.difficulty_rating
+                                               ELSE problems.difficulty_rating END,
                       time_limit_sec = EXCLUDED.time_limit_sec,
-                      memory_limit_mb = EXCLUDED.memory_limit_mb,
-                      is_active = true
+                      memory_limit_mb = EXCLUDED.memory_limit_mb
                     RETURNING id;
                     """,
-                    (problem_number, title, slug, description, difficulty_rating, time_limit, memory_limit),
+                    # Al reimportar no se toca is_active ni un rating sin coincidencia en el json.
+                    (problem_number, title, slug, description, difficulty_rating, time_limit,
+                     memory_limit, rating_oficial is not None),
                 )
                 problem_id = cursor.fetchone()[0]
 
