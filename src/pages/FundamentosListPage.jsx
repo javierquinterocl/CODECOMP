@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { buscarNivel, temasDeNivel } from '../scripts/fundamentosData';
+import { buscarNivel, temasDe } from '../scripts/fundamentosData';
+import { useFundamentos } from '../scripts/useFundamentos';
+import FundamentosCarga from '../components/FundamentosCarga';
 import { NIVELES, normalizarTexto } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 
@@ -36,22 +38,25 @@ const FundamentosListPage = () => {
   const { nivel: nivelSlug } = useParams();
   const nivel = buscarNivel(nivelSlug);
   const [busqueda, setBusqueda] = useState('');
+  const { ejercicios, cargando, error } = useFundamentos();
+  const delNivel = useMemo(() => (nivel && ejercicios?.[nivel.slug]) || [], [nivel, ejercicios]);
 
-  const temas = useMemo(() => (nivel ? temasDeNivel(nivel) : []), [nivel]);
+  const temas = useMemo(() => temasDe(delNivel), [delNivel]);
 
   const grupos = useMemo(() => {
-    if (!nivel) return [];
     const termino = normalizarTexto(busqueda.trim());
     return temas
       .map((tema) => ({
         tema,
-        ejercicios: nivel.ejercicios.filter((e) => e.tema === tema.slug && (!termino
+        ejercicios: delNivel.filter((e) => e.tema === tema.slug && (!termino
           || normalizarTexto(`${e.numero} ${e.titulo} ${e.resumen} ${tema.titulo}`).includes(termino))),
       }))
       .filter((g) => g.ejercicios.length > 0);
-  }, [nivel, temas, busqueda]);
+  }, [delNivel, temas, busqueda]);
 
-  if (!nivel || nivel.ejercicios.length === 0) {
+  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA="/dashboard/fundamentos" />;
+
+  if (!nivel || delNivel.length === 0) {
     return (
       <div className="nb-dash-inner">
         <Link to="/dashboard/fundamentos" className="nb-pb-back">← Volver a fundamentos</Link>
@@ -79,7 +84,7 @@ const FundamentosListPage = () => {
         </div>
 
         <div className="nb-pb-cat-count">
-          <div className="nb-pb-cat-count-value">{nivel.ejercicios.length}</div>
+          <div className="nb-pb-cat-count-value">{delNivel.length}</div>
           <div className="nb-pb-cat-count-label">Ejercicios</div>
         </div>
       </div>

@@ -11,6 +11,7 @@ import { adaptativo } from '../_compartido/rutas/adaptativo.ts';
 import { detalleProblema, listarProblemas } from '../_compartido/rutas/problemas.ts';
 import { progreso, recomendaciones, sincronizarUsuario } from '../_compartido/rutas/progreso.ts';
 import { tutor } from '../_compartido/rutas/tutor.ts';
+import { fundamentos } from '../_compartido/rutas/fundamentos.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -66,6 +67,8 @@ Deno.serve(async (req: Request) => {
         return segmentos[1]
           ? await detalleProblema(ctx, Number(segmentos[1]))
           : await listarProblemas(ctx);
+      case 'fundamentos':
+        return await fundamentos(ctx, segmentos[1]);
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }
