@@ -15,7 +15,7 @@ import { pedirPista } from '../scripts/tutorApi';
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
 const ESPERA_PISTA = 60;
 
-const ProblemDetailPage = () => {
+const Detalle = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
@@ -23,7 +23,8 @@ const ProblemDetailPage = () => {
 
   const ejercicio = buscarEjercicio(numero);
   const [lenguaje, setLenguaje] = useState(LENGUAJES[0]);
-  const [codigo, setCodigo] = useState(LENGUAJES[0].plantilla);
+  // Un borrador por lenguaje mientras dure la visita; sin borrador vale la plantilla.
+  const [borradores, setBorradores] = useState({});
   const [expandido, setExpandido] = useState(false);
   const [temaClaro, setTemaClaro] = useState(false);
   const [enviado, setEnviado] = useState(false);
@@ -71,32 +72,40 @@ const ProblemDetailPage = () => {
   // El destino de "volver" es el listado por el que se entró, que puede ser "todos".
   const volverA = slug === 'todos' ? 'todos los problemas' : (categoria?.titulo || 'problemas');
   const marcado = esFavorito(problema.numero);
+  const codigo = borradores[lenguaje.id] ?? lenguaje.plantilla;
 
   // Sin traducción solo existe el inglés y el conmutador no se muestra.
   const hayTraduccion = Boolean(problema.textos?.es);
   const idioma = hayTraduccion ? idiomaElegido : 'en';
   const texto = problema.textos?.[idioma] || problema;
 
-  /* Al cambiar de lenguaje solo se reemplaza la plantilla si nadie la tocó:
-     así no se pierde el trabajo de quien ya empezó a escribir. */
-  const cambiarLenguaje = (id) => {
-    const siguiente = LENGUAJES.find((l) => l.id === id);
-    if (!siguiente) return;
-    if (codigo.trim() === lenguaje.plantilla.trim()) setCodigo(siguiente.plantilla);
-    setLenguaje(siguiente);
-  };
-
   const limpiarPista = () => {
     setPista('');
     setErrorPista('');
   };
 
-  const reiniciar = () => {
-    setCodigo(lenguaje.plantilla);
+  // El veredicto y la pista hablan de un código concreto: se van cuando cambia.
+  const limpiarVeredicto = () => {
     setEnviado(false);
     setResultado(null);
     setErrorEnvio('');
     limpiarPista();
+  };
+
+  const cambiarLenguaje = (id) => {
+    const siguiente = LENGUAJES.find((l) => l.id === id);
+    if (!siguiente || siguiente.id === lenguaje.id) return;
+    setLenguaje(siguiente);
+    limpiarVeredicto();
+  };
+
+  const reiniciar = () => {
+    setBorradores((previos) => {
+      const resto = { ...previos };
+      delete resto[lenguaje.id];
+      return resto;
+    });
+    limpiarVeredicto();
   };
 
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
@@ -249,11 +258,8 @@ const ProblemDetailPage = () => {
             codigo={codigo}
             lenguajeId={lenguaje.id}
             onChange={(v) => {
-              setCodigo(v);
-              setEnviado(false);
-              setResultado(null);
-              setErrorEnvio('');
-              limpiarPista();
+              setBorradores((previos) => ({ ...previos, [lenguaje.id]: v }));
+              limpiarVeredicto();
             }}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
@@ -328,6 +334,12 @@ const ProblemDetailPage = () => {
       </div>
     </div>
   );
+};
+
+// La `key` devuelve el editor a la plantilla al pasar de un problema a otro.
+const ProblemDetailPage = () => {
+  const { numero } = useParams();
+  return <Detalle key={numero} />;
 };
 
 export default ProblemDetailPage;
