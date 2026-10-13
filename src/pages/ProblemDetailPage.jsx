@@ -4,7 +4,8 @@ import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
-import { StarIcon, NivelBarra } from '../components/ProblemBits';
+import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
+import { useIdioma } from '../scripts/useIdioma';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
@@ -14,24 +15,11 @@ import { pedirPista } from '../scripts/tutorApi';
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
 const ESPERA_PISTA = 60;
 
-const CLAVE_IDIOMA = 'codecomp:problemas:idioma';
-const IDIOMAS = [
-  { id: 'es', nombre: 'Español' },
-  { id: 'en', nombre: 'Inglés' },
-];
-
-const idiomaGuardado = () => {
-  try {
-    return localStorage.getItem(CLAVE_IDIOMA) === 'en' ? 'en' : 'es';
-  } catch {
-    return 'es';
-  }
-};
-
 const ProblemDetailPage = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
+  const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
   const [lenguaje, setLenguaje] = useState(LENGUAJES[0]);
@@ -49,7 +37,6 @@ const ProblemDetailPage = () => {
   const [errorPista, setErrorPista] = useState('');
   const [pistaHasta, setPistaHasta] = useState(0);
   const [ahora, setAhora] = useState(() => Date.now());
-  const [idiomaElegido, setIdiomaElegido] = useState(idiomaGuardado);
 
   useEffect(() => {
     if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
@@ -89,15 +76,6 @@ const ProblemDetailPage = () => {
   const hayTraduccion = Boolean(problema.textos?.es);
   const idioma = hayTraduccion ? idiomaElegido : 'en';
   const texto = problema.textos?.[idioma] || problema;
-
-  const cambiarIdioma = (id) => {
-    setIdiomaElegido(id);
-    try {
-      localStorage.setItem(CLAVE_IDIOMA, id);
-    } catch {
-      // Sin persistencia, la elección vale para esta visita.
-    }
-  };
 
   /* Al cambiar de lenguaje solo se reemplaza la plantilla si nadie la tocó:
      así no se pierde el trabajo de quien ya empezó a escribir. */
@@ -190,22 +168,7 @@ const ProblemDetailPage = () => {
             </div>
 
             <div className="nb-ex-title-side">
-              {hayTraduccion && (
-                <div className="nb-ex-idioma" role="group" aria-label="Idioma del enunciado">
-                  {IDIOMAS.map((opcion) => (
-                    <button
-                      key={opcion.id}
-                      type="button"
-                      className={`nb-ex-idioma-btn${idioma === opcion.id ? ' is-active' : ''}`}
-                      onClick={() => cambiarIdioma(opcion.id)}
-                      aria-pressed={idioma === opcion.id}
-                      title={`Ver el enunciado en ${opcion.nombre.toLowerCase()}`}
-                    >
-                      {opcion.id}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {hayTraduccion && <IdiomaSwitch idioma={idioma} onCambiar={cambiarIdioma} />}
               <span className="nb-ex-numero">{problema.numero}</span>
               <button
                 type="button"

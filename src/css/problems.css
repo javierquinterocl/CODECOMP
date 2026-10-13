@@ -158,6 +158,10 @@
 .nb-ex-idioma-btn.is-active { background: #000; color: #fff; }
 .nb-ex-idioma-btn:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: -3px; }
 .nb-ex-idioma-btn.is-active:focus-visible { outline-color: #fff; }
+/* En las barras de listado lleva etiqueta y sombra, como sus vecinos. */
+.nb-ex-idioma.is-bar { flex: 0 0 auto; align-items: stretch; box-shadow: 4px 4px 0px #000; }
+.nb-ex-idioma.is-bar .nb-ex-idioma-btn { display: flex; align-items: center; border-left: 2px solid #000; padding-inline: clamp(11px,0.9vw,18px); }
+.nb-ex-idioma-label { display: flex; align-items: center; padding: 0 clamp(10px,0.8vw,16px); font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
 
 /* ---------- Franja de datos ---------- */
 .nb-ex-meta { display: flex; flex-wrap: wrap; gap: clamp(8px, 0.7vw, 14px); }
@@ -319,6 +323,7 @@
 }
 
 @media (max-width: 640px) {
+  .nb-ex-idioma.is-bar { box-shadow: 3px 3px 0px #000; }
   .nb-pb-grid { grid-template-columns: 1fr; }
   .nb-pb-card { min-height: 0; box-shadow: 3px 3px 0px #000; }
   .nb-pb-ghost { font-size: 88px; }

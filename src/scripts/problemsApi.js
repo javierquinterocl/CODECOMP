@@ -32,8 +32,6 @@ export const mapProblem = (problem) => {
   const tituloEs = limpiarTexto(problem.title_es || '');
   const descriptionEn = limpiarTexto(problem.description_markdown || problem.title);
   const descriptionEs = limpiarTexto(problem.description_markdown_es || '');
-  // El idioma por defecto es el español; el inglés queda cuando no hay traducción.
-  const description = descriptionEs || descriptionEn;
 
   const tags = Array.isArray(problem.tags) ? problem.tags : [];
   const nombreTag = (tag) => (typeof tag === 'string' ? tag : tag?.name || '');
@@ -45,15 +43,15 @@ export const mapProblem = (problem) => {
     id: problem.id ?? problem.problem_number,
     numero: problem.problem_number,
     categoria: categoriaDeProblema({ tags, dificultadRating: difficulty }) || (tags[0] ? slugify(nombreTag(tags[0])) : 'principiante'),
-    titulo: tituloEs || tituloOriginal,
-    tituloOriginal,
+    titulo: tituloOriginal,
+    tituloEs,
     nivel,
     dificultadRating: difficulty,
     puntos: difficulty / 1000,
     tiempoLimite: Number(problem.time_limit_sec) || 1,
     memoriaLimite: Number(problem.memory_limit_mb) || 256,
-    resumen: description.replace(/[#*`\n]+/g, ' ').trim().slice(0, 180),
-    descripcion: parrafosDe(description),
+    resumen: descriptionEn.replace(/[#*`\n]+/g, ' ').trim().slice(0, 180),
+    descripcion: parrafosDe(descriptionEn),
     textos: {
       es: descriptionEs ? { titulo: tituloEs || tituloOriginal, descripcion: parrafosDe(descriptionEs) } : null,
       en: { titulo: tituloOriginal, descripcion: parrafosDe(descriptionEn) },

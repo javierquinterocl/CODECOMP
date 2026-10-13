@@ -4,6 +4,8 @@ import { CATEGORIAS as CATEGORIAS_LOCALES, problemaPerteneceCategoria, normaliza
 import { getAllProblems } from '../scripts/problemsApi';
 import { getProgress } from '../scripts/progressApi';
 import { useAuth } from '../context/AuthContext';
+import { useIdioma } from '../scripts/useIdioma';
+import { IdiomaSwitch } from '../components/ProblemBits';
 
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square">
@@ -47,6 +49,7 @@ const ProblemsPage = () => {
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(ADAPTIVO);
   const { user } = useAuth();
+  const { idioma, cambiar } = useIdioma();
   const [resueltos, setResueltos] = useState(0);
 
   // El mismo dato que muestra el tablero de inicio.
@@ -148,6 +151,7 @@ const ProblemsPage = () => {
             </button>
           )}
         </div>
+        {ADAPTIVO && <IdiomaSwitch idioma={idioma} onCambiar={cambiar} conEtiqueta />}
         <Link to="/dashboard/problemas/todos" className="nb-pb-all">
           Ver todos<span className="nb-mono">↗</span>
         </Link>
