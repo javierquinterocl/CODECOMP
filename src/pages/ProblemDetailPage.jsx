@@ -84,27 +84,20 @@ const Detalle = () => {
     setErrorPista('');
   };
 
-  // Cambiar de lenguaje no pasa por aquí: el veredicto sigue a la vista.
-  const limpiarVeredicto = () => {
-    setEnviado(false);
-    setResultado(null);
-    setErrorEnvio('');
-    limpiarPista();
-  };
-
   const cambiarLenguaje = (id) => {
     const siguiente = LENGUAJES.find((l) => l.id === id);
     if (!siguiente || siguiente.id === lenguaje.id) return;
     setLenguaje(siguiente);
   };
 
+  // Veredicto y pista siguen a la vista al teclear, reiniciar o cambiar de lenguaje:
+  // solo los quita un envío nuevo.
   const reiniciar = () => {
     setBorradores((previos) => {
       const resto = { ...previos };
       delete resto[lenguaje.id];
       return resto;
     });
-    limpiarVeredicto();
   };
 
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
@@ -254,10 +247,7 @@ const Detalle = () => {
           <Editor
             codigo={codigo}
             lenguajeId={lenguaje.id}
-            onChange={(v) => {
-              setBorradores((previos) => ({ ...previos, [lenguaje.id]: v }));
-              limpiarVeredicto();
-            }}
+            onChange={(v) => setBorradores((previos) => ({ ...previos, [lenguaje.id]: v }))}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
             claro={temaClaro}
