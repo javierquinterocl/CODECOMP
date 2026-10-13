@@ -17,8 +17,8 @@ import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { LockIcon, CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
 
-// Pausa sin teclear antes de mandar el borrador a la base.
-const ESPERA_BORRADOR = 2500;
+// Mientras se teclea, el borrador va a la base como mucho una vez cada tanto (y al salir).
+const ESPERA_BORRADOR = 15000;
 
 const reloj = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 
@@ -108,16 +108,23 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   // Borrador por guardar, y si el estudiante ya tecleó (para no pisarle lo escrito).
   const pendiente = useRef(null);
   const espera = useRef(null);
+  const guardado = useRef(null);
   const tocado = useRef(false);
   const abierto = useRef(false);
 
   const guardarPendiente = useCallback((alSalir = false) => {
     clearTimeout(espera.current);
+    espera.current = null;
     if (pendiente.current === null || !abierto.current || !user) return;
     const texto = pendiente.current;
     pendiente.current = null;
+    // Lo que ya está en la base no se vuelve a mandar.
+    if (texto === guardado.current) return;
+    guardado.current = texto;
     // Si no se guarda, el estudiante sigue trabajando: no es motivo para interrumpirlo.
-    guardarBorrador(user, nivel.slug, ejercicio.numero, texto, { alSalir }).catch(() => {});
+    guardarBorrador(user, nivel.slug, ejercicio.numero, texto, { alSalir }).catch(() => {
+      guardado.current = null;
+    });
   }, [user, nivel.slug, ejercicio.numero]);
 
   const escribir = (texto) => {
@@ -125,8 +132,8 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     setCodigo(texto);
     setEnviado(false);
     pendiente.current = texto;
-    clearTimeout(espera.current);
-    espera.current = setTimeout(guardarPendiente, ESPERA_BORRADOR);
+    // El reloj no se reinicia con cada tecla: así el ritmo de escrituras tiene tope.
+    espera.current ??= setTimeout(guardarPendiente, ESPERA_BORRADOR);
   };
 
   // Registra la apertura: fija el candado con la hora de la base y trae el borrador.
@@ -134,11 +141,12 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     if (!authReady || !user) return undefined;
     let vigente = true;
     abrirEjercicio(user, nivel.slug, ejercicio.numero)
-      .then(({ transcurrido, codigo: guardado }) => {
+      .then(({ transcurrido, codigo: enBase }) => {
         if (!vigente) return;
         abierto.current = true;
         setDesbloqueoEn(Date.now() + ESPERA_ENVIO * 1000 - transcurrido);
-        if (typeof guardado === 'string' && !tocado.current) setCodigo(guardado);
+        guardado.current = enBase ?? PLANTILLA_PSEINT;
+        if (typeof enBase === 'string' && !tocado.current) setCodigo(enBase);
       })
       .catch(() => {});
     return () => { vigente = false; };
