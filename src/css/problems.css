@@ -150,6 +150,15 @@
 .nb-ex-title-side { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; }
 .nb-ex-numero { border: 2px solid #000; background: var(--cat-ink); color: var(--cat-bg); padding: clamp(7px,0.6vw,13px) clamp(10px,0.8vw,17px); font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-base); line-height: 1; }
 
+/* Conmutador de idioma del enunciado: dos segmentos, el activo en negro. */
+.nb-ex-idioma { align-self: stretch; display: flex; border: 2px solid #000; background: #fff; }
+.nb-ex-idioma-btn { border: 0; background: transparent; color: #000; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; line-height: 1; padding: clamp(7px,0.6vw,13px) clamp(8px,0.7vw,13px); cursor: pointer; transition: var(--nb-tr); }
+.nb-ex-idioma-btn + .nb-ex-idioma-btn { border-left: 2px solid #000; }
+.nb-ex-idioma-btn:hover { background: var(--nb-hover); color: var(--nb-blue); }
+.nb-ex-idioma-btn.is-active { background: #000; color: #fff; }
+.nb-ex-idioma-btn:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: -3px; }
+.nb-ex-idioma-btn.is-active:focus-visible { outline-color: #fff; }
+
 /* ---------- Franja de datos ---------- */
 .nb-ex-meta { display: flex; flex-wrap: wrap; gap: clamp(8px, 0.7vw, 14px); }
 .nb-ex-meta-item { flex: 1 1 118px; background: #fff; border: 2px solid #000; padding: clamp(8px,0.6vw,14px) clamp(10px,0.8vw,16px); }

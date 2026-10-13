@@ -105,7 +105,7 @@ const ProblemsCategoryPage = () => {
     return ejercicios.filter((e) => {
       if (soloFavoritos && !esFavorito(e.numero)) return false;
       if (!termino) return true;
-      return normalizarTexto(`${e.numero} ${e.titulo} ${e.resumen || ''}`).includes(termino);
+      return normalizarTexto(`${e.numero} ${e.titulo} ${e.tituloOriginal || ''} ${e.resumen || ''}`).includes(termino);
     });
   }, [ejercicios, busqueda, soloFavoritos, esFavorito]);
 

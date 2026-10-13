@@ -18,10 +18,22 @@ const limpiarTexto = (value = '') => String(value)
 
 const slugify = (value = '') => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
+// El dataset cierra con "none" los enunciados sin nota: ese párrafo no se muestra.
+const parrafosDe = (texto) => {
+  const parrafos = texto.split(/\n\s*\n/).map(limpiarTexto).filter(Boolean);
+  if (parrafos.length > 1 && /^none\.?$/i.test(parrafos[parrafos.length - 1])) parrafos.pop();
+  return parrafos;
+};
+
 export const mapProblem = (problem) => {
   const difficulty = Number(problem.difficulty_rating) || 1200;
   const nivel = nivelDeRating(difficulty);
-  const description = limpiarTexto(problem.description_markdown || problem.title);
+  const tituloOriginal = limpiarTexto(problem.title);
+  const tituloEs = limpiarTexto(problem.title_es || '');
+  const descriptionEn = limpiarTexto(problem.description_markdown || problem.title);
+  const descriptionEs = limpiarTexto(problem.description_markdown_es || '');
+  // El idioma por defecto es el español; el inglés queda cuando no hay traducción.
+  const description = descriptionEs || descriptionEn;
 
   const tags = Array.isArray(problem.tags) ? problem.tags : [];
   const nombreTag = (tag) => (typeof tag === 'string' ? tag : tag?.name || '');
@@ -33,14 +45,19 @@ export const mapProblem = (problem) => {
     id: problem.id ?? problem.problem_number,
     numero: problem.problem_number,
     categoria: categoriaDeProblema({ tags, dificultadRating: difficulty }) || (tags[0] ? slugify(nombreTag(tags[0])) : 'principiante'),
-    titulo: limpiarTexto(problem.title),
+    titulo: tituloEs || tituloOriginal,
+    tituloOriginal,
     nivel,
     dificultadRating: difficulty,
     puntos: difficulty / 1000,
     tiempoLimite: Number(problem.time_limit_sec) || 1,
     memoriaLimite: Number(problem.memory_limit_mb) || 256,
     resumen: description.replace(/[#*`\n]+/g, ' ').trim().slice(0, 180),
-    descripcion: description.split(/\n\s*\n/).map(limpiarTexto).filter(Boolean),
+    descripcion: parrafosDe(description),
+    textos: {
+      es: descriptionEs ? { titulo: tituloEs || tituloOriginal, descripcion: parrafosDe(descriptionEs) } : null,
+      en: { titulo: tituloOriginal, descripcion: parrafosDe(descriptionEn) },
+    },
     entrada: 'Consulta los casos de prueba y las restricciones del enunciado.',
     salida: 'Imprime la respuesta solicitada por el enunciado.',
     ejemplos: examples,
