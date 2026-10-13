@@ -2,7 +2,51 @@
    ejercicio: la barra de complejidad y la estrella de favorito.
    La etiqueta de cada nivel (NIVELES) vive en problemsData.js. */
 
+import { useState } from 'react';
 import { IDIOMAS } from '../scripts/useIdioma';
+
+/* Imagen del enunciado, servida por Codeforces. Si no carga, queda su texto. */
+const Imagen = ({ src, figura = false }) => {
+  const [rota, setRota] = useState(false);
+  if (rota && figura) return <p className="nb-ex-text nb-ex-sin-imagen">[figura]</p>;
+  if (rota) return <span className="nb-ex-sin-imagen">[fórmula]</span>;
+
+  return (
+    <img
+      className={figura ? 'nb-ex-figura' : 'nb-ex-formula'}
+      src={src}
+      alt={figura ? 'Figura del enunciado' : 'fórmula'}
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setRota(true)}
+    />
+  );
+};
+
+const EnLinea = ({ hijos }) => hijos.map((h, i) => {
+  if (typeof h === 'string') return h;
+  if (h.tipo === 'formula') return <Imagen key={i} src={h.src} />;
+  const Marca = h.tipo === 'sup' ? 'sup' : 'sub';
+  return <Marca key={i}><EnLinea hijos={h.hijos} /></Marca>;
+});
+
+/** Enunciado por bloques (los de `bloquesDe`); una cadena suelta vale como párrafo. */
+export const Enunciado = ({ bloques, lang }) => bloques.map((b, i) => {
+  if (typeof b === 'string') return <p key={i} className="nb-ex-text" lang={lang}>{b}</p>;
+  if (b.tipo === 'figura') return <Imagen key={i} src={b.src} figura />;
+  if (b.tipo === 'lista') {
+    return (
+      <ul key={i} className="nb-ex-lista" lang={lang}>
+        {b.items.map((item, j) => <li key={j}><EnLinea hijos={item} /></li>)}
+      </ul>
+    );
+  }
+  return (
+    <p key={i} className={`nb-ex-text${b.tipo === 'centro' ? ' nb-ex-centro' : ''}`} lang={lang}>
+      <EnLinea hijos={b.hijos} />
+    </p>
+  );
+});
 
 /** Conmutador de idioma de los problemas: dos segmentos, el activo en negro. */
 export const IdiomaSwitch = ({ idioma, onCambiar, conEtiqueta = false }) => (

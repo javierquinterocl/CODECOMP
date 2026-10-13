@@ -1,37 +1,18 @@
 import { categoriaDeProblema, nivelDeRating } from './problemsData';
 import { rutaApi } from './apiBase';
+import { bloquesDe, limpiarTexto, textoPlano } from './enunciado';
 
 const API_URL = import.meta.env.VITE_PROBLEMS_API_URL || rutaApi('problems');
 
-const subindices = { 0: '₀', 1: '₁', 2: '₂', 3: '₃', 4: '₄', 5: '₅', 6: '₆', 7: '₇', 8: '₈', 9: '₉' };
-
-const limpiarTexto = (value = '') => String(value)
-  .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&')
-  .replace(/&quot;/g, '"').replace(/&#39;/g, "'")
-  .replace(/(?:<=|>=|≤|≥)(?:\s*(?:<=|>=|≤|≥)){1,}/g, (match) => match.includes('>=') || match.includes('≥') ? '≥' : '≤')
-  .replace(/\*([a-zA-Z])\*(\d+)/g, (_, letter, number) => `${letter}${[...number].map((digit) => subindices[digit]).join('')}`)
-  .replace(/\*([^*]+)\*/g, '$1')
-  .replace(/`([^`]+)`/g, '$1')
-  .replace(/[ \t]+\n/g, '\n')
-  .replace(/\n{3,}/g, '\n\n')
-  .trim();
-
 const slugify = (value = '') => value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-
-// El dataset cierra con "none" los enunciados sin nota: ese párrafo no se muestra.
-const parrafosDe = (texto) => {
-  const parrafos = texto.split(/\n\s*\n/).map(limpiarTexto).filter(Boolean);
-  if (parrafos.length > 1 && /^none\.?$/i.test(parrafos[parrafos.length - 1])) parrafos.pop();
-  return parrafos;
-};
 
 export const mapProblem = (problem) => {
   const difficulty = Number(problem.difficulty_rating) || 1200;
   const nivel = nivelDeRating(difficulty);
   const tituloOriginal = limpiarTexto(problem.title);
   const tituloEs = limpiarTexto(problem.title_es || '');
-  const descriptionEn = limpiarTexto(problem.description_markdown || problem.title);
-  const descriptionEs = limpiarTexto(problem.description_markdown_es || '');
+  const descriptionEn = problem.description_markdown || problem.title || '';
+  const descriptionEs = problem.description_markdown_es || '';
 
   const tags = Array.isArray(problem.tags) ? problem.tags : [];
   const nombreTag = (tag) => (typeof tag === 'string' ? tag : tag?.name || '');
@@ -50,11 +31,11 @@ export const mapProblem = (problem) => {
     puntos: difficulty / 1000,
     tiempoLimite: Number(problem.time_limit_sec) || 1,
     memoriaLimite: Number(problem.memory_limit_mb) || 256,
-    resumen: descriptionEn.replace(/[#*`\n]+/g, ' ').trim().slice(0, 180),
-    descripcion: parrafosDe(descriptionEn),
+    resumen: textoPlano(descriptionEn).replace(/[#`]+/g, ' ').trim().slice(0, 180),
+    descripcion: bloquesDe(descriptionEn),
     textos: {
-      es: descriptionEs ? { titulo: tituloEs || tituloOriginal, descripcion: parrafosDe(descriptionEs) } : null,
-      en: { titulo: tituloOriginal, descripcion: parrafosDe(descriptionEn) },
+      es: descriptionEs ? { titulo: tituloEs || tituloOriginal, descripcion: bloquesDe(descriptionEs) } : null,
+      en: { titulo: tituloOriginal, descripcion: bloquesDe(descriptionEn) },
     },
     entrada: 'Consulta los casos de prueba y las restricciones del enunciado.',
     salida: 'Imprime la respuesta solicitada por el enunciado.',

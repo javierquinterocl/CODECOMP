@@ -4,7 +4,7 @@ import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
-import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
+import { StarIcon, NivelBarra, IdiomaSwitch, Enunciado } from '../components/ProblemBits';
 import { useIdioma } from '../scripts/useIdioma';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
@@ -215,9 +215,7 @@ const Detalle = () => {
 
           {/* Descripción */}
           <Plegable titulo="Descripción" abiertoInicial>
-            {texto.descripcion.map((p) => (
-              <p key={p} className="nb-ex-text" lang={hayTraduccion ? idioma : undefined}>{p}</p>
-            ))}
+            <Enunciado bloques={texto.descripcion} lang={hayTraduccion ? idioma : undefined} />
           </Plegable>
 
           {/* Entrada y salida */}

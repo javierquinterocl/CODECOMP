@@ -129,6 +129,15 @@
 .nb-ex-text { margin: 0 0 10px; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; }
 .nb-ex-text:last-child { margin-bottom: 0; }
 
+/* ---------- Marcado del enunciado: fórmulas, figuras, listas y centrado ----------
+   Las imágenes vienen de Codeforces sin tamaño conocido: solo se les pone tope. */
+.nb-ex-formula { display: inline-block; vertical-align: middle; max-width: 100%; height: auto; }
+.nb-ex-figura { display: block; max-width: 100%; height: auto; margin: 0 auto 10px; }
+.nb-ex-sin-imagen { font-family: 'JetBrains Mono', monospace; color: var(--nb-ink-mute); }
+.nb-ex-lista { margin: 0 0 10px; padding-left: 1.4em; list-style: square; font-size: var(--fs-sm); line-height: 1.6; font-weight: 500; }
+.nb-ex-centro { text-align: center; }
+.nb-ex-figura:last-child, .nb-ex-lista:last-child { margin-bottom: 0; }
+
 /* ---------- Bloques plegables del enunciado ----------
    La cabecera entera es el botón. */
 .nb-ex-fold-head { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; background: transparent; border: none; padding: var(--sp-card); font-family: inherit; color: #000; text-align: left; cursor: pointer; }
