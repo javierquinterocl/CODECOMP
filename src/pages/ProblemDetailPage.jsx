@@ -84,7 +84,7 @@ const Detalle = () => {
     setErrorPista('');
   };
 
-  // El veredicto y la pista hablan de un código concreto: se van cuando cambia.
+  // Cambiar de lenguaje no pasa por aquí: el veredicto sigue a la vista.
   const limpiarVeredicto = () => {
     setEnviado(false);
     setResultado(null);
@@ -96,7 +96,6 @@ const Detalle = () => {
     const siguiente = LENGUAJES.find((l) => l.id === id);
     if (!siguiente || siguiente.id === lenguaje.id) return;
     setLenguaje(siguiente);
-    limpiarVeredicto();
   };
 
   const reiniciar = () => {
