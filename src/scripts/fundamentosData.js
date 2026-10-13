@@ -121,6 +121,7 @@ export const LOGROS_PRACTICA = [
 // Niveles del módulo, en el orden del slider. El morado del primero lo eligió
 // Javier; el rojo es el de Estructuras de Datos del catálogo (problemsData.js)
 // y el tercero va en negro.
+// `franja` es el tono oscuro de las franjas de arriba y abajo de la tarjeta de nivel.
 // `codigo` es el adorno de la tarjeta: un fragmento de PSeInt, sin relación
 // con ningún ejercicio.
 export const NIVELES_FUNDAMENTOS = [
@@ -129,7 +130,7 @@ export const NIVELES_FUNDAMENTOS = [
     n: 1,
     titulo: 'Fundamentos de programación',
     texto: 'Ejercicios cortos para aprender cada instrucción de PSeInt, de lo más simple a matrices.',
-    color: { bg: '#5410F9', ink: '#fff', bgSuave: '#7A45FF', inkSuave: '#fff' },
+    color: { bg: '#5410F9', ink: '#fff', bgSuave: '#7A45FF', inkSuave: '#fff', franja: '#2b0686' },
     logros: LOGROS,
     codigo: ['Algoritmo saludo\n    Escribir "Hola"\nFinAlgoritmo', 'Si nota >= 30 Entonces\n    Escribir "Bien"\nFinSi'],
   },
@@ -138,7 +139,7 @@ export const NIVELES_FUNDAMENTOS = [
     n: 2,
     titulo: 'Práctica de fundamentos',
     texto: 'Los mismos temas con enunciados más largos: hay que leer con atención y decidir qué hacer con los datos.',
-    color: { bg: '#E10E15', ink: '#fff', bgSuave: '#FF4249', inkSuave: '#fff' },
+    color: { bg: '#E10E15', ink: '#fff', bgSuave: '#FF4249', inkSuave: '#fff', franja: '#4c0519' },
     logros: LOGROS_PRACTICA,
     codigo: ['Mientras n > 0 Hacer\n    suma <- suma + n MOD 10\n    n <- trunc(n / 10)\nFinMientras', 'Para f <- 1 Hasta 3 Hacer\n    Leer tabla[f, c]\nFinPara'],
   },
@@ -147,7 +148,7 @@ export const NIVELES_FUNDAMENTOS = [
     n: 3,
     titulo: 'Programación avanzada',
     texto: '¡Muy pronto!',
-    color: { bg: '#000', ink: '#fff', bgSuave: '#000', inkSuave: '#fff' },
+    color: { bg: '#000', ink: '#fff', bgSuave: '#000', inkSuave: '#fff', franja: '#000' },
     logros: [],
     codigo: ['Funcion r <- factorial(n)\n    ...\nFinFuncion', '// muy pronto'],
     pronto: true,

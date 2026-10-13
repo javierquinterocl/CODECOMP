@@ -36,7 +36,7 @@
 
 /* Tarjeta del nivel: tres franjas (nivel, presentación, avance). El color
    llega por --cat-bg / --cat-ink / --cat-soft desde los datos; las franjas de
-   arriba y abajo usan el tono suave. El enlace de play se estira sobre toda
+   arriba y abajo usan el tono oscuro. El enlace de play se estira sobre toda
    la tarjeta, así que nada entre él y la tarjeta lleva `position`; el pie sí,
    para que sus botones queden encima. */
 .nb-fd-card { position: relative; overflow: hidden; min-height: var(--fd-card-h); display: flex; flex-direction: column; background: var(--cat-bg); color: var(--cat-ink); border: 2px solid #000; box-shadow: 5px 5px 0px #000; transition: var(--nb-tr); }

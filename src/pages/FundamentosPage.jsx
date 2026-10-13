@@ -140,7 +140,7 @@ const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) =
 const TarjetaNivel = ({ nivel, ejercicios, visita, temporizador, onTemporizador }) => (
   <div
     className={`nb-fd-card${nivel.pronto ? ' is-soon' : ''}`}
-    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.bgSuave }}
+    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.franja }}
   >
     <div className="nb-fd-card-top">
       <span className="nb-fd-card-kicker">Nivel {nivel.n}</span>
