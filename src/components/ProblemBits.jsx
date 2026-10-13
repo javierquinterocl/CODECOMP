@@ -2,6 +2,27 @@
    ejercicio: la barra de complejidad y la estrella de favorito.
    La etiqueta de cada nivel (NIVELES) vive en problemsData.js. */
 
+import { IDIOMAS } from '../scripts/useIdioma';
+
+/** Conmutador de idioma de los problemas: dos segmentos, el activo en negro. */
+export const IdiomaSwitch = ({ idioma, onCambiar, conEtiqueta = false }) => (
+  <div className={`nb-ex-idioma${conEtiqueta ? ' is-bar' : ''}`} role="group" aria-label="Idioma de los problemas">
+    {conEtiqueta && <span className="nb-ex-idioma-label">Idioma</span>}
+    {IDIOMAS.map((opcion) => (
+      <button
+        key={opcion.id}
+        type="button"
+        className={`nb-ex-idioma-btn${idioma === opcion.id ? ' is-active' : ''}`}
+        onClick={() => onCambiar(opcion.id)}
+        aria-pressed={idioma === opcion.id}
+        title={`Ver los problemas en ${opcion.nombre.toLowerCase()}`}
+      >
+        {conEtiqueta ? opcion.nombre : opcion.id}
+      </button>
+    ))}
+  </div>
+);
+
 /** Barra de 5 casillas: se llenan tantas como diga el nivel. */
 export const NivelBarra = ({ nivel }) => (
   <span className="nb-pb-nivel" role="img" aria-label={`Complejidad ${nivel} de 5`}>

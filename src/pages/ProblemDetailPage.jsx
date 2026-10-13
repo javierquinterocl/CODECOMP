@@ -4,7 +4,8 @@ import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
-import { StarIcon, NivelBarra } from '../components/ProblemBits';
+import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
+import { useIdioma } from '../scripts/useIdioma';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
@@ -18,6 +19,7 @@ const ProblemDetailPage = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
+  const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
   const [lenguaje, setLenguaje] = useState(LENGUAJES[0]);
@@ -69,6 +71,11 @@ const ProblemDetailPage = () => {
   // El destino de "volver" es el listado por el que se entró, que puede ser "todos".
   const volverA = slug === 'todos' ? 'todos los problemas' : (categoria?.titulo || 'problemas');
   const marcado = esFavorito(problema.numero);
+
+  // Sin traducción solo existe el inglés y el conmutador no se muestra.
+  const hayTraduccion = Boolean(problema.textos?.es);
+  const idioma = hayTraduccion ? idiomaElegido : 'en';
+  const texto = problema.textos?.[idioma] || problema;
 
   /* Al cambiar de lenguaje solo se reemplaza la plantilla si nadie la tocó:
      así no se pierde el trabajo de quien ya empezó a escribir. */
@@ -157,10 +164,11 @@ const ProblemDetailPage = () => {
           >
             <div className="nb-ex-title-main">
               <div className="nb-ex-kicker">{categoria?.titulo || 'Problema'}</div>
-              <h1 className="nb-ex-title">{problema.titulo}</h1>
+              <h1 className="nb-ex-title" lang={hayTraduccion ? idioma : undefined}>{texto.titulo}</h1>
             </div>
 
             <div className="nb-ex-title-side">
+              {hayTraduccion && <IdiomaSwitch idioma={idioma} onCambiar={cambiarIdioma} />}
               <span className="nb-ex-numero">{problema.numero}</span>
               <button
                 type="button"
@@ -198,8 +206,8 @@ const ProblemDetailPage = () => {
 
           {/* Descripción */}
           <Plegable titulo="Descripción" abiertoInicial>
-            {problema.descripcion.map((p) => (
-              <p key={p} className="nb-ex-text">{p}</p>
+            {texto.descripcion.map((p) => (
+              <p key={p} className="nb-ex-text" lang={hayTraduccion ? idioma : undefined}>{p}</p>
             ))}
           </Plegable>
 

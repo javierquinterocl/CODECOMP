@@ -32,3 +32,6 @@ functions/.secret.local
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos de trabajo de la traduccion del catalogo
+/traduccion/

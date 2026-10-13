@@ -11,7 +11,8 @@ import {
 } from '../scripts/problemsData';
 import { getAllProblems } from '../scripts/problemsApi';
 import { useFavoritos } from '../scripts/useFavoritos';
-import { StarIcon, NivelBarra } from '../components/ProblemBits';
+import { useIdioma } from '../scripts/useIdioma';
+import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
 
 const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
 
@@ -33,8 +34,9 @@ const TODOS = {
   ink: '#fff',
 };
 
-const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar }) => {
+const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar, idioma }) => {
   const marcado = esFavorito(ejercicio.numero);
+  const titulo = (idioma === 'es' && ejercicio.tituloEs) || ejercicio.titulo;
 
   return (
     <div className="nb-pb-row">
@@ -44,9 +46,9 @@ const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar }) => {
         {/* El enlace se estira sobre toda la fila con ::after; el botón de
             favorito se queda encima gracias a su z-index. */}
         <Link to={`/dashboard/problemas/${categoriaSlug}/${ejercicio.numero}`} className="nb-pb-row-link">
-          {ejercicio.titulo}
+          {titulo}
         </Link>
-        <div className="nb-pb-row-sub">{ejercicio.resumen}</div>
+        <div className="nb-pb-row-sub">{ADAPTIVO ? titulo : ejercicio.resumen}</div>
       </div>
 
       <div className="nb-pb-row-nivel">
@@ -60,7 +62,7 @@ const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar }) => {
         onClick={() => alternar(ejercicio.numero)}
         aria-pressed={marcado}
         title={marcado ? 'Quitar de favoritos' : 'Marcar como favorito'}
-        aria-label={marcado ? `Quitar ${ejercicio.titulo} de favoritos` : `Marcar ${ejercicio.titulo} como favorito`}
+        aria-label={marcado ? `Quitar ${titulo} de favoritos` : `Marcar ${titulo} como favorito`}
       >
         <StarIcon relleno={marcado} />
       </button>
@@ -73,6 +75,7 @@ const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar }) => {
 const ProblemsCategoryPage = () => {
   const { slug } = useParams();
   const { esFavorito, alternar } = useFavoritos();
+  const { idioma, cambiar } = useIdioma();
   const [soloFavoritos, setSoloFavoritos] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [problemas, setProblemas] = useState([]);
@@ -105,7 +108,7 @@ const ProblemsCategoryPage = () => {
     return ejercicios.filter((e) => {
       if (soloFavoritos && !esFavorito(e.numero)) return false;
       if (!termino) return true;
-      return normalizarTexto(`${e.numero} ${e.titulo} ${e.resumen || ''}`).includes(termino);
+      return normalizarTexto(`${e.numero} ${e.titulo} ${e.tituloEs || ''} ${e.resumen || ''}`).includes(termino);
     });
   }, [ejercicios, busqueda, soloFavoritos, esFavorito]);
 
@@ -163,6 +166,8 @@ const ProblemsCategoryPage = () => {
             )}
           </div>
 
+          {ADAPTIVO && <IdiomaSwitch idioma={idioma} onCambiar={cambiar} conEtiqueta />}
+
           <button
             type="button"
             className={`nb-pb-filtro${soloFavoritos ? ' is-on' : ''}`}
@@ -185,6 +190,7 @@ const ProblemsCategoryPage = () => {
             categoriaSlug={slug}
             esFavorito={esFavorito}
             alternar={alternar}
+            idioma={idioma}
           />
         ))}
 

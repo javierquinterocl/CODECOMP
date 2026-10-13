@@ -17,7 +17,7 @@ export const listarProblemas = async (ctx: Contexto): Promise<Response> => {
   try {
 
     const problemas = await sql`
-      SELECT p.problem_number, p.title,
+      SELECT p.problem_number, p.title, p.title_es,
         p.difficulty_rating, p.time_limit_sec, p.memory_limit_mb,
         COALESCE(array_agg(t.name ORDER BY t.name)
           FILTER (WHERE t.id IS NOT NULL), '{}') AS tags
@@ -59,7 +59,8 @@ export const detalleProblema = async (ctx: Contexto, numero: number): Promise<Re
 
   try {
     const [problema] = await sql`
-      SELECT p.id, p.problem_number, p.title, p.slug, p.description_markdown,
+      SELECT p.id, p.problem_number, p.title, p.title_es, p.slug,
+        p.description_markdown, p.description_markdown_es,
         p.difficulty_rating, p.time_limit_sec, p.memory_limit_mb,
         COALESCE((SELECT json_agg(json_build_object('input', tc.input, 'output', tc.expected_output)
           ORDER BY tc.id) FROM test_cases tc
