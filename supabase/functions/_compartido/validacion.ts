@@ -81,3 +81,45 @@ export const hashDe = async (texto: string): Promise<string> => {
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 };
+
+/* ── Fundamentos ── */
+
+export const NIVELES_FUNDAMENTOS = new Set(['fundamentos', 'practica', 'avanzado']);
+export const MAX_BORRADOR = 20000;
+
+export interface EjercicioRef {
+  nivel: string;
+  numero: number;
+}
+
+export const validarEjercicio = (
+  cuerpo: Record<string, unknown> | null,
+): { ok: true; ejercicio: EjercicioRef } | { ok: false; rechazo: Rechazo } => {
+  const { nivel, numero } = cuerpo ?? {};
+  if (typeof nivel !== 'string' || !NIVELES_FUNDAMENTOS.has(nivel)) {
+    return { ok: false, rechazo: rechazo(400, 'nivel', 'El nivel no es valido.') };
+  }
+  if (!Number.isInteger(numero) || (numero as number) < 1) {
+    return { ok: false, rechazo: rechazo(400, 'numero', 'El numero de ejercicio no es valido.') };
+  }
+  return { ok: true, ejercicio: { nivel, numero: numero as number } };
+};
+
+// El tope va en caracteres, igual que el CHECK de la columna.
+export const validarBorrador = (
+  cuerpo: Record<string, unknown> | null,
+): { ok: true; borrador: EjercicioRef & { codigo: string } } | { ok: false; rechazo: Rechazo } => {
+  const ref = validarEjercicio(cuerpo);
+  if (!ref.ok) return ref;
+  const codigo = cuerpo?.codigo;
+  if (typeof codigo !== 'string') {
+    return { ok: false, rechazo: rechazo(400, 'sin-codigo', 'codigo es obligatorio.') };
+  }
+  if ([...codigo].length > MAX_BORRADOR) {
+    return {
+      ok: false,
+      rechazo: rechazo(413, 'codigo-muy-largo', 'El codigo supera los 20000 caracteres.'),
+    };
+  }
+  return { ok: true, borrador: { ...ref.ejercicio, codigo } };
+};

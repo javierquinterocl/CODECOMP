@@ -4,7 +4,7 @@ import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
-import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
+import { StarIcon, NivelBarra, IdiomaSwitch, Enunciado } from '../components/ProblemBits';
 import { useIdioma } from '../scripts/useIdioma';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
@@ -15,7 +15,7 @@ import { pedirPista } from '../scripts/tutorApi';
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
 const ESPERA_PISTA = 60;
 
-const ProblemDetailPage = () => {
+const Detalle = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
@@ -23,7 +23,8 @@ const ProblemDetailPage = () => {
 
   const ejercicio = buscarEjercicio(numero);
   const [lenguaje, setLenguaje] = useState(LENGUAJES[0]);
-  const [codigo, setCodigo] = useState(LENGUAJES[0].plantilla);
+  // Un borrador por lenguaje mientras dure la visita; sin borrador vale la plantilla.
+  const [borradores, setBorradores] = useState({});
   const [expandido, setExpandido] = useState(false);
   const [temaClaro, setTemaClaro] = useState(false);
   const [enviado, setEnviado] = useState(false);
@@ -71,32 +72,32 @@ const ProblemDetailPage = () => {
   // El destino de "volver" es el listado por el que se entró, que puede ser "todos".
   const volverA = slug === 'todos' ? 'todos los problemas' : (categoria?.titulo || 'problemas');
   const marcado = esFavorito(problema.numero);
+  const codigo = borradores[lenguaje.id] ?? lenguaje.plantilla;
 
   // Sin traducción solo existe el inglés y el conmutador no se muestra.
   const hayTraduccion = Boolean(problema.textos?.es);
   const idioma = hayTraduccion ? idiomaElegido : 'en';
   const texto = problema.textos?.[idioma] || problema;
 
-  /* Al cambiar de lenguaje solo se reemplaza la plantilla si nadie la tocó:
-     así no se pierde el trabajo de quien ya empezó a escribir. */
-  const cambiarLenguaje = (id) => {
-    const siguiente = LENGUAJES.find((l) => l.id === id);
-    if (!siguiente) return;
-    if (codigo.trim() === lenguaje.plantilla.trim()) setCodigo(siguiente.plantilla);
-    setLenguaje(siguiente);
-  };
-
   const limpiarPista = () => {
     setPista('');
     setErrorPista('');
   };
 
+  const cambiarLenguaje = (id) => {
+    const siguiente = LENGUAJES.find((l) => l.id === id);
+    if (!siguiente || siguiente.id === lenguaje.id) return;
+    setLenguaje(siguiente);
+  };
+
+  // Veredicto y pista siguen a la vista al teclear, reiniciar o cambiar de lenguaje:
+  // solo los quita un envío nuevo.
   const reiniciar = () => {
-    setCodigo(lenguaje.plantilla);
-    setEnviado(false);
-    setResultado(null);
-    setErrorEnvio('');
-    limpiarPista();
+    setBorradores((previos) => {
+      const resto = { ...previos };
+      delete resto[lenguaje.id];
+      return resto;
+    });
   };
 
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
@@ -206,9 +207,7 @@ const ProblemDetailPage = () => {
 
           {/* Descripción */}
           <Plegable titulo="Descripción" abiertoInicial>
-            {texto.descripcion.map((p) => (
-              <p key={p} className="nb-ex-text" lang={hayTraduccion ? idioma : undefined}>{p}</p>
-            ))}
+            <Enunciado bloques={texto.descripcion} lang={hayTraduccion ? idioma : undefined} />
           </Plegable>
 
           {/* Entrada y salida */}
@@ -248,13 +247,7 @@ const ProblemDetailPage = () => {
           <Editor
             codigo={codigo}
             lenguajeId={lenguaje.id}
-            onChange={(v) => {
-              setCodigo(v);
-              setEnviado(false);
-              setResultado(null);
-              setErrorEnvio('');
-              limpiarPista();
-            }}
+            onChange={(v) => setBorradores((previos) => ({ ...previos, [lenguaje.id]: v }))}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
             claro={temaClaro}
@@ -328,6 +321,12 @@ const ProblemDetailPage = () => {
       </div>
     </div>
   );
+};
+
+// La `key` devuelve el editor a la plantilla al pasar de un problema a otro.
+const ProblemDetailPage = () => {
+  const { numero } = useParams();
+  return <Detalle key={numero} />;
 };
 
 export default ProblemDetailPage;

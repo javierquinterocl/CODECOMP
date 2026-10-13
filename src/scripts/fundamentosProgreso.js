@@ -1,57 +1,29 @@
-// Lo que el módulo Fundamentos recuerda de cada estudiante. Va en localStorage:
-// es por navegador y no viaja con la cuenta. Sin juez no se sabe qué resolvió,
-// así que solo se guarda dónde quedó y cuándo abrió cada ejercicio.
+// Preferencias de Fundamentos que son del navegador. El avance (qué ejercicio se
+// abrió y cuándo, y el código escrito) viaja con la cuenta: ver fundamentosApi.js.
 
-const CLAVE_APERTURAS = 'codecomp:fundamentos:aperturas';
-const CLAVE_VISITAS = 'codecomp:fundamentos:ultimo';
 const CLAVE_TEMPORIZADOR = 'codecomp:fundamentos:temporizador';
 
-const leer = (clave) => {
+// El avance vivía aquí antes de pasar a la base; esas dos claves ya no se leen.
+try {
+  localStorage.removeItem('codecomp:fundamentos:aperturas');
+  localStorage.removeItem('codecomp:fundamentos:ultimo');
+} catch {
+  // Modo privado o almacenamiento bloqueado.
+}
+
+/** El temporizador de práctica viene apagado: lo enciende el estudiante. */
+export const temporizadorActivo = () => {
   try {
-    const datos = JSON.parse(localStorage.getItem(clave));
-    return datos && typeof datos === 'object' ? datos : {};
+    return JSON.parse(localStorage.getItem(CLAVE_TEMPORIZADOR))?.activo === true;
   } catch {
-    // Modo privado o dato corrupto: se trata como primera visita.
-    return {};
+    return false;
   }
 };
 
-const guardar = (clave, datos) => {
+export const guardarTemporizador = (activo) => {
   try {
-    localStorage.setItem(clave, JSON.stringify(datos));
+    localStorage.setItem(CLAVE_TEMPORIZADOR, JSON.stringify({ activo: Boolean(activo) }));
   } catch {
     // Sin persistencia vale solo para esta visita.
   }
-};
-
-/** Instante en que se abrió el ejercicio por primera vez. Recargar no lo
-    reinicia, y un ejercicio que ya se desbloqueó no vuelve a bloquearse. */
-export const aperturaDe = (nivelSlug, numero) => {
-  const aperturas = leer(CLAVE_APERTURAS);
-  const clave = `${nivelSlug}:${numero}`;
-  const guardada = Number(aperturas[clave]);
-  // Una fecha en el futuro solo puede venir de un reloj cambiado.
-  if (guardada > 0 && guardada <= Date.now()) return guardada;
-
-  const ahora = Date.now();
-  guardar(CLAVE_APERTURAS, { ...aperturas, [clave]: ahora });
-  return ahora;
-};
-
-/** Recuerda el último ejercicio abierto en cada nivel. */
-export const registrarVisita = (nivelSlug, numero) => {
-  guardar(CLAVE_VISITAS, { ...leer(CLAVE_VISITAS), [nivelSlug]: Number(numero) });
-};
-
-/** Número del último ejercicio abierto en ese nivel, o null si nunca entró. */
-export const ultimaVisita = (nivelSlug) => {
-  const numero = Number(leer(CLAVE_VISITAS)[nivelSlug]);
-  return Number.isInteger(numero) && numero > 0 ? numero : null;
-};
-
-/** El temporizador de práctica viene apagado: lo enciende el estudiante. */
-export const temporizadorActivo = () => leer(CLAVE_TEMPORIZADOR).activo === true;
-
-export const guardarTemporizador = (activo) => {
-  guardar(CLAVE_TEMPORIZADOR, { activo: Boolean(activo) });
 };

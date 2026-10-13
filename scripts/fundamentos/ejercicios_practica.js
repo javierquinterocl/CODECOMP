@@ -1,5 +1,6 @@
 // Nivel 2 del módulo Fundamentos: Práctica de fundamentos.
-// Mismos temas que el nivel 1 (fundamentosData.js), pero cada ejercicio pide
+// Fuente de la carga a la base (cargar.ts); no va en el bundle.
+// Mismos temas que el nivel 1, pero cada ejercicio pide
 // leer un enunciado con contexto y decidir qué hacer con los datos.
 // Hay pocos de salida y variables y más de los temas que piden razonar.
 

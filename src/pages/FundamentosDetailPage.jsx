@@ -1,18 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ESPERA_ENVIO,
   PLANTILLA_PSEINT,
-  buscarEjercicioDe,
   buscarNivel,
   buscarTema,
   minutosTemporizador,
 } from '../scripts/fundamentosData';
-import { aperturaDe, registrarVisita, temporizadorActivo } from '../scripts/fundamentosProgreso';
+import { temporizadorActivo } from '../scripts/fundamentosProgreso';
+import { abrirEjercicio, guardarBorrador } from '../scripts/fundamentosApi';
+import { useFundamentos } from '../scripts/useFundamentos';
+import { useAuth } from '../context/AuthContext';
+import FundamentosCarga from '../components/FundamentosCarga';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { LockIcon, CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
+
+// Mientras se teclea, el borrador va a la base como mucho una vez cada tanto (y al salir).
+const ESPERA_BORRADOR = 15000;
 
 const reloj = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 
@@ -72,7 +78,8 @@ const PanelGato = ({ tema, extra, oculto, onAlternar }) => {
   );
 };
 
-const Ejercicio = ({ nivel, ejercicio }) => {
+const Ejercicio = ({ nivel, ejercicio, total }) => {
+  const { user, authReady } = useAuth();
   const tema = buscarTema(ejercicio.tema);
   const listado = `/dashboard/fundamentos/${nivel.slug}`;
 
@@ -83,7 +90,8 @@ const Ejercicio = ({ nivel, ejercicio }) => {
   const [enviado, setEnviado] = useState(false);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);
-  const [desbloqueoEn] = useState(() => aperturaDe(nivel.slug, ejercicio.numero) + ESPERA_ENVIO * 1000);
+  // Mientras la base no diga cuándo se abrió por primera vez, el candado cuenta desde ahora.
+  const [desbloqueoEn, setDesbloqueoEn] = useState(() => Date.now() + ESPERA_ENVIO * 1000);
   const [ahora, setAhora] = useState(() => Date.now());
 
   // Temporizador de práctica: se enciende desde la tarjeta del nivel y corre
@@ -97,10 +105,62 @@ const Ejercicio = ({ nivel, ejercicio }) => {
   const tiempoAgotado = conReloj && quedan === 0;
   const corriendo = bloqueado || (conReloj && !tiempoAgotado);
 
-  // La tarjeta del nivel usa esto para ofrecer "Continuar".
+  // Borrador por guardar, y si el estudiante ya tecleó (para no pisarle lo escrito).
+  const pendiente = useRef(null);
+  const espera = useRef(null);
+  const guardado = useRef(null);
+  const tocado = useRef(false);
+  const abierto = useRef(false);
+
+  const guardarPendiente = useCallback((alSalir = false) => {
+    clearTimeout(espera.current);
+    espera.current = null;
+    if (pendiente.current === null || !abierto.current || !user) return;
+    const texto = pendiente.current;
+    pendiente.current = null;
+    // Lo que ya está en la base no se vuelve a mandar.
+    if (texto === guardado.current) return;
+    guardado.current = texto;
+    // Si no se guarda, el estudiante sigue trabajando: no es motivo para interrumpirlo.
+    guardarBorrador(user, nivel.slug, ejercicio.numero, texto, { alSalir }).catch(() => {
+      guardado.current = null;
+    });
+  }, [user, nivel.slug, ejercicio.numero]);
+
+  const escribir = (texto) => {
+    tocado.current = true;
+    setCodigo(texto);
+    setEnviado(false);
+    pendiente.current = texto;
+    // El reloj no se reinicia con cada tecla: así el ritmo de escrituras tiene tope.
+    espera.current ??= setTimeout(guardarPendiente, ESPERA_BORRADOR);
+  };
+
+  // Registra la apertura: fija el candado con la hora de la base y trae el borrador.
   useEffect(() => {
-    registrarVisita(nivel.slug, ejercicio.numero);
-  }, [nivel.slug, ejercicio.numero]);
+    if (!authReady || !user) return undefined;
+    let vigente = true;
+    abrirEjercicio(user, nivel.slug, ejercicio.numero)
+      .then(({ transcurrido, codigo: enBase }) => {
+        if (!vigente) return;
+        abierto.current = true;
+        setDesbloqueoEn(Date.now() + ESPERA_ENVIO * 1000 - transcurrido);
+        guardado.current = enBase ?? PLANTILLA_PSEINT;
+        if (typeof enBase === 'string' && !tocado.current) setCodigo(enBase);
+      })
+      .catch(() => {});
+    return () => { vigente = false; };
+  }, [authReady, user, nivel.slug, ejercicio.numero]);
+
+  // Al salir del ejercicio o cerrar la pestaña se manda lo que quedara sin guardar.
+  useEffect(() => {
+    const alSalir = () => guardarPendiente(true);
+    window.addEventListener('pagehide', alSalir);
+    return () => {
+      window.removeEventListener('pagehide', alSalir);
+      alSalir();
+    };
+  }, [guardarPendiente]);
 
   useEffect(() => {
     if (!corriendo) return undefined;
@@ -108,10 +168,7 @@ const Ejercicio = ({ nivel, ejercicio }) => {
     return () => clearInterval(tic);
   }, [corriendo]);
 
-  const reiniciar = () => {
-    setCodigo(PLANTILLA_PSEINT);
-    setEnviado(false);
-  };
+  const reiniciar = () => escribir(PLANTILLA_PSEINT);
 
   return (
     <div className="nb-fd-vista">
@@ -147,7 +204,7 @@ const Ejercicio = ({ nivel, ejercicio }) => {
             </div>
             <div className="nb-ex-meta-item">
               <span className="nb-ex-meta-label">Ejercicio</span>
-              <span className="nb-ex-meta-value">{ejercicio.numero} de {nivel.ejercicios.length}</span>
+              <span className="nb-ex-meta-value">{ejercicio.numero} de {total}</span>
             </div>
           </div>
 
@@ -197,10 +254,7 @@ const Ejercicio = ({ nivel, ejercicio }) => {
           <Editor
             codigo={codigo}
             lenguajeId="pseint"
-            onChange={(v) => {
-              setCodigo(v);
-              setEnviado(false);
-            }}
+            onChange={escribir}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
             claro={temaClaro}
@@ -229,7 +283,7 @@ const Ejercicio = ({ nivel, ejercicio }) => {
               </div>
               <p className="nb-ex-feedback-text">
                 {enviado
-                  ? 'Tu solución todavía no se puede evaluar aquí, así que no se calificó ni se guardó. Mientras tanto, pruébala en PSeInt con los ejemplos del enunciado.'
+                  ? 'Tu solución todavía no se puede evaluar aquí, así que no se calificó. Tu código queda guardado; mientras tanto, pruébalo en PSeInt con los ejemplos del enunciado.'
                   : tiempoAgotado
                     ? 'Tranquilo, esto es solo práctica: puedes seguir editando y enviar cuando quieras.'
                     : bloqueado
@@ -256,12 +310,19 @@ const Ejercicio = ({ nivel, ejercicio }) => {
 const FundamentosDetailPage = () => {
   const { nivel: nivelSlug, numero } = useParams();
   const nivel = buscarNivel(nivelSlug);
-  const ejercicio = buscarEjercicioDe(nivelSlug, numero);
+  const { ejercicios, cargando, error } = useFundamentos();
+  const volverA = nivel ? `/dashboard/fundamentos/${nivel.slug}` : '/dashboard/fundamentos';
+
+  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA={volverA} />;
+
+  // Un ejercicio se identifica por su nivel y su número dentro de ese nivel.
+  const delNivel = (nivel && ejercicios?.[nivel.slug]) || [];
+  const ejercicio = delNivel.find((e) => String(e.numero) === String(numero));
 
   if (!ejercicio) {
     return (
       <div className="nb-dash-inner">
-        <Link to={nivel ? `/dashboard/fundamentos/${nivel.slug}` : '/dashboard/fundamentos'} className="nb-pb-back">← Volver</Link>
+        <Link to={volverA} className="nb-pb-back">← Volver</Link>
         <div className="nb-pb-empty">
           <h3 className="nb-pb-empty-title">Ejercicio no encontrado</h3>
           <p className="nb-dash-body-text">No existe ese ejercicio en este nivel.</p>
@@ -271,7 +332,7 @@ const FundamentosDetailPage = () => {
   }
 
   // La `key` reinicia el editor y la cuenta atrás al pasar de un ejercicio a otro.
-  return <Ejercicio key={`${nivel.slug}:${ejercicio.numero}`} nivel={nivel} ejercicio={ejercicio} />;
+  return <Ejercicio key={`${nivel.slug}:${ejercicio.numero}`} nivel={nivel} ejercicio={ejercicio} total={delNivel.length} />;
 };
 
 export default FundamentosDetailPage;

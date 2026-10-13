@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { NIVELES_FUNDAMENTOS, TEMAS, buscarTema, temasDeNivel } from '../scripts/fundamentosData';
-import { guardarTemporizador, temporizadorActivo, ultimaVisita } from '../scripts/fundamentosProgreso';
+import { NIVELES_FUNDAMENTOS, TEMAS, buscarTema, temasDe } from '../scripts/fundamentosData';
+import { guardarTemporizador, temporizadorActivo } from '../scripts/fundamentosProgreso';
+import { useFundamentos } from '../scripts/useFundamentos';
+import FundamentosCarga from '../components/FundamentosCarga';
 import { Plegable } from '../components/ExerciseBits';
 import { StarIcon } from '../components/ProblemBits';
 import { ArrowLeftIcon, ArrowRightIcon, PlayIcon, LockIcon, ClockIcon } from '../components/AppIcons';
-
-const TOTAL_EJERCICIOS = NIVELES_FUNDAMENTOS.reduce((total, n) => total + n.ejercicios.length, 0);
 
 // Estrellas de fondo del cuadro de logros: posición, tamaño y desfase.
 const ESTRELLAS = [
@@ -82,11 +82,11 @@ const Logros = ({ logros }) => (
 /* Pie de la tarjeta: dónde quedó el estudiante, el botón para seguir y el
    interruptor del temporizador. Marca el último ejercicio abierto, no los
    resueltos; sin visitas la barra va vacía y el botón lleva al primero. */
-const PieNivel = ({ nivel, numero, temporizador, onTemporizador }) => {
-  const total = nivel.ejercicios.length;
-  const ejercicio = nivel.ejercicios.find((e) => e.numero === numero);
+const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) => {
+  const total = ejercicios.length;
+  const ejercicio = ejercicios.find((e) => e.numero === numero);
   const actual = ejercicio ? numero : 0;
-  const destino = ejercicio ? numero : nivel.ejercicios[0]?.numero;
+  const destino = ejercicio ? numero : ejercicios[0]?.numero;
   const accionReloj = temporizador ? 'Desactivar el temporizador' : 'Activar el temporizador';
 
   return (
@@ -137,15 +137,15 @@ const PieNivel = ({ nivel, numero, temporizador, onTemporizador }) => {
 
 /* Tres franjas: el nivel arriba, la presentación al centro (texto a la
    izquierda, ventana de código a la derecha) y el avance abajo. */
-const TarjetaNivel = ({ nivel, visita, temporizador, onTemporizador }) => (
+const TarjetaNivel = ({ nivel, ejercicios, visita, temporizador, onTemporizador }) => (
   <div
     className={`nb-fd-card${nivel.pronto ? ' is-soon' : ''}`}
-    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.bgSuave }}
+    style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.franja }}
   >
     <div className="nb-fd-card-top">
       <span className="nb-fd-card-kicker">Nivel {nivel.n}</span>
       <span className="nb-fd-card-kicker">
-        {nivel.pronto ? 'Pronto' : `${nivel.ejercicios.length} ejercicios`}
+        {nivel.pronto ? 'Pronto' : `${ejercicios.length} ejercicios`}
       </span>
     </div>
 
@@ -171,16 +171,20 @@ const TarjetaNivel = ({ nivel, visita, temporizador, onTemporizador }) => (
       </div>
     </div>
 
-    <PieNivel nivel={nivel} numero={visita} temporizador={temporizador} onTemporizador={onTemporizador} />
+    <PieNivel
+      nivel={nivel}
+      ejercicios={ejercicios}
+      numero={visita}
+      temporizador={temporizador}
+      onTemporizador={onTemporizador}
+    />
   </div>
 );
 
 const FundamentosPage = () => {
   const [actual, setActual] = useState(0);
-  // Se lee una vez al entrar: al volver de un ejercicio la página se monta de nuevo.
-  const [visitas] = useState(() => Object.fromEntries(
-    NIVELES_FUNDAMENTOS.map((n) => [n.slug, ultimaVisita(n.slug)]),
-  ));
+  // Se piden al entrar: al volver de un ejercicio la página se monta de nuevo.
+  const { ejercicios, visitas, cargando, error } = useFundamentos({ conVisitas: true });
   // Una sola preferencia para todos los niveles; el editor la lee al abrir un ejercicio.
   const [temporizador, setTemporizador] = useState(temporizadorActivo);
   const alternarTemporizador = () => setTemporizador((v) => {
@@ -188,6 +192,10 @@ const FundamentosPage = () => {
     return !v;
   });
   const ultimo = NIVELES_FUNDAMENTOS.length - 1;
+
+  if (cargando || error) return <FundamentosCarga error={error} />;
+
+  const totalEjercicios = Object.values(ejercicios).reduce((total, lista) => total + lista.length, 0);
 
   return (
     <div className="nb-dash-inner">
@@ -206,7 +214,7 @@ const FundamentosPage = () => {
           <div className="nb-fd-hero-stats">
             <div className="nb-pb-hstat">
               <div className="nb-pb-hstat-label">Ejercicios</div>
-              <div className="nb-pb-hstat-value">{TOTAL_EJERCICIOS}</div>
+              <div className="nb-pb-hstat-value">{totalEjercicios}</div>
             </div>
             <div className="nb-pb-hstat">
               <div className="nb-pb-hstat-label">Temas</div>
@@ -234,12 +242,14 @@ const FundamentosPage = () => {
           <div className="nb-fd-track" style={{ transform: `translateX(-${actual * 100}%)` }}>
             {NIVELES_FUNDAMENTOS.map((nivel, i) => {
               const visible = i === actual;
+              const delNivel = ejercicios[nivel.slug] || [];
 
               return (
                 // `inert` saca del tabulador a la diapositiva que no se ve.
                 <section key={nivel.slug} className="nb-fd-slide" aria-hidden={!visible} inert={!visible}>
                   <TarjetaNivel
                     nivel={nivel}
+                    ejercicios={delNivel}
                     visita={visitas[nivel.slug]}
                     temporizador={temporizador}
                     onTemporizador={alternarTemporizador}
@@ -248,7 +258,7 @@ const FundamentosPage = () => {
                   <Logros logros={nivel.logros} />
 
                   <Plegable titulo="Temas recomendados o bases" abiertoInicial>
-                    <ListaTemas temas={nivel.temasFuturos || temasDeNivel(nivel)} />
+                    <ListaTemas temas={nivel.temasFuturos || temasDe(delNivel)} />
                   </Plegable>
                 </section>
               );
