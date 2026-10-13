@@ -29,6 +29,9 @@ Deno.test('validar detecta numeros repetidos, temas desconocidos y conteos disti
 Deno.test('diferencias compara campo a campo con la fila de la base', () => {
   const [fila] = filasDeArchivos();
   assertEquals(diferencias(fila, { ...fila }), []);
+  // La base devuelve las claves de los ejemplos en otro orden.
+  const girados = fila.ejemplos.map((ej) => ({ salida: ej.salida, entrada: ej.entrada }));
+  assertEquals(diferencias(fila, { ...fila, ejemplos: girados }), []);
   assertEquals(diferencias(fila, { ...fila, titulo: 'Otro', pista_concepto: 'x' }), [
     'titulo',
     'pista_concepto',

@@ -54,6 +54,7 @@ try {
     console.log('Simulacion: no se escribio nada.');
   } else {
     await sql.begin(async (tx) => {
+      // Va como texto: si el parametro se declara jsonb, el cliente lo codifica otra vez.
       const datos = JSON.stringify(filas satisfies Fila[]);
       await tx`
         INSERT INTO fundamentos_ejercicios (nivel, numero, tema, dificultad, titulo, resumen,
@@ -61,7 +62,7 @@ try {
         SELECT v.nivel, v.numero, v.tema, v.dificultad, v.titulo, v.resumen,
           ARRAY(SELECT jsonb_array_elements_text(v.descripcion)), v.entrada, v.salida,
           v.ejemplos, v.pista_concepto, true
-        FROM jsonb_to_recordset(${datos}::jsonb) AS v(nivel text, numero int, tema text,
+        FROM jsonb_to_recordset(${datos}::text::jsonb) AS v(nivel text, numero int, tema text,
           dificultad smallint, titulo text, resumen text, descripcion jsonb, entrada text,
           salida text, ejemplos jsonb, pista_concepto text)
         ON CONFLICT (nivel, numero) DO UPDATE SET
@@ -74,7 +75,7 @@ try {
       const retirados = await tx`
         UPDATE fundamentos_ejercicios AS e SET is_active = false
         WHERE e.is_active AND NOT EXISTS (
-          SELECT 1 FROM jsonb_to_recordset(${datos}::jsonb) AS v(nivel text, numero int)
+          SELECT 1 FROM jsonb_to_recordset(${datos}::text::jsonb) AS v(nivel text, numero int)
           WHERE v.nivel = e.nivel AND v.numero = e.numero
         )
       `;

@@ -74,7 +74,14 @@ export const validar = (filas: Fila[]): string[] => {
   return errores;
 };
 
+// jsonb no conserva el orden de las claves: se comparan ordenadas.
+const canonico = (valor: unknown): string =>
+  JSON.stringify(valor, (_, v) =>
+    v && typeof v === 'object' && !Array.isArray(v)
+      ? Object.fromEntries(Object.entries(v).sort(([a], [b]) => a.localeCompare(b)))
+      : v);
+
 /** Campos que difieren entre la fila del archivo y la de la base. */
 export const diferencias = (archivo: Fila, base: Record<string, unknown>): string[] =>
   (Object.keys(archivo) as (keyof Fila)[])
-    .filter((campo) => JSON.stringify(archivo[campo]) !== JSON.stringify(base[campo] ?? null));
+    .filter((campo) => canonico(archivo[campo]) !== canonico(base[campo] ?? null));
