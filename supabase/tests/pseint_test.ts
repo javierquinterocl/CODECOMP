@@ -60,6 +60,8 @@ Deno.test('ocultarCredenciales tapa llaves de AWS y secretos largos, no la salid
   const falso = 'ASIAEJEMPLO000000000 y abcdEJEMPLO/secreto+inventado0123456789xyz';
   assertEquals(ocultarCredenciales(falso), '[oculto] y [oculto]');
   assertEquals(ocultarCredenciales('3 x 10 = 30\n3628800\nGana A'), '3 x 10 = 30\n3628800\nGana A');
+  const separador = '='.repeat(50) + '\n' + '*'.repeat(50) + '\n' + 'a'.repeat(45);
+  assertEquals(ocultarCredenciales(separador), separador);
 });
 
 /* ── Veredicto ─────────────────────────────────────────────────────────── */
@@ -220,7 +222,13 @@ Deno.test('envio juzga con los ejemplos de la base y hace dos escrituras', async
 
 Deno.test('envio respeta el candado de 2 minutos con el reloj de la base', async () => {
   assertEquals((await enviar({ abiertoHaceSeg: 30 })).status, 403);
-  assertEquals((await enviar({ abiertoHaceSeg: null })).status, 403);
+  // Si la apertura no se guardo, el envio la registra para que el candado se abra a los 2 minutos.
+  const sinApertura = await enviar({ abiertoHaceSeg: null });
+  assertEquals(sinApertura.status, 403);
+  assertEquals(
+    sinApertura.consultas.some((c) => c.includes('INSERT INTO fundamentos_progreso')),
+    true,
+  );
 });
 
 Deno.test('envio devuelve 429 con la espera del estudiante', async () => {

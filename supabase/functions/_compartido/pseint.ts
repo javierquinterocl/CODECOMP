@@ -37,6 +37,7 @@ const MARCA = /\x1b\[z([pe])(\d+):\d+;/;
 const AVISOS_DE_PRUEBA = /^\*\*\*(LimpiarPantalla|EsperarTecla|Esperar\d+)\*\*\*\n/gm;
 const ERROR = /^Lin (\d+)(?: \(inst \d+\))?: ERROR (\d+): ([^\n]*)/;
 const TOPE_MOSTRADO = 2000;
+const TOPE_MENSAJE = 300;
 
 // Quita el "> dato" que escribe cada Leer y separa los errores del interprete.
 export const interpretarSalida = (crudo: string, entrada: string): Lectura => {
@@ -52,10 +53,10 @@ export const interpretarSalida = (crudo: string, entrada: string): Lectura => {
     const texto = partes[i + 2];
     if (clase === 'e') {
       const m = ERROR.exec(texto);
-      const limpio = texto.trim();
+      const mensaje = ocultarCredenciales((m ? m[3] : texto).trim()).slice(0, TOPE_MENSAJE);
       return m
-        ? { tipo: 'error', salida, linea: Number(m[1]), numero: Number(m[2]), mensaje: m[3].trim() }
-        : { tipo: 'error', salida, linea, numero: null, mensaje: limpio };
+        ? { tipo: 'error', salida, linea: Number(m[1]), numero: Number(m[2]), mensaje }
+        : { tipo: 'error', salida, linea, numero: null, mensaje };
     }
     if (texto.startsWith('> <<No hay m')) return { tipo: 'sin-datos', salida, linea };
     const eco = `> ${datos[leidos]}\n`;
@@ -69,10 +70,12 @@ export const interpretarSalida = (crudo: string, entrada: string): Lectura => {
   return { tipo: 'ok', salida: salida.replace(AVISOS_DE_PRUEBA, '') };
 };
 
-// Nada con forma de credencial de AWS vuelve al navegador (riesgo aceptado: el proceso puede leer las del rol).
+// Nada con forma de credencial de AWS vuelve al navegador: el proceso puede leer las del rol.
+// Un tramo largo solo se tapa si mezcla mayusculas, minusculas y digitos (no "=====...").
 const CREDENCIALES = /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|[A-Za-z0-9/+=]{40,}/g;
+const MEZCLA = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)/;
 export const ocultarCredenciales = (texto: string): string =>
-  texto.replace(CREDENCIALES, '[oculto]');
+  texto.replace(CREDENCIALES, (t) => (/^A[SK]IA/.test(t) || MEZCLA.test(t) ? '[oculto]' : t));
 
 // Sin espacios al final de cada linea ni lineas vacias al final.
 export const normalizar = (texto: string): string =>
@@ -102,7 +105,7 @@ export const juzgar = (ejemplos: Ejemplo[], ejecuciones: Ejecucion[]): Veredicto
         ejemplo: n,
         entrada: ejemplo.entrada,
         esperada: ejemplo.salida,
-        obtenida: ocultarCredenciales(lectura.salida.slice(0, TOPE_MOSTRADO)),
+        obtenida: ocultarCredenciales(lectura.salida).slice(0, TOPE_MOSTRADO),
       };
     }
   }
@@ -113,6 +116,8 @@ export type Invocador = (codigo: string, entradas: string[]) => Promise<Ejecucio
 
 // Esperas ante un 429 por simultaneidad: Lambda lo rechazo sin ejecutar nada.
 const ESPERAS_SATURADA = [250, 500, 1000, 2000];
+// Lo que puede tardar la Lambda (plazo total de 7 s y arranque): sin ese margen no se reintenta.
+const MARGEN_LAMBDA_MS = 8000;
 const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Llama a la API Invoke de Lambda firmada con la llave que solo puede invocar esa funcion.
@@ -131,6 +136,7 @@ export const invocadorLambda = (config: Config): Invocador => {
   return async (codigo, entradas) => {
     const corte = new AbortController();
     const alarma = setTimeout(() => corte.abort(), config.pseintTimeoutMs);
+    const limite = Date.now() + config.pseintTimeoutMs;
     try {
       const cuerpoPeticion = JSON.stringify({ codigo, entradas });
       let res = await cliente.fetch(url, {
@@ -140,9 +146,10 @@ export const invocadorLambda = (config: Config): Invocador => {
       });
       // Solo se reintenta la saturacion: cualquier otro error pudo haber ejecutado el codigo.
       for (const espera of ESPERAS_SATURADA) {
-        if (res.status !== 429) break;
+        const pausa = espera + Math.random() * espera;
+        if (res.status !== 429 || limite - Date.now() - pausa < MARGEN_LAMBDA_MS) break;
         await res.body?.cancel();
-        await dormir(espera + Math.random() * espera);
+        await dormir(pausa);
         res = await cliente.fetch(url, {
           method: 'POST',
           body: cuerpoPeticion,

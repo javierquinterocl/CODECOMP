@@ -156,6 +156,15 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     return responder(rechazo(404, 'no-encontrado', 'Ejercicio no encontrado.'), cors);
   }
   const abierto = ejercicio.abierto_en as Date | null;
+  if (!abierto) {
+    // Si la apertura no llego a guardarse, se registra ahora: el candado no queda cerrado para siempre.
+    await sql`
+      INSERT INTO fundamentos_progreso (user_id, ejercicio_id)
+      SELECT ${userId}::uuid, e.id FROM fundamentos_ejercicios e
+      WHERE e.nivel = ${nivel} AND e.numero = ${numero}
+      ON CONFLICT (user_id, ejercicio_id) DO NOTHING
+    `;
+  }
   const transcurrido = abierto ? (ejercicio.ahora as Date).getTime() - abierto.getTime() : 0;
   if (transcurrido < CANDADO_SEGUNDOS * 1000) {
     return responder(
@@ -226,7 +235,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     if (contado) {
       await sql`
         UPDATE limites_envio SET conteo_pseint = GREATEST(conteo_pseint - 1, 0)
-        WHERE user_id = ${userId}
+        WHERE user_id = ${userId} AND dia_pseint = ${hoy}
       `.catch(() => {});
     }
     return responder(
