@@ -4,8 +4,10 @@ import type { Config } from '../functions/_compartido/config.ts';
 import {
   type Ejecucion,
   interpretarSalida,
+  invocadorLambda,
   juzgar,
   normalizar,
+  ocultarCredenciales,
 } from '../functions/_compartido/pseint.ts';
 import { envio } from '../functions/_compartido/rutas/fundamentos.ts';
 
@@ -53,6 +55,13 @@ Deno.test('normalizar ignora espacios al final de linea, lineas vacias finales y
   assertEquals(normalizar(' a b'), ' a b');
 });
 
+Deno.test('ocultarCredenciales tapa llaves de AWS y secretos largos, no la salida normal', () => {
+  // Valores inventados con la forma de una llave temporal y de un secreto.
+  const falso = 'ASIAEJEMPLO000000000 y abcdEJEMPLO/secreto+inventado0123456789xyz';
+  assertEquals(ocultarCredenciales(falso), '[oculto] y [oculto]');
+  assertEquals(ocultarCredenciales('3 x 10 = 30\n3628800\nGana A'), '3 x 10 = 30\n3628800\nGana A');
+});
+
 /* ── Veredicto ─────────────────────────────────────────────────────────── */
 
 const EJEMPLOS = [{ entrada: '21', salida: 'Edad: > 42' }, { entrada: '1', salida: 'Edad: > 2' }];
@@ -86,6 +95,48 @@ Deno.test('juzgar distingue error, falta de datos, ciclo infinito y salida exces
   assertEquals(juzgar(EJEMPLOS, [{ salida: 'x', estado: 'salida' }]).veredicto, 'DEMASIADA_SALIDA');
   // La Lambda deja de evaluar tras un ciclo infinito: lo que falte no es un acierto.
   assertEquals(juzgar(EJEMPLOS, [ok(CRUDO.leer)]).veredicto, 'FALLO');
+});
+
+/* ── Invocacion de la Lambda ───────────────────────────────────────────── */
+
+// Llave inventada: la firma se calcula pero nunca sale a la red.
+const CONFIG_FALSA = {
+  pseintAccessKeyId: 'AKIAEJEMPLOINVENTADO',
+  pseintSecretAccessKey: 'secreto-inventado-solo-para-tests',
+  pseintRegion: 'us-east-1',
+  pseintFuncion: 'codecomp-pseint',
+  pseintTimeoutMs: 12000,
+} as Config;
+
+const conRespuestas = async (estados: number[], probar: () => Promise<void>) => {
+  const original = globalThis.fetch;
+  let llamadas = 0;
+  globalThis.fetch = () => {
+    const status = estados[Math.min(llamadas++, estados.length - 1)];
+    const cuerpo = status === 200 ? { resultados: [ok('1\n')] } : { Reason: 'x' };
+    return Promise.resolve(new Response(JSON.stringify(cuerpo), { status }));
+  };
+  try {
+    await probar();
+  } finally {
+    globalThis.fetch = original;
+  }
+  return llamadas;
+};
+
+Deno.test('invocadorLambda reintenta la saturacion (429), que no ejecuto nada', async () => {
+  const llamadas = await conRespuestas([429, 429, 200], async () => {
+    assertEquals(await invocadorLambda(CONFIG_FALSA)('c', ['']), [ok('1\n')]);
+  });
+  assertEquals(llamadas, 3);
+});
+
+Deno.test('invocadorLambda no reintenta otros errores: podrian haber ejecutado el codigo', async () => {
+  const llamadas = await conRespuestas([502, 200], async () => {
+    const fallo = await invocadorLambda(CONFIG_FALSA)('c', ['']).then(() => null, (e) => e);
+    assertEquals(fallo instanceof Error, true);
+  });
+  assertEquals(llamadas, 1);
 });
 
 /* ── Ruta POST /fundamentos/envio ──────────────────────────────────────── */

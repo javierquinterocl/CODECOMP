@@ -2,12 +2,13 @@
 # Crea o actualiza la Lambda de PSeInt: rol, red privada sin salida ni DNS, registros y codigo.
 # Uso: AWS_PROFILE=codecomp bash aws/pseint/desplegar.sh   (FUNCION=codecomp-pseint-prueba para la de prueba)
 set -euo pipefail
+# Git Bash convertiria /aws/lambda/... en una ruta de Windows.
+export MSYS_NO_PATHCONV=1
 
 export AWS_PROFILE="${AWS_PROFILE:-codecomp}"
 export AWS_DEFAULT_REGION="${AWS_DEFAULT_REGION:-us-east-1}"
 AWS="${AWS:-aws}"
 FUNCION="${FUNCION:-codecomp-pseint}"
-MANEJADOR="${MANEJADOR:-manejador.py}"
 ROL=codecomp-pseint-ejecucion
 RED=codecomp-pseint
 REGISTROS="/aws/lambda/$FUNCION"
@@ -18,6 +19,7 @@ HUELLA_PAQUETE=871312634da8e1a0e45b0badbdcb8a0e67dbe51e4bf8cf5fe3ff37fd9817191b
 HUELLA_BINARIO=96c6fe1884d6f6b95c406c8992555ef043338e96ae3f6109d5e950fbc9178930
 
 AQUI="$(cd "$(dirname "$0")" && pwd)"
+MANEJADOR="${MANEJADOR:-$AQUI/manejador.py}"
 TRABAJO="$(mktemp -d)"
 trap 'rm -rf "$TRABAJO"' EXIT
 ruta() { if command -v cygpath >/dev/null; then cygpath -w "$1"; else echo "$1"; fi; }
@@ -27,12 +29,12 @@ existe_funcion() { "$AWS" lambda get-function --function-name "$FUNCION" >/dev/n
 echo "== Ejecutable oficial de PSeInt $VERSION"
 # Primero el que ya corre en la Lambda; SourceForge solo si todavia no hay funcion.
 if existe_funcion; then
-  curl -sSL -o "$TRABAJO/actual.zip" \
+  curl -sSL -o "$(ruta "$TRABAJO/actual.zip")" \
     "$("$AWS" lambda get-function --function-name "$FUNCION" --query Code.Location --output text)"
   python -I -c 'import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extract("pseint", sys.argv[2])' \
     "$(ruta "$TRABAJO/actual.zip")" "$(ruta "$TRABAJO")"
 else
-  curl -sSL -A 'Wget/1.21' -o "$TRABAJO/$PAQUETE" \
+  curl -sSL -A 'Wget/1.21' -o "$(ruta "$TRABAJO/$PAQUETE")" \
     "https://downloads.sourceforge.net/project/pseint/$VERSION/$PAQUETE"
   echo "$HUELLA_PAQUETE  $TRABAJO/$PAQUETE" | sha256sum -c -
   tar --force-local -xzf "$TRABAJO/$PAQUETE" -C "$TRABAJO" pseint/bin/pseint
@@ -41,7 +43,7 @@ else
 fi
 echo "$HUELLA_BINARIO  $TRABAJO/pseint" | sha256sum -c -
 
-python -I - "$(ruta "$AQUI/$MANEJADOR")" "$(ruta "$TRABAJO/pseint")" "$(ruta "$TRABAJO/funcion.zip")" <<'EOF'
+python -I - "$(ruta "$MANEJADOR")" "$(ruta "$TRABAJO/pseint")" "$(ruta "$TRABAJO/funcion.zip")" <<'EOF'
 import sys, zipfile
 manejador, binario, destino = sys.argv[1:]
 with zipfile.ZipFile(destino, 'w', zipfile.ZIP_DEFLATED) as z:

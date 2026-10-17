@@ -69,6 +69,11 @@ export const interpretarSalida = (crudo: string, entrada: string): Lectura => {
   return { tipo: 'ok', salida: salida.replace(AVISOS_DE_PRUEBA, '') };
 };
 
+// Nada con forma de credencial de AWS vuelve al navegador (riesgo aceptado: el proceso puede leer las del rol).
+const CREDENCIALES = /\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|[A-Za-z0-9/+=]{40,}/g;
+export const ocultarCredenciales = (texto: string): string =>
+  texto.replace(CREDENCIALES, '[oculto]');
+
 // Sin espacios al final de cada linea ni lineas vacias al final.
 export const normalizar = (texto: string): string =>
   texto.replace(/\r\n?/g, '\n').split('\n').map((l) => l.replace(/[ \t]+$/, '')).join('\n')
@@ -97,7 +102,7 @@ export const juzgar = (ejemplos: Ejemplo[], ejecuciones: Ejecucion[]): Veredicto
         ejemplo: n,
         entrada: ejemplo.entrada,
         esperada: ejemplo.salida,
-        obtenida: lectura.salida.slice(0, TOPE_MOSTRADO),
+        obtenida: ocultarCredenciales(lectura.salida.slice(0, TOPE_MOSTRADO)),
       };
     }
   }
@@ -105,6 +110,10 @@ export const juzgar = (ejemplos: Ejemplo[], ejecuciones: Ejecucion[]): Veredicto
 };
 
 export type Invocador = (codigo: string, entradas: string[]) => Promise<Ejecucion[]>;
+
+// Esperas ante un 429 por simultaneidad: Lambda lo rechazo sin ejecutar nada.
+const ESPERAS_SATURADA = [250, 500, 1000, 2000];
+const dormir = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Llama a la API Invoke de Lambda firmada con la llave que solo puede invocar esa funcion.
 export const invocadorLambda = (config: Config): Invocador => {
@@ -123,11 +132,23 @@ export const invocadorLambda = (config: Config): Invocador => {
     const corte = new AbortController();
     const alarma = setTimeout(() => corte.abort(), config.pseintTimeoutMs);
     try {
-      const res = await cliente.fetch(url, {
+      const cuerpoPeticion = JSON.stringify({ codigo, entradas });
+      let res = await cliente.fetch(url, {
         method: 'POST',
-        body: JSON.stringify({ codigo, entradas }),
+        body: cuerpoPeticion,
         signal: corte.signal,
       });
+      // Solo se reintenta la saturacion: cualquier otro error pudo haber ejecutado el codigo.
+      for (const espera of ESPERAS_SATURADA) {
+        if (res.status !== 429) break;
+        await res.body?.cancel();
+        await dormir(espera + Math.random() * espera);
+        res = await cliente.fetch(url, {
+          method: 'POST',
+          body: cuerpoPeticion,
+          signal: corte.signal,
+        });
+      }
       const cuerpo = await res.json().catch(() => null);
       if (
         !res.ok || res.headers.get('x-amz-function-error') || !Array.isArray(cuerpo?.resultados)
