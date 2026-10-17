@@ -18,17 +18,17 @@ const EXPLICACIONES = {
   119: CIERRES,
   207: 'Solo se pueden comparar valores del mismo tipo: números con números, textos con textos.',
   213: TIPOS,
-  293: TIPOS,
-  294: TIPOS,
-  295: TIPOS,
   230: OPERANDO,
   234: OPERANDO,
   239: OPERANDO,
-  304: OPERANDO,
-  305: OPERANDO,
+  293: TIPOS,
+  294: TIPOS,
+  295: TIPOS,
   296: 'Estás dividiendo entre cero. Revisa con qué valor divides antes de hacerlo.',
   298: 'MOD solo funciona con números enteros.',
   303: 'Esa casilla no existe: la primera es la 1 y la última es el tamaño del arreglo.',
+  304: OPERANDO,
+  305: OPERANDO,
 };
 
 export const explicarError = (numero) =>

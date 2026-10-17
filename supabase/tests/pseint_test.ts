@@ -147,6 +147,7 @@ interface Escenario {
   abiertoHaceSeg?: number | null;
   limite?: Record<string, unknown>;
   limiteFalla?: boolean;
+  sinPresupuesto?: boolean;
   invocacion?: () => Promise<Ejecucion[]>;
 }
 
@@ -163,7 +164,9 @@ const contexto = (esc: Escenario, consultas: string[]): Contexto => {
     }
     if (texto.includes('registrar_envio_pseint')) return [esc.limite ?? { permitido: true }];
     if (texto.includes('consumir_presupuesto')) {
-      return [{ permitido: true, usado_dia: 1, usado_mes: 1 }];
+      return esc.sinPresupuesto
+        ? [{ permitido: false, codigo: 'presupuesto-diario' }]
+        : [{ permitido: true, usado_dia: 1, usado_mes: 1 }];
     }
     return [];
   };
@@ -248,6 +251,12 @@ Deno.test('si la Lambda falla responde 503 y devuelve el envio al estudiante', a
   const reembolso = consultas.find((c) => c.includes('conteo_pseint - 1'));
   // Devuelve el envio pero no borra la espera: si no, una caida invitaria a reenviar en rafaga.
   assertEquals(Boolean(reembolso) && !reembolso!.includes('ultimo_pseint'), true);
+});
+
+Deno.test('si el tope global corta, el envio no cuenta para el estudiante', async () => {
+  const { status, consultas } = await enviar({ sinPresupuesto: true });
+  assertEquals(status, 503);
+  assertEquals(consultas.some((c) => c.includes('conteo_pseint - 1')), true);
 });
 
 Deno.test('si el limite no se pudo registrar, la caida de la Lambda no descuenta nada', async () => {

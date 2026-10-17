@@ -57,7 +57,7 @@ const describir = (r) => {
       return {
         clase: ' is-fail',
         titulo: 'Tu algoritmo no termina',
-        texto: 'Se detuvo a los 3 segundos. Revisa que la condición de tus ciclos llegue a cumplirse.',
+        texto: 'Tardó demasiado y se detuvo. Revisa que la condición de tus ciclos llegue a cumplirse.',
       };
     case 'DEMASIADA_SALIDA':
       return {

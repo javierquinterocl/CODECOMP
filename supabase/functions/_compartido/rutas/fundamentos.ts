@@ -144,27 +144,35 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     return responder(rechazo(503, 'sin-juez', 'El juez de PSeInt no esta disponible ahora.'), cors);
   }
 
-  const userId = await idDeUsuario(sql, identidad);
-  // Los ejemplos salen de la base, nunca del navegador; y el candado se mide con su reloj.
-  const [ejercicio] = await sql`
-    SELECT e.ejemplos, p.abierto_en, now() AS ahora
-    FROM fundamentos_ejercicios e
-    LEFT JOIN fundamentos_progreso p ON p.ejercicio_id = e.id AND p.user_id = ${userId}
-    WHERE e.nivel = ${nivel} AND e.numero = ${numero} AND e.is_active
-  `;
+  let userId: string;
+  let ejercicio;
+  try {
+    userId = await idDeUsuario(sql, identidad);
+    // Los ejemplos salen de la base, nunca del navegador; y el candado se mide con su reloj.
+    [ejercicio] = await sql`
+      SELECT e.ejemplos, p.abierto_en, now() AS ahora
+      FROM fundamentos_ejercicios e
+      LEFT JOIN fundamentos_progreso p ON p.ejercicio_id = e.id AND p.user_id = ${userId}
+      WHERE e.nivel = ${nivel} AND e.numero = ${numero} AND e.is_active
+    `;
+    if (ejercicio && !ejercicio.abierto_en) {
+      // Si la apertura no llego a guardarse, se registra ahora:
+      // asi el candado no queda cerrado para siempre.
+      await sql`
+        INSERT INTO fundamentos_progreso (user_id, ejercicio_id)
+        SELECT ${userId}::uuid, e.id FROM fundamentos_ejercicios e
+        WHERE e.nivel = ${nivel} AND e.numero = ${numero}
+        ON CONFLICT (user_id, ejercicio_id) DO NOTHING
+      `;
+    }
+  } catch (error) {
+    console.error('Fundamentos submit error:', error);
+    return responder(rechazo(500, 'consulta', 'No se pudo preparar tu envio.'), cors);
+  }
   if (!ejercicio) {
     return responder(rechazo(404, 'no-encontrado', 'Ejercicio no encontrado.'), cors);
   }
   const abierto = ejercicio.abierto_en as Date | null;
-  if (!abierto) {
-    // Si la apertura no llego a guardarse, se registra ahora: el candado no queda cerrado para siempre.
-    await sql`
-      INSERT INTO fundamentos_progreso (user_id, ejercicio_id)
-      SELECT ${userId}::uuid, e.id FROM fundamentos_ejercicios e
-      WHERE e.nivel = ${nivel} AND e.numero = ${numero}
-      ON CONFLICT (user_id, ejercicio_id) DO NOTHING
-    `;
-  }
   const transcurrido = abierto ? (ejercicio.ahora as Date).getTime() - abierto.getTime() : 0;
   if (transcurrido < CANDADO_SEGUNDOS * 1000) {
     return responder(
@@ -201,6 +209,15 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     );
   }
 
+  // Un envio que no llego a evaluarse no cuenta para el tope diario; la espera se mantiene.
+  const devolverEnvio = async () => {
+    if (!contado) return;
+    await sql`
+      UPDATE limites_envio SET conteo_pseint = GREATEST(conteo_pseint - 1, 0)
+      WHERE user_id = ${userId} AND dia_pseint = ${hoy}
+    `.catch(() => {});
+  };
+
   // Al reves: si falla el tope global se corta.
   let presupuesto;
   try {
@@ -213,12 +230,14 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     );
   } catch (error) {
     console.error('Fallo al revisar el presupuesto de PSeInt:', error);
+    await devolverEnvio();
     return responder(
       rechazo(503, 'presupuesto', 'El juez de PSeInt no esta disponible ahora.'),
       cors,
     );
   }
   if (!presupuesto.permitido) {
+    await devolverEnvio();
     return responder(rechazo(503, presupuesto.codigo!, presupuesto.mensaje!), cors);
   }
 
@@ -231,13 +250,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     return responder({ status: 200, cuerpo: juzgar(ejemplos, ejecuciones) }, cors);
   } catch (error) {
     console.error('Fallo al invocar el juez de PSeInt:', error);
-    // No cuenta para el tope diario, pero la espera se mantiene para no amplificar una rafaga.
-    if (contado) {
-      await sql`
-        UPDATE limites_envio SET conteo_pseint = GREATEST(conteo_pseint - 1, 0)
-        WHERE user_id = ${userId} AND dia_pseint = ${hoy}
-      `.catch(() => {});
-    }
+    await devolverEnvio();
     return responder(
       rechazo(
         503,
