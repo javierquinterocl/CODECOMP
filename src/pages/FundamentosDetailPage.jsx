@@ -8,7 +8,8 @@ import {
   minutosTemporizador,
 } from '../scripts/fundamentosData';
 import { temporizadorActivo } from '../scripts/fundamentosProgreso';
-import { abrirEjercicio, guardarBorrador } from '../scripts/fundamentosApi';
+import { abrirEjercicio, enviarSolucion, guardarBorrador } from '../scripts/fundamentosApi';
+import { explicarError } from '../scripts/pseintErrores';
 import { useFundamentos } from '../scripts/useFundamentos';
 import { useAuth } from '../context/AuthContext';
 import FundamentosCarga from '../components/FundamentosCarga';
@@ -21,6 +22,64 @@ import { LockIcon, CollapseIcon, ExpandIcon, ClockIcon } from '../components/App
 const ESPERA_BORRADOR = 15000;
 
 const reloj = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
+
+const ESPERAS = new Set(['limite-espera', 'limite-diario', 'candado']);
+
+// Clase, título y textos de la caja del gato según lo que respondió el juez.
+const describir = (r) => {
+  if (r.falla) {
+    const espera = ESPERAS.has(r.codigo);
+    return { clase: espera ? '' : ' is-fail', titulo: espera ? 'Espera un momento' : 'No se pudo evaluar', texto: r.falla };
+  }
+  switch (r.veredicto) {
+    case 'ACEPTADO':
+      return {
+        clase: ' is-ok',
+        titulo: '¡Aceptado!',
+        texto: `Tu algoritmo pasó ${r.ejemplos === 1 ? 'el ejemplo' : `los ${r.ejemplos} ejemplos`} del enunciado.`,
+      };
+    case 'INCORRECTO':
+      return {
+        clase: ' is-fail',
+        titulo: 'Respuesta incorrecta',
+        texto: `En el ejemplo ${r.ejemplo} tu salida no coincide con la esperada.`,
+        comparar: true,
+      };
+    case 'ERROR':
+      return { clase: ' is-fail', titulo: `Error en la línea ${r.linea}`, oficial: r.mensaje, texto: explicarError(r.numero) };
+    case 'SIN_DATOS':
+      return {
+        clase: ' is-fail',
+        titulo: `Error en la línea ${r.linea}`,
+        texto: 'Leer pidió un dato más, pero la entrada del ejemplo ya se acabó. Revisa cuántos datos lees.',
+      };
+    case 'NO_TERMINA':
+      return {
+        clase: ' is-fail',
+        titulo: 'Tu algoritmo no termina',
+        texto: 'Tardó demasiado y se detuvo. Revisa que la condición de tus ciclos llegue a cumplirse.',
+      };
+    case 'DEMASIADA_SALIDA':
+      return {
+        clase: ' is-fail',
+        titulo: 'Tu algoritmo escribió demasiado',
+        texto: 'Revisa que ningún Escribir esté dentro de un ciclo que no termina.',
+      };
+    default:
+      return {
+        clase: ' is-fail',
+        titulo: 'No se pudo evaluar',
+        texto: 'El intérprete de PSeInt se detuvo de forma inesperada. Revisa tu código e inténtalo de nuevo.',
+      };
+  }
+};
+
+const Salida = ({ etiqueta, texto, vacio }) => (
+  <div className="nb-ex-feedback-output">
+    <span className="nb-ex-feedback-label">{etiqueta}</span>
+    <pre>{texto || vacio}</pre>
+  </div>
+);
 
 /* ── Panel del gato ──
    Un segundo sidebar, pegado al borde derecho. Parece un chat pero es de solo
@@ -87,7 +146,11 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const [expandido, setExpandido] = useState(false);
   // PSeInt es claro por defecto; aquí el editor arranca igual.
   const [temaClaro, setTemaClaro] = useState(true);
-  const [enviado, setEnviado] = useState(false);
+  // Lo último que respondió el juez: solo un envío nuevo lo cambia.
+  const [resultado, setResultado] = useState(null);
+  const [evaluando, setEvaluando] = useState(false);
+  // La marca de la regleta sí se va al teclear: con líneas nuevas dejaría de apuntar al error.
+  const [lineaError, setLineaError] = useState(null);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);
   // Mientras la base no diga cuándo se abrió por primera vez, el candado cuenta desde ahora.
@@ -130,7 +193,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const escribir = (texto) => {
     tocado.current = true;
     setCodigo(texto);
-    setEnviado(false);
+    setLineaError(null);
     pendiente.current = texto;
     // El reloj no se reinicia con cada tecla: así el ritmo de escrituras tiene tope.
     espera.current ??= setTimeout(guardarPendiente, ESPERA_BORRADOR);
@@ -169,6 +232,23 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   }, [corriendo]);
 
   const reiniciar = () => escribir(PLANTILLA_PSEINT);
+
+  const evaluar = async () => {
+    if (!user || evaluando) return;
+    setEvaluando(true);
+    try {
+      const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
+      setResultado(respuesta);
+      setLineaError(respuesta.veredicto === 'ERROR' || respuesta.veredicto === 'SIN_DATOS' ? respuesta.linea : null);
+    } catch (error) {
+      setResultado({ falla: error.message, codigo: error.codigo });
+      setLineaError(null);
+    } finally {
+      setEvaluando(false);
+    }
+  };
+
+  const veredicto = resultado && describir(resultado);
 
   return (
     <div className="nb-fd-vista">
@@ -240,14 +320,14 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
 
             <button
               type="button"
-              className={`nb-ex-send${bloqueado ? ' is-locked' : ''}`}
-              onClick={() => setEnviado(true)}
-              disabled={bloqueado}
+              className={`nb-ex-send${bloqueado ? ' is-locked' : ''}${evaluando ? ' is-busy' : ''}`}
+              onClick={evaluar}
+              disabled={bloqueado || evaluando}
               title={bloqueado ? 'Lee el enunciado y piensa tu solución: el envío se abre en un momento' : undefined}
             >
               {bloqueado
                 ? <><LockIcon /> Enviar en {reloj(restante)}</>
-                : 'Enviar'}
+                : evaluando ? 'Evaluando…' : 'Enviar'}
             </button>
           </div>
 
@@ -262,6 +342,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
             onReiniciar={reiniciar}
             bloquearPegado
             tabulador
+            lineaError={lineaError}
             extra={conReloj && (
               <span
                 className={`nb-fd-timer${tiempoAgotado ? ' is-done' : ''}`}
@@ -273,23 +354,35 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
             )}
           />
 
-          <div className="nb-ex-feedback">
+          <div className={`nb-ex-feedback${veredicto ? veredicto.clase : ''}`}>
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
             <div className="nb-ex-feedback-main" aria-live="polite">
               <div className="nb-ex-feedback-title">
-                {enviado
-                  ? 'El juez de PSeInt llegará pronto'
+                {veredicto
+                  ? veredicto.titulo
                   : tiempoAgotado ? 'Se acabó el tiempo' : '¡Resuélvelo primero, vamos!'}
               </div>
-              <p className="nb-ex-feedback-text">
-                {enviado
-                  ? 'Tu solución todavía no se puede evaluar aquí, así que no se calificó. Tu código queda guardado; mientras tanto, pruébalo en PSeInt con los ejemplos del enunciado.'
-                  : tiempoAgotado
+              {veredicto ? (
+                <div className="nb-ex-feedback-result">
+                  {veredicto.oficial && <p className="nb-ex-feedback-text"><strong>{veredicto.oficial}</strong></p>}
+                  <p className="nb-ex-feedback-text">{veredicto.texto}</p>
+                  {veredicto.comparar && (
+                    <>
+                      <Salida etiqueta="Entrada" texto={resultado.entrada} vacio="(sin entrada)" />
+                      <Salida etiqueta="Salida esperada" texto={resultado.esperada} vacio="(sin salida)" />
+                      <Salida etiqueta="Tu salida" texto={resultado.obtenida} vacio="(sin salida)" />
+                    </>
+                  )}
+                </div>
+              ) : (
+                <p className="nb-ex-feedback-text">
+                  {tiempoAgotado
                     ? 'Tranquilo, esto es solo práctica: puedes seguir editando y enviar cuando quieras.'
                     : bloqueado
                     ? 'Tómate este tiempo para leer el enunciado y pensar los pasos. El envío se desbloquea cuando termine la cuenta.'
                     : 'Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.'}
-              </p>
+                </p>
+              )}
             </div>
           </div>
         </div>

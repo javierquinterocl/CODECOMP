@@ -237,6 +237,8 @@
 .nb-ex-editor-body { display: flex; align-items: stretch; min-height: 0; }
 .nb-ex-gutter { position: relative; flex: 0 0 auto; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
 .nb-ex-gutter span { display: block; }
+/* Línea donde el juez encontró el error: la marca ocupa todo el ancho de la regleta. */
+.nb-ex-gutter-nums span.is-error { margin: 0 -10px; padding: 0 10px; background: #B00A26; color: #fff; font-weight: 700; }
 /* Solo da el ancho: el número más largo, sin alto. */
 .nb-ex-gutter-ancho { height: 0; visibility: hidden; }
 .nb-ex-gutter-nums { position: absolute; top: 0; left: 0; right: 0; padding: clamp(10px,0.8vw,16px) 10px; }

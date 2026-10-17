@@ -1,10 +1,16 @@
-// GET /fundamentos/ejercicios, GET y POST /fundamentos/progreso, POST /fundamentos/borrador.
-// Todavia sin juez: solo se guarda cuando se abrio cada ejercicio y el borrador del editor.
+// GET /fundamentos/ejercicios, GET y POST /fundamentos/progreso, POST /fundamentos/borrador
+// y POST /fundamentos/envio, que evalua con el juez de PSeInt.
 
 import type { Contexto } from '../contexto.ts';
+import { dia, mes } from '../config.ts';
 import { rechazo, responder } from '../http.ts';
+import { revisarPresupuesto, revisarUsuarioPseint } from '../limites.ts';
+import { type Ejemplo, type Invocador, invocadorLambda, juzgar } from '../pseint.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { validarBorrador, validarEjercicio } from '../validacion.ts';
+
+// Igual que ESPERA_ENVIO en src/scripts/fundamentosData.js.
+const CANDADO_SEGUNDOS = 120;
 
 const listarEjercicios = async (ctx: Contexto): Promise<Response> => {
   const { req, sql, cors } = ctx;
@@ -120,6 +126,142 @@ const borrador = async (ctx: Contexto): Promise<Response> => {
   }
 };
 
+export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Response> => {
+  const { req, sql, config, cors, identidad } = ctx;
+  if (req.method !== 'POST') {
+    return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
+  }
+  if (!identidad) {
+    return responder(rechazo(401, 'sin-sesion', 'Inicia sesion para enviar tu solucion.'), cors);
+  }
+
+  const validado = validarBorrador(await leerCuerpo(req));
+  if (!validado.ok) return responder(validado.rechazo, cors);
+  const { nivel, numero, codigo } = validado.borrador;
+
+  if (!invocar && !config.pseintAccessKeyId) {
+    console.error('Falta la llave del juez de PSeInt.');
+    return responder(rechazo(503, 'sin-juez', 'El juez de PSeInt no esta disponible ahora.'), cors);
+  }
+
+  let userId: string;
+  let ejercicio;
+  try {
+    userId = await idDeUsuario(sql, identidad);
+    // Los ejemplos salen de la base, nunca del navegador; y el candado se mide con su reloj.
+    [ejercicio] = await sql`
+      SELECT e.ejemplos, p.abierto_en, now() AS ahora
+      FROM fundamentos_ejercicios e
+      LEFT JOIN fundamentos_progreso p ON p.ejercicio_id = e.id AND p.user_id = ${userId}
+      WHERE e.nivel = ${nivel} AND e.numero = ${numero} AND e.is_active
+    `;
+    if (ejercicio && !ejercicio.abierto_en) {
+      // Si la apertura no llego a guardarse, se registra ahora:
+      // asi el candado no queda cerrado para siempre.
+      await sql`
+        INSERT INTO fundamentos_progreso (user_id, ejercicio_id)
+        SELECT ${userId}::uuid, e.id FROM fundamentos_ejercicios e
+        WHERE e.nivel = ${nivel} AND e.numero = ${numero}
+        ON CONFLICT (user_id, ejercicio_id) DO NOTHING
+      `;
+    }
+  } catch (error) {
+    console.error('Fundamentos submit error:', error);
+    return responder(rechazo(500, 'consulta', 'No se pudo preparar tu envio.'), cors);
+  }
+  if (!ejercicio) {
+    return responder(rechazo(404, 'no-encontrado', 'Ejercicio no encontrado.'), cors);
+  }
+  const abierto = ejercicio.abierto_en as Date | null;
+  const transcurrido = abierto ? (ejercicio.ahora as Date).getTime() - abierto.getTime() : 0;
+  if (transcurrido < CANDADO_SEGUNDOS * 1000) {
+    return responder(
+      rechazo(
+        403,
+        'candado',
+        'Lee el enunciado y piensa tu solucion: el envio todavia no se abre.',
+      ),
+      cors,
+    );
+  }
+
+  const hoy = dia(config.zonaHoraria);
+  // Si falla la revision del estudiante se deja pasar: el tope global sigue protegiendo.
+  let permiso;
+  let contado = false;
+  try {
+    permiso = await revisarUsuarioPseint(
+      sql,
+      userId,
+      hoy,
+      config.pseintEsperaSegundos,
+      config.pseintTopeDiario,
+    );
+    contado = permiso.permitido;
+  } catch (error) {
+    console.error('Fallo al revisar el limite de PSeInt:', error);
+    permiso = { permitido: true };
+  }
+  if (!permiso.permitido) {
+    return responder(
+      rechazo(429, permiso.codigo!, permiso.mensaje!, { reintentarEn: permiso.esperaSegundos }),
+      cors,
+    );
+  }
+
+  // Un envio que no llego a evaluarse no cuenta para el tope diario; la espera se mantiene.
+  const devolverEnvio = async () => {
+    if (!contado) return;
+    await sql`
+      UPDATE limites_envio SET conteo_pseint = GREATEST(conteo_pseint - 1, 0)
+      WHERE user_id = ${userId} AND dia_pseint = ${hoy}
+    `.catch(() => {});
+  };
+
+  // Al reves: si falla el tope global se corta.
+  let presupuesto;
+  try {
+    presupuesto = await revisarPresupuesto(
+      sql,
+      `pseint:${hoy}`,
+      `pseint:${mes(config.zonaHoraria)}`,
+      config.pseintMaxDiario,
+      config.pseintMaxMensual,
+    );
+  } catch (error) {
+    console.error('Fallo al revisar el presupuesto de PSeInt:', error);
+    await devolverEnvio();
+    return responder(
+      rechazo(503, 'presupuesto', 'El juez de PSeInt no esta disponible ahora.'),
+      cors,
+    );
+  }
+  if (!presupuesto.permitido) {
+    await devolverEnvio();
+    return responder(rechazo(503, presupuesto.codigo!, presupuesto.mensaje!), cors);
+  }
+
+  const ejemplos = ejercicio.ejemplos as Ejemplo[];
+  try {
+    const ejecuciones = await (invocar ?? invocadorLambda(config))(
+      codigo,
+      ejemplos.map((e) => e.entrada),
+    );
+    return responder({ status: 200, cuerpo: juzgar(ejemplos, ejecuciones) }, cors);
+  } catch (error) {
+    console.error('Fallo al invocar el juez de PSeInt:', error);
+    await devolverEnvio();
+    return responder(
+      rechazo(
+        503,
+        'juez-no-disponible',
+        'El juez de PSeInt no esta disponible ahora. Intentalo en un momento.',
+      ),
+      cors,
+    );
+  }
+};
+
 export const fundamentos = (ctx: Contexto, recurso: string | undefined): Promise<Response> => {
   switch (recurso) {
     case 'ejercicios':
@@ -128,6 +270,8 @@ export const fundamentos = (ctx: Contexto, recurso: string | undefined): Promise
       return progreso(ctx);
     case 'borrador':
       return borrador(ctx);
+    case 'envio':
+      return envio(ctx);
     default:
       return Promise.resolve(responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), ctx.cors));
   }

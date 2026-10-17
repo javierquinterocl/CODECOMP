@@ -355,6 +355,7 @@ export const EJERCICIOS = [
     entrada: 'Una línea con un entero N entre 0 y 12.',
     salida: 'Una línea con el factorial de N.',
     ejemplos: [{ entrada: '5', salida: '120' }, { entrada: '0', salida: '1' }, { entrada: '10', salida: '3628800' }],
+    pistaConcepto: 'Si N es 0, un Para de 1 hasta 0 cuenta hacia atrás y da vueltas de más. Con Paso 1, el ciclo ni siquiera entra.',
   },
   {
     numero: 37, tema: 'ciclo-para', nivel: 2,
@@ -373,6 +374,7 @@ export const EJERCICIOS = [
     entrada: 'Dos líneas: la base (entero entre 1 y 10) y el exponente (entero entre 0 y 9).',
     salida: 'Una línea con el resultado.',
     ejemplos: [{ entrada: '2\n10', salida: '1024' }, { entrada: '5\n0', salida: '1' }, { entrada: '3\n3', salida: '27' }],
+    pistaConcepto: 'Si el exponente es 0, un Para de 1 hasta 0 cuenta hacia atrás y da vueltas de más. Con Paso 1, el ciclo ni siquiera entra.',
   },
   {
     numero: 39, tema: 'ciclo-para', nivel: 3,

@@ -463,6 +463,7 @@ export const EJERCICIOS_PRACTICA = [
     entrada: 'Dos líneas: el dinero inicial (entero positivo) y la cantidad de años (entre 0 y 20).',
     salida: 'Una línea con el saldo final.',
     ejemplos: [{ entrada: '1000\n2', salida: '1210' }, { entrada: '1500\n3', salida: '1996' }, { entrada: '999\n1', salida: '1098' }, { entrada: '500\n0', salida: '500' }],
+    pistaConcepto: 'Si los años son 0, un Para de 1 hasta 0 cuenta hacia atrás y da vueltas de más. Con Paso 1, el ciclo ni siquiera entra.',
   },
   {
     numero: 38, tema: 'ciclo-para', nivel: 4,
@@ -513,6 +514,7 @@ export const EJERCICIOS_PRACTICA = [
     entrada: 'La primera línea trae N (entre 1 y 100). Siguen N líneas con un entero cada una: la fila de adelante hacia atrás. La última línea trae K, mayor o igual que cero: las veces que suena la campana.',
     salida: 'N líneas con la fila después de las K rotaciones, de adelante hacia atrás.',
     ejemplos: [{ entrada: '5\n1\n2\n3\n4\n5\n2', salida: '4\n5\n1\n2\n3' }, { entrada: '3\n7\n8\n9\n3', salida: '7\n8\n9' }, { entrada: '4\n1\n2\n3\n4\n5', salida: '4\n1\n2\n3' }],
+    pistaConcepto: 'Si las rotaciones que quedan son 0, un Para de 1 hasta 0 cuenta hacia atrás y rota de más. Con Paso 1, el ciclo ni siquiera entra.',
   },
   {
     numero: 42, tema: 'arreglos', nivel: 4,

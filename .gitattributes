@@ -1,0 +1,2 @@
+# Los scripts de bash se rompen con CRLF.
+*.sh text eol=lf
