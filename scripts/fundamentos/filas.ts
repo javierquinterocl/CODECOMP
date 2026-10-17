@@ -20,6 +20,9 @@ export interface Fila {
 
 export const ESPERADOS: Record<string, number> = { fundamentos: 50, practica: 50 };
 
+// El juez de PSeInt acepta como mucho 10 entradas por envio (aws/pseint/manejador.py).
+export const MAX_EJEMPLOS = 10;
+
 // deno-lint-ignore no-explicit-any
 const filaDe = (nivel: string, e: any): Fila => ({
   nivel,
@@ -68,6 +71,7 @@ export const validar = (filas: Fila[]): string[] => {
       errores.push(`${clave}: descripcion vacia`);
     }
     const ejemplosBien = Array.isArray(f.ejemplos) && f.ejemplos.length > 0 &&
+      f.ejemplos.length <= MAX_EJEMPLOS &&
       f.ejemplos.every((ej) => typeof ej.entrada === 'string' && esTexto(ej.salida));
     if (!ejemplosBien) errores.push(`${clave}: ejemplos invalidos`);
   }

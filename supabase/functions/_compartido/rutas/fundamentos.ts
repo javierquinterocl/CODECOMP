@@ -171,6 +171,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
   const hoy = dia(config.zonaHoraria);
   // Si falla la revision del estudiante se deja pasar: el tope global sigue protegiendo.
   let permiso;
+  let contado = false;
   try {
     permiso = await revisarUsuarioPseint(
       sql,
@@ -179,6 +180,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
       config.pseintEsperaSegundos,
       config.pseintTopeDiario,
     );
+    contado = permiso.permitido;
   } catch (error) {
     console.error('Fallo al revisar el limite de PSeInt:', error);
     permiso = { permitido: true };
@@ -220,12 +222,13 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     return responder({ status: 200, cuerpo: juzgar(ejemplos, ejecuciones) }, cors);
   } catch (error) {
     console.error('Fallo al invocar el juez de PSeInt:', error);
-    // Un envio que no se pudo evaluar no cuenta para el estudiante.
-    await sql`
-      UPDATE limites_envio
-      SET conteo_pseint = GREATEST(conteo_pseint - 1, 0), ultimo_pseint = NULL
-      WHERE user_id = ${userId}
-    `.catch(() => {});
+    // No cuenta para el tope diario, pero la espera se mantiene para no amplificar una rafaga.
+    if (contado) {
+      await sql`
+        UPDATE limites_envio SET conteo_pseint = GREATEST(conteo_pseint - 1, 0)
+        WHERE user_id = ${userId}
+      `.catch(() => {});
+    }
     return responder(
       rechazo(
         503,

@@ -26,6 +26,15 @@ Deno.test('validar detecta numeros repetidos, temas desconocidos y conteos disti
   assertEquals(errores.some((e) => e.includes('practica: 49')), true);
 });
 
+Deno.test('validar exige entre 1 y 10 ejemplos, lo que admite el juez de PSeInt', () => {
+  const filas = filasDeArchivos();
+  const [ejemplo] = filas[0].ejemplos;
+  filas[0] = { ...filas[0], ejemplos: Array(11).fill(ejemplo) };
+  filas[1] = { ...filas[1], ejemplos: [] };
+  const errores = validar(filas);
+  assertEquals(errores.filter((e) => e.includes('ejemplos invalidos')).length, 2);
+});
+
 Deno.test('diferencias compara campo a campo con la fila de la base', () => {
   const [fila] = filasDeArchivos();
   assertEquals(diferencias(fila, { ...fila }), []);

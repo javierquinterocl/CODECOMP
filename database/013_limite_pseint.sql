@@ -18,15 +18,12 @@ DECLARE
   v_faltan  INTEGER;
   v_conteo  INTEGER;
 BEGIN
-  SELECT * INTO v_fila FROM limites_envio WHERE user_id = p_user_id FOR UPDATE;
+  -- Dos primeros envios a la vez no chocan: la fila nace una sola vez y sin espera para Problemas.
+  INSERT INTO limites_envio (user_id, ultimo_envio, dia, conteo_dia)
+  VALUES (p_user_id, now() - INTERVAL '1 hour', p_dia, 0)
+  ON CONFLICT (user_id) DO NOTHING;
 
-  IF NOT FOUND THEN
-    -- La fila nace sin espera pendiente para el juez de Problemas.
-    INSERT INTO limites_envio (user_id, ultimo_envio, dia, conteo_dia, ultimo_pseint, dia_pseint, conteo_pseint)
-    VALUES (p_user_id, now() - INTERVAL '1 hour', p_dia, 0, now(), p_dia, 1);
-    RETURN QUERY SELECT true, NULL::TEXT, 0, 1;
-    RETURN;
-  END IF;
+  SELECT * INTO v_fila FROM limites_envio WHERE user_id = p_user_id FOR UPDATE;
 
   IF v_fila.ultimo_pseint IS NOT NULL THEN
     v_faltan := CEIL(p_espera_segundos - EXTRACT(EPOCH FROM (now() - v_fila.ultimo_pseint)))::INTEGER;

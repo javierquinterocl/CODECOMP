@@ -149,6 +149,8 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   // Lo último que respondió el juez: solo un envío nuevo lo cambia.
   const [resultado, setResultado] = useState(null);
   const [evaluando, setEvaluando] = useState(false);
+  // La marca de la regleta sí se va al teclear: con líneas nuevas dejaría de apuntar al error.
+  const [lineaError, setLineaError] = useState(null);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);
   // Mientras la base no diga cuándo se abrió por primera vez, el candado cuenta desde ahora.
@@ -191,6 +193,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const escribir = (texto) => {
     tocado.current = true;
     setCodigo(texto);
+    setLineaError(null);
     pendiente.current = texto;
     // El reloj no se reinicia con cada tecla: así el ritmo de escrituras tiene tope.
     espera.current ??= setTimeout(guardarPendiente, ESPERA_BORRADOR);
@@ -234,16 +237,18 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     if (!user || evaluando) return;
     setEvaluando(true);
     try {
-      setResultado(await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo));
+      const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
+      setResultado(respuesta);
+      setLineaError(respuesta.veredicto === 'ERROR' || respuesta.veredicto === 'SIN_DATOS' ? respuesta.linea : null);
     } catch (error) {
       setResultado({ falla: error.message, codigo: error.codigo });
+      setLineaError(null);
     } finally {
       setEvaluando(false);
     }
   };
 
   const veredicto = resultado && describir(resultado);
-  const lineaError = resultado?.veredicto === 'ERROR' || resultado?.veredicto === 'SIN_DATOS' ? resultado.linea : null;
 
   return (
     <div className="nb-fd-vista">

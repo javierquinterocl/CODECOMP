@@ -3,17 +3,20 @@
 import ctypes
 import os
 import resource
-import shutil
 import subprocess
 import tempfile
+import time
 
-BINARIO = '/tmp/pseint'
+# Desde /var/task, que es de solo lectura: un envio no puede reemplazar el binario.
+BINARIO = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'pseint')
 TOPE_CODIGO = 20000
 TOPE_ENTRADAS = 10
 TOPE_ENTRADA = 64 * 1024
 TOPE_SALIDA = 64 * 1024
 SEGUNDOS_CPU = 2
 SEGUNDOS_RELOJ = 3
+# Plazo de toda la invocacion, por debajo de los 10 s de la Lambda: agotarlo es "no termina".
+SEGUNDOS_TOTALES = 7
 
 # Perfil Flexible oficial, mas las marcas de E/S y el modo de evaluacion.
 OPCIONES = [
@@ -24,29 +27,22 @@ OPCIONES = [
     '--withioreferences', '--foreval', '--fortest',
 ]
 
+COMILLAS = str.maketrans({'“': '"', '”': '"', '‘': "'", '’': "'"})
+
 # Sin volcado: otro proceso del mismo usuario no puede leer /proc de este (ni sus credenciales).
 ctypes.CDLL(None).prctl(4, 0, 0, 0, 0)
 
 
-def _preparar():
-    if not os.path.exists(BINARIO):
-        shutil.copy(os.path.join(os.path.dirname(__file__), 'pseint'), BINARIO)
-        os.chmod(BINARIO, 0o500)
-
-
 def _limites():
-    resource.setrlimit(resource.RLIMIT_CPU, (SEGUNDOS_CPU, SEGUNDOS_CPU))
+    # El blando avisa con SIGXCPU; si se ignora, el duro mata con SIGKILL.
+    resource.setrlimit(resource.RLIMIT_CPU, (SEGUNDOS_CPU, SEGUNDOS_CPU + 1))
     resource.setrlimit(resource.RLIMIT_AS, (256 * 1024 * 1024,) * 2)
     resource.setrlimit(resource.RLIMIT_FSIZE, (TOPE_SALIDA,) * 2)
     resource.setrlimit(resource.RLIMIT_NOFILE, (16, 16))
     resource.setrlimit(resource.RLIMIT_NPROC, (1, 1))
 
 
-def _rechazo(motivo):
-    return {'error': motivo}
-
-
-def _ejecutar(codigo, entrada):
+def _ejecutar(codigo, entrada, plazo):
     with tempfile.TemporaryDirectory() as carpeta:
         programa = os.path.join(carpeta, 'p.psc')
         with open(programa, 'w', encoding='latin-1', errors='replace') as f:
@@ -58,15 +54,16 @@ def _ejecutar(codigo, entrada):
                     [BINARIO, programa, *OPCIONES],
                     input=entrada.encode('latin-1', errors='replace'),
                     stdout=destino, stderr=subprocess.STDOUT, cwd=carpeta,
-                    preexec_fn=_limites, timeout=SEGUNDOS_RELOJ, env={'LANG': 'C'},
+                    preexec_fn=_limites, timeout=plazo,
+                    env={'LANG': 'C', 'HOME': carpeta},
                 )
                 codigo_salida = proceso.returncode
             except subprocess.TimeoutExpired:
                 codigo_salida = None
         with open(salida, 'rb') as f:
             texto = f.read(TOPE_SALIDA).decode('latin-1')
-    # -24 y -25: SIGXCPU y SIGXFSZ, los topes de CPU y de salida.
-    if codigo_salida is None or codigo_salida == -24:
+    # None: reloj; -24 y -9: tope blando y duro de CPU; -25: tope de salida.
+    if codigo_salida in (None, -24, -9):
         estado = 'tiempo'
     elif codigo_salida == -25:
         estado = 'salida'
@@ -78,24 +75,28 @@ def _ejecutar(codigo, entrada):
 
 
 def handler(evento, _contexto):
+    inicio = time.monotonic()
     codigo = evento.get('codigo') if isinstance(evento, dict) else None
     entradas = evento.get('entradas') if isinstance(evento, dict) else None
     if not isinstance(codigo, str) or len(codigo) > TOPE_CODIGO:
-        return _rechazo('codigo')
+        return {'error': 'codigo'}
     if not isinstance(entradas, list) or not 1 <= len(entradas) <= TOPE_ENTRADAS:
-        return _rechazo('entradas')
+        return {'error': 'entradas'}
     if any(not isinstance(e, str) or len(e) > TOPE_ENTRADA for e in entradas):
-        return _rechazo('entradas')
+        return {'error': 'entradas'}
 
-    _preparar()
     # Sin caracteres de control: las marcas de E/S de PSeInt no se pueden falsificar.
-    codigo = ''.join(c for c in codigo if c in '\n\t' or ord(c) >= 32)
+    codigo = ''.join(c for c in codigo.translate(COMILLAS) if c in '\n\t' or ord(c) >= 32)
     resultados = []
     for entrada in entradas:
+        restante = SEGUNDOS_TOTALES - (time.monotonic() - inicio)
+        if restante < 0.5:
+            resultados.append({'salida': '', 'estado': 'tiempo'})
+            break
         entrada = entrada.replace('\r', '')
         if entrada and not entrada.endswith('\n'):
             entrada += '\n'
-        resultado = _ejecutar(codigo, entrada + '<{[END_OF_INPUT]}>\n')
+        resultado = _ejecutar(codigo, entrada + '<{[END_OF_INPUT]}>\n', min(SEGUNDOS_RELOJ, restante))
         resultados.append(resultado)
         # Un ciclo infinito tarda lo mismo en todos los ejemplos: con uno basta.
         if resultado['estado'] == 'tiempo':

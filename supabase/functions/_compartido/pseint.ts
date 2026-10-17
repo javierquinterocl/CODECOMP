@@ -113,6 +113,8 @@ export const invocadorLambda = (config: Config): Invocador => {
     secretAccessKey: config.pseintSecretAccessKey,
     region: config.pseintRegion,
     service: 'lambda',
+    // Sin reintentos: cada uno volveria a ejecutar el codigo del estudiante.
+    retries: 0,
   });
   const url = `https://lambda.${config.pseintRegion}.amazonaws.com/2015-03-31/functions/` +
     `${encodeURIComponent(config.pseintFuncion)}/invocations`;

@@ -93,6 +93,7 @@ Deno.test('juzgar distingue error, falta de datos, ciclo infinito y salida exces
 interface Escenario {
   abiertoHaceSeg?: number | null;
   limite?: Record<string, unknown>;
+  limiteFalla?: boolean;
   invocacion?: () => Promise<Ejecucion[]>;
 }
 
@@ -116,6 +117,9 @@ const contexto = (esc: Escenario, consultas: string[]): Contexto => {
   const sql = (partes: TemplateStringsArray) => {
     const texto = partes.join('?');
     consultas.push(texto);
+    if (esc.limiteFalla && texto.includes('registrar_envio_pseint')) {
+      return Promise.reject(new Error('sin funcion'));
+    }
     return Promise.resolve(filas(texto));
   };
   const cuerpo = { nivel: 'fundamentos', numero: 7, codigo: 'Algoritmo a\nFinAlgoritmo' };
@@ -182,5 +186,16 @@ Deno.test('si la Lambda falla responde 503 y devuelve el envio al estudiante', a
   });
   assertEquals(status, 503);
   assertEquals(cuerpo.codigo, 'juez-no-disponible');
-  assertEquals(consultas.some((c) => c.includes('conteo_pseint - 1')), true);
+  const reembolso = consultas.find((c) => c.includes('conteo_pseint - 1'));
+  // Devuelve el envio pero no borra la espera: si no, una caida invitaria a reenviar en rafaga.
+  assertEquals(Boolean(reembolso) && !reembolso!.includes('ultimo_pseint'), true);
+});
+
+Deno.test('si el limite no se pudo registrar, la caida de la Lambda no descuenta nada', async () => {
+  const { status, consultas } = await enviar({
+    limiteFalla: true,
+    invocacion: () => Promise.reject(new Error('sin red')),
+  });
+  assertEquals(status, 503);
+  assertEquals(consultas.some((c) => c.includes('conteo_pseint - 1')), false);
 });
