@@ -44,6 +44,16 @@ export interface Config {
   iaMaxCodigo: number;
   iaMaxEnunciado: number;
   iaMaxError: number;
+
+  pseintFuncion: string;
+  pseintRegion: string;
+  pseintAccessKeyId: string;
+  pseintSecretAccessKey: string;
+  pseintTimeoutMs: number;
+  pseintMaxDiario: number;
+  pseintMaxMensual: number;
+  pseintEsperaSegundos: number;
+  pseintTopeDiario: number;
 }
 
 export const cargarConfig = (): Config => ({
@@ -95,6 +105,17 @@ export const cargarConfig = (): Config => ({
   iaMaxCodigo: num(env('IA_MAX_CODIGO'), 3500),
   iaMaxEnunciado: num(env('IA_MAX_ENUNCIADO'), 1200),
   iaMaxError: num(env('IA_MAX_ERROR'), 400),
+
+  // Juez de PSeInt: Lambda en AWS. La llave solo puede invocar esa funcion.
+  pseintFuncion: env('PSEINT_LAMBDA_FUNCION') ?? 'codecomp-pseint',
+  pseintRegion: env('PSEINT_LAMBDA_REGION') ?? 'us-east-1',
+  pseintAccessKeyId: env('PSEINT_AWS_ACCESS_KEY_ID') ?? '',
+  pseintSecretAccessKey: env('PSEINT_AWS_SECRET_ACCESS_KEY') ?? '',
+  pseintTimeoutMs: num(env('PSEINT_TIMEOUT_MS'), 12000),
+  pseintMaxDiario: num(env('PSEINT_MAX_DIARIO'), 3000),
+  pseintMaxMensual: num(env('PSEINT_MAX_MENSUAL'), 30000),
+  pseintEsperaSegundos: num(env('PSEINT_ESPERA_SEGUNDOS'), 5),
+  pseintTopeDiario: num(env('PSEINT_TOPE_DIARIO'), 200),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

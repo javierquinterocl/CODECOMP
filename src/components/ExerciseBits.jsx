@@ -51,7 +51,7 @@ const tabular = (texto, inicio, fin, quitar) => {
    textarea queda encima con el texto invisible. */
 export const Editor = ({
   codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar,
-  bloquearPegado = false, tabulador = false, extra = null,
+  bloquearPegado = false, tabulador = false, extra = null, lineaError = null,
 }) => {
   const regletaRef = useRef(null);
   const resaltadoRef = useRef(null);
@@ -150,7 +150,7 @@ export const Editor = ({
         <div className="nb-ex-gutter" aria-hidden="true">
           <span className="nb-ex-gutter-ancho">{lineas.length}</span>
           <div className="nb-ex-gutter-nums" ref={regletaRef}>
-            {lineas.map((n) => <span key={n}>{n}</span>)}
+            {lineas.map((n) => <span key={n} className={n === lineaError ? 'is-error' : undefined}>{n}</span>)}
           </div>
         </div>
         <div className="nb-ex-code-wrap">

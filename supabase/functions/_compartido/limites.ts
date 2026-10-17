@@ -73,6 +73,33 @@ export const revisarUsuario = async (
   };
 };
 
+// Espera y tope diario del juez de PSeInt, con contador propio (database/013).
+export const revisarUsuarioPseint = async (
+  sql: Sql,
+  userId: string,
+  dia: string,
+  esperaSegundos: number,
+  topeDiario: number,
+): Promise<Veredicto> => {
+  const [fila] = await sql`
+    SELECT * FROM registrar_envio_pseint(
+      ${userId}::uuid, ${dia}::date, ${esperaSegundos}::int, ${topeDiario}::int
+    )
+  `;
+  if (fila.permitido) return { permitido: true };
+
+  const codigo = fila.codigo as string;
+  return {
+    permitido: false,
+    codigo,
+    esperaSegundos: fila.espera_segundos as number,
+    mensaje: mensajeDeLimite(codigo, {
+      esperaSegundos: fila.espera_segundos as number,
+      topeDiario,
+    }),
+  };
+};
+
 // Espera entre pistas del mismo estudiante (database/009).
 export const revisarPista = async (
   sql: Sql,

@@ -159,6 +159,8 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-ex-send.is-locked { display: flex; align-items: center; justify-content: center; gap: 9px; background: #fff; color: #000; cursor: not-allowed; font-variant-numeric: tabular-nums; }
 .nb-ex-send.is-locked:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 .nb-ex-send.is-locked svg { flex: 0 0 auto; display: block; width: 1.35em; height: 1.35em; }
+.nb-ex-send.is-busy { opacity: 0.6; cursor: wait; }
+.nb-ex-send.is-busy:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 
 /* ── Panel del gato: sidebar derecho ── */
 .nb-fd-lateral { --fd-lat-w: clamp(264px, 20vw, 380px); --fd-lat-pad: clamp(12px, 0.9vw, 18px); --fd-lat-btn: 36px; position: sticky; top: var(--header-h); flex: 0 0 var(--fd-lat-w); width: var(--fd-lat-w); height: calc(100vh - var(--header-h)); display: flex; flex-direction: column; overflow: hidden; background: #fff; border-left: 2px solid #000; transition: width 0.2s, flex-basis 0.2s; }

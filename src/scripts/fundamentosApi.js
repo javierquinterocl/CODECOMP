@@ -3,6 +3,7 @@ import { rutaApi } from './apiBase';
 const URL_EJERCICIOS = rutaApi('fundamentos/ejercicios');
 const URL_PROGRESO = rutaApi('fundamentos/progreso');
 const URL_BORRADOR = rutaApi('fundamentos/borrador');
+const URL_ENVIO = rutaApi('fundamentos/envio');
 
 // La base llama `dificultad` a lo que las páginas llaman `nivel` (1 a 5), como en Problemas.
 const mapEjercicio = (fila) => ({
@@ -82,4 +83,14 @@ export const abrirEjercicio = async (user, nivel, numero) => {
 export const guardarBorrador = async (user, nivel, numero, codigo, { alSalir = false } = {}) => {
   const response = await enviar(user, URL_BORRADOR, { nivel, numero: Number(numero), codigo }, { keepalive: alSalir });
   await leer(response, 'No se pudo guardar tu código.');
+};
+
+/** Evalúa el código con el juez de PSeInt. Si falla, el error lleva el `codigo` del servidor. */
+export const enviarSolucion = async (user, nivel, numero, codigo) => {
+  const response = await enviar(user, URL_ENVIO, { nivel, numero: Number(numero), codigo });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw Object.assign(new Error(data.message || 'No se pudo evaluar tu solución.'), { codigo: data.codigo });
+  }
+  return data;
 };
