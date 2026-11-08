@@ -13,6 +13,7 @@ import { progreso, recomendaciones, sincronizarUsuario } from '../_compartido/ru
 import { tutor } from '../_compartido/rutas/tutor.ts';
 import { fundamentos } from '../_compartido/rutas/fundamentos.ts';
 import { actividad, clases, datos } from '../_compartido/rutas/registro.ts';
+import { docente } from '../_compartido/rutas/docente.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -76,6 +77,8 @@ Deno.serve(async (req: Request) => {
         return await actividad(ctx, segmentos[1]);
       case 'clases':
         return await clases(ctx, segmentos[1]);
+      case 'docente':
+        return await docente(ctx, segmentos[1], segmentos[2]);
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }

@@ -380,6 +380,82 @@
   .nb-dash-btn-claro { box-shadow: 3px 3px 0px #000; }
 }
 
+/* ── Vista docente (Estudiantes y ficha del estudiante) ── */
+.nb-doc-stack { display: flex; flex-direction: column; gap: var(--sp-gap); margin-bottom: var(--sp-gap); }
+.nb-doc-clase { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.nb-doc-clase .nb-dash-section-title { margin: 0; }
+.nb-doc-vacio { margin: 12px 0 0; font-size: var(--fs-sm); color: var(--nb-ink-mute); }
+.nb-doc-nota { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--nb-ink-soft); }
+.nb-doc-buscar { flex: 0 1 340px; }
+
+.nb-doc-alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; position: relative; z-index: 1; }
+.nb-doc-alerta { background: #000; color: #fff; }
+
+.nb-doc-lista { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.nb-doc-estudiante { flex-wrap: wrap; }
+.nb-doc-estudiante .nb-pb-row-main { display: flex; flex-direction: column; align-items: flex-start; }
+.nb-doc-dato { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; min-width: clamp(70px, 6vw, 110px); }
+.nb-doc-dato small { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-doc-dato strong { font-size: var(--fs-base); font-weight: 700; }
+
+.nb-doc-tabla { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid #000; }
+.nb-doc-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid #000; }
+.nb-doc-fila.is-col { flex-direction: column; align-items: stretch; }
+.nb-doc-fila-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.nb-doc-celda { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); }
+.nb-doc-celda.is-grande { flex: 1 1 200px; }
+.nb-doc-celda strong { font-weight: 700; overflow-wrap: anywhere; }
+.nb-doc-celda small { color: var(--nb-ink-soft); overflow-wrap: anywhere; }
+.nb-doc-estado { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 2px solid #000; background: #fff; padding: 3px 8px; }
+.nb-doc-estado.is-on { background: #0AB05D; color: #000; }
+.nb-doc-pista { margin: 0; font-size: var(--fs-sm); line-height: 1.55; border-left: 4px solid var(--nb-blue); padding-left: 12px; }
+
+/* Mapa de calor: 0 sin práctica, 1 bajo, 2 medio, 3 alto. */
+.nb-doc-mapa-scroll { overflow-x: auto; margin-top: 14px; border: 2px solid #000; }
+.nb-doc-mapa { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.nb-doc-mapa th, .nb-doc-mapa td { border: 1px solid #000; padding: 8px 10px; text-align: center; white-space: nowrap; }
+.nb-doc-mapa thead th { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: #000; color: #fff; }
+.nb-doc-mapa tbody th { text-align: left; font-weight: 700; background: #fff; }
+.nb-doc-mapa td, .nb-doc-pct { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-doc-mapa .is-0, .nb-doc-pct.is-0 { color: var(--nb-ink-mute); background: #fff; }
+.nb-doc-mapa .is-1, .nb-doc-pct.is-1 { background: #fff; color: #000; }
+.nb-doc-mapa .is-2, .nb-doc-pct.is-2 { background: var(--nb-hover); color: var(--nb-blue); }
+.nb-doc-mapa .is-3, .nb-doc-pct.is-3 { background: var(--nb-blue); color: #fff; }
+.nb-doc-pct { flex: 0 0 auto; border: 2px solid #000; padding: 3px 8px; font-size: var(--fs-xs); }
+
+/* Barras de actividad: la altura viene de los datos en --alto. */
+.nb-doc-barras { display: flex; align-items: flex-end; gap: 6px; height: 180px; margin-top: 16px; padding-bottom: 4px; border-bottom: 2px solid #000; }
+.nb-doc-barra { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.nb-doc-barra span { width: 100%; height: var(--alto); background: var(--nb-blue); border: 2px solid #000; }
+.nb-doc-barra small { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; }
+
+/* Línea del nivel. */
+.nb-doc-linea { display: block; width: 100%; height: 160px; margin-top: 16px; border: 2px solid #000; background: #fff; }
+.nb-doc-linea-base { stroke: var(--nb-ink-mute); stroke-width: 1; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
+.nb-doc-linea-trazo { fill: none; stroke: var(--nb-blue); stroke-width: 3; vector-effect: non-scaling-stroke; }
+.nb-doc-linea-punto { fill: #000; }
+
+.nb-doc-codigo summary { cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-doc-codigo summary:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 3px; }
+.nb-doc-codigo pre { margin: 10px 0 0; max-height: 360px; overflow: auto; background: var(--nb-editor); color: #fff; border: 2px solid #000; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); line-height: 1.5; }
+
+/* Historial de inicios de sesión. */
+.nb-doc-plegable { margin-bottom: var(--sp-gap); }
+.nb-doc-sesiones { display: flex; flex-direction: column; gap: 14px; }
+.nb-doc-herramientas { display: flex; flex-wrap: wrap; gap: 12px; }
+.nb-doc-herramientas .nb-ex-send { flex: 0 0 auto; }
+.nb-doc-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.nb-doc-filtro { border: 2px solid #000; background: #fff; color: #000; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 10px; cursor: pointer; box-shadow: 3px 3px 0px #000; transition: var(--nb-tr); }
+.nb-doc-filtro:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+.nb-doc-filtro.is-active { background: #000; color: #fff; }
+.nb-doc-filtro:disabled { opacity: 0.6; cursor: not-allowed; }
+.nb-doc-paginas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+@media (max-width: 640px) {
+  .nb-doc-filtro { box-shadow: 2px 2px 0px #000; }
+  .nb-doc-barras { height: 140px; gap: 3px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .nb-dash-reco-track { animation: none; }
   .nb-dash-reco-marquee { overflow-x: auto; }

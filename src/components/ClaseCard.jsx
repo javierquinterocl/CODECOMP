@@ -1,24 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { crearClase, getClases, unirseAClase } from '../scripts/registroApi';
+import { crearClase, unirseAClase } from '../scripts/registroApi';
 
-/** El estudiante entra a su clase con el código; el docente crea clases y ve sus códigos. */
-const ClaseCard = () => {
+/**
+ * El estudiante entra a su clase con el código; el docente crea clases y ve sus códigos.
+ * `estado` es la respuesta de getClases y `onCambio` la vuelve a pedir tras entrar o crear.
+ */
+const ClaseCard = ({ estado, onCambio }) => {
   const { user } = useAuth();
-  const [estado, setEstado] = useState(null);
   const [texto, setTexto] = useState('');
   const [mensaje, setMensaje] = useState(null);
   const [ocupado, setOcupado] = useState(false);
-  const [recarga, setRecarga] = useState(0);
-
-  useEffect(() => {
-    if (!user) return undefined;
-    let vigente = true;
-    getClases(user)
-      .then((data) => { if (vigente) setEstado(data); })
-      .catch(() => {});
-    return () => { vigente = false; };
-  }, [user, recarga]);
 
   if (!estado) return null;
   const { docente, clases } = estado;
@@ -37,7 +29,7 @@ const ClaseCard = () => {
         setMensaje({ ok: true, texto: `Entraste a ${data.clase.nombre}.` });
       }
       setTexto('');
-      setRecarga((n) => n + 1);
+      onCambio();
     } catch (error) {
       setMensaje({ ok: false, texto: error.message });
     } finally {

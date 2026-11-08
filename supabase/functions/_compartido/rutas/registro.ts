@@ -161,7 +161,18 @@ export const clases = async (ctx: Contexto, recurso: string | undefined): Promis
           SELECT g.id, g.nombre, m.unido_en FROM clase_miembros m
           JOIN clases g ON g.id = m.clase_id WHERE m.user_id = ${userId} ORDER BY m.unido_en
         `;
-      return responder({ status: 200, cuerpo: { docente, clases: filas } }, cors);
+      // Companeros de la primera clase para el tablero: solo nombre, nivel y conteos.
+      const companeros = filas.length
+        ? await sql`
+          SELECT u.id = ${userId} AS yo, u.username, u.nivel, u.solved_count AS resueltos,
+            (SELECT count(*)::int FROM submissions s WHERE s.user_id = u.id
+              AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS envios, m.unido_en
+          FROM clase_miembros m JOIN users u ON u.id = m.user_id
+          WHERE m.clase_id = ${filas[0].id}
+          ORDER BY u.nivel DESC, u.solved_count DESC LIMIT 50
+        `
+        : [];
+      return responder({ status: 200, cuerpo: { docente, clases: filas, companeros } }, cors);
     }
     if (req.method !== 'POST') return metodo(ctx);
     if (!docente) {

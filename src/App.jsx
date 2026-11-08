@@ -6,6 +6,7 @@ import { auth, db, hasFirebaseConfig } from './scripts/firebaseConfig';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
 import UserHistoryPage from './pages/UserHistoryPage';
+import EstudianteFichaPage from './pages/EstudianteFichaPage';
 import RecoverPage from './pages/RecoverPage';
 import ResetPage from './pages/ResetPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -105,6 +106,7 @@ function App() {
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/grupos"   element={<GruposPage />} />
           <Route path="/historial-usuarios" element={<UserHistoryPage />} />
+          <Route path="/historial-usuarios/:id" element={<EstudianteFichaPage />} />
         </Route>
 
         {/* ResetPage tiene su propio layout simple — fuera del DashboardLayout */}
