@@ -4,6 +4,7 @@
 import type { Contexto } from '../contexto.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
+import { escalonDelUsuario } from '../escalon.ts';
 
 export const miProgreso = async (ctx: Contexto): Promise<Response> => {
   const { req, sql, cors, identidad } = ctx;
@@ -45,9 +46,11 @@ export const miProgreso = async (ctx: Contexto): Promise<Response> => {
       SELECT dia::text, segundos_activos AS segundos
       FROM actividad_diaria WHERE user_id = ${userId} AND dia >= current_date - 13 ORDER BY dia
     `;
+    const escalon = await escalonDelUsuario(sql, userId);
     return responder({
       status: 200,
       cuerpo: {
+        escalon,
         usuario: { ...usuario, nivel: Number(usuario.nivel) },
         evolucion,
         temas,

@@ -155,6 +155,12 @@ const DashboardPage = () => {
   }, [user, recargaClase]);
   const companeros = clase?.companeros || [];
 
+  // Bloqueo suave (S4): no se recomienda nada por encima del escalón del estudiante.
+  const escalonActual = progress?.escalon?.actual;
+  const recomendadosDelEscalon = escalonActual
+    ? recommendations.filter((r) => nivelDeRating(r.difficulty_rating) <= escalonActual)
+    : recommendations;
+
   const photo = storedPhotoURL || user?.photoURL || null;
 
   return (
@@ -301,8 +307,8 @@ const DashboardPage = () => {
               <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
             </div>
           </div>
-          {recommendations.length > 0 ? (
-            <RecoCarrusel recomendados={recommendations} />
+          {recomendadosDelEscalon.length > 0 ? (
+            <RecoCarrusel recomendados={recomendadosDelEscalon} />
           ) : (
             <p className="nb-dash-body-text">Completa un envío para construir tu primera ruta de práctica.</p>
           )}

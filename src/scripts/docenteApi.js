@@ -15,6 +15,16 @@ const pedir = async (user, ruta, porDefecto) => leer(
 export const getPanelClase = (user, claseId) =>
   pedir(user, `docente/clase/${claseId}`, 'No se pudo cargar la clase.');
 
+/** Sube (o devuelve) el escalón mínimo de un estudiante: 1 a 5. */
+export const cambiarEscalon = async (user, estudianteId, minimo) => leer(
+  await fetch(rutaApi(`docente/estudiante/${estudianteId}/escalon`), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ minimo }),
+  }),
+  'No se pudo cambiar el escalón.',
+);
+
 /** Ficha de un estudiante de una clase del docente. */
 export const getFichaEstudiante = (user, estudianteId) =>
   pedir(user, `docente/estudiante/${estudianteId}`, 'No se pudo cargar el estudiante.');

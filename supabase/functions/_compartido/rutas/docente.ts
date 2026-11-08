@@ -6,6 +6,7 @@ import { esDocente } from '../auth.ts';
 import { alertasDe, parecido, UMBRAL_PARECIDO } from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
+import { escalonDelUsuario } from '../escalon.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
@@ -13,7 +14,7 @@ const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
 const auditar = (
   sql: Contexto['sql'],
   docenteId: string,
-  accion: 'ver_clase' | 'ver_estudiante',
+  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon',
   claseId: string | null,
   estudianteId: string | null,
 ) =>
@@ -193,19 +194,44 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     }
   }
 
+  const escalon = await escalonDelUsuario(sql, estudianteId);
   return responder({
     status: 200,
-    cuerpo: { clase, usuario, evolucion, envios, pistas, actividad, fundamentos, temas, parecidos },
+    cuerpo: { clase, usuario, escalon, evolucion, envios, pistas, actividad, fundamentos, temas, parecidos },
   }, cors);
+};
+
+// POST /docente/estudiante/:id/escalon { minimo }: el docente sube (o devuelve) el piso del escalon.
+const cambiarEscalon = async (ctx: Contexto, docenteId: string, estudianteId: string) => {
+  const { req, sql, cors } = ctx;
+  const cuerpo = await req.json().catch(() => null);
+  const minimo = cuerpo?.minimo;
+  if (!Number.isInteger(minimo) || minimo < 1 || minimo > 5) {
+    return responder(rechazo(400, 'datos', 'minimo debe ser un entero de 1 a 5.'), cors);
+  }
+  const [clase] = await sql`
+    SELECT c.id FROM clase_miembros m JOIN clases c ON c.id = m.clase_id
+    WHERE m.user_id = ${estudianteId} AND c.docente_id = ${docenteId} LIMIT 1
+  `;
+  if (!clase) {
+    return responder(rechazo(404, 'estudiante', 'Ese estudiante no esta en tus clases.'), cors);
+  }
+  await sql`UPDATE users SET escalon_minimo = ${minimo} WHERE id = ${estudianteId}`;
+  await auditar(sql, docenteId, 'cambiar_escalon', clase.id as string, estudianteId);
+  return responder({ status: 200, cuerpo: { escalon: await escalonDelUsuario(sql, estudianteId) } }, cors);
 };
 
 export const docente = async (
   ctx: Contexto,
   recurso: string | undefined,
   id: string | undefined,
+  accion?: string,
 ): Promise<Response> => {
   const { req, sql, config, cors, identidad } = ctx;
-  if (req.method !== 'GET') return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
+  const cambio = recurso === 'estudiante' && accion === 'escalon';
+  if (req.method !== (cambio ? 'POST' : 'GET') || (accion && !cambio)) {
+    return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
+  }
   if (!identidad) {
     return responder(rechazo(401, 'sin-sesion', 'Inicia sesion para continuar.'), cors);
   }
@@ -217,6 +243,7 @@ export const docente = async (
   }
   try {
     const docenteId = await idDeUsuario(sql, identidad);
+    if (cambio) return await cambiarEscalon(ctx, docenteId, id);
     return recurso === 'clase'
       ? await panelDeClase(ctx, docenteId, id)
       : await fichaDeEstudiante(ctx, docenteId, id);

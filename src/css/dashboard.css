@@ -372,6 +372,8 @@
 .nb-dash-clase-codigo { font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.16em; background: #000; color: #fff; padding: 3px 8px; }
 .nb-dash-clase-form { display: flex; flex-wrap: wrap; gap: 12px; }
 .nb-dash-clase-form .nb-input { flex: 1 1 220px; min-width: 0; }
+.nb-dash-clase-form .nb-ex-send:disabled:not(.is-busy) { opacity: 0.6; cursor: not-allowed; }
+.nb-dash-clase-form .nb-ex-send:disabled:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 .nb-dash-clase-msg { margin: 12px 0 0; font-size: var(--fs-sm); font-weight: 600; }
 .nb-dash-clase-msg.is-error { color: var(--nb-danger); }
 
@@ -388,6 +390,9 @@
 .nb-doc-nota { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--nb-ink-soft); }
 .nb-doc-nota-top { margin: 12px 0; line-height: 1.55; }
 .nb-doc-fila > a.nb-doc-filtro { flex: 0 0 auto; text-decoration: none; }
+a.nb-doc-filtro { display: inline-block; text-decoration: none; }
+.nb-doc-escalon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.nb-doc-escalon .nb-doc-nota-top { flex: 1 1 320px; margin: 0; }
 .nb-doc-buscar { flex: 0 1 340px; }
 
 .nb-doc-alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; position: relative; z-index: 1; }

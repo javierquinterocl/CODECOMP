@@ -3,7 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getMiProgreso, responderDatos } from '../scripts/registroApi';
 import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria } from '../scripts/docenteData';
-import { buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
+import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
+import { NivelBarra } from '../components/ProblemBits';
+
+const RESUELTOS_PARA_SUBIR = 5;
 import NivelEvolucion from '../components/NivelEvolucion';
 
 // La columna envuelve a la tarjeta: si la tarjeta fuera la columna, heredaría su separación grande.
@@ -96,6 +99,21 @@ const MiProgresoPage = () => {
       </div>
 
       <div className="nb-doc-stack">
+        {datos.escalon && (
+          <Seccion titulo={`Tu escalón: ${NIVELES[datos.escalon.actual]}`} sub={`Escalón ${datos.escalon.actual} de 5`}>
+            <div className="nb-doc-escalon">
+              <NivelBarra nivel={datos.escalon.actual} />
+              <p className="nb-doc-nota nb-doc-nota-top">
+                {datos.escalon.actual < 5
+                  ? `Para subir a «${NIVELES[datos.escalon.actual + 1]}»: llega a nivel ${datos.escalon.nivelParaSubir} o resuelve ${RESUELTOS_PARA_SUBIR} problemas de este escalón (llevas ${Math.min(datos.escalon.resueltosEnActual, RESUELTOS_PARA_SUBIR)}).`
+                  : 'Estás en el escalón más alto.'}
+                {' '}Puedes intentar problemas más difíciles: se marcan como «Fuera de tu escalón» y no se recomiendan.
+              </p>
+            </div>
+            <Link className="nb-doc-filtro" to="/dashboard/problemas">Ver problemas</Link>
+          </Seccion>
+        )}
+
         <Seccion titulo="Evolución de tu nivel" sub="Cada punto es un problema cerrado">
           <p className="nb-doc-nota nb-doc-nota-top">
             Tu nivel sube al resolver un problema: más si es al primer intento, sin pistas y difícil para ti.

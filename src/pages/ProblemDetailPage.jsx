@@ -11,6 +11,7 @@ import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
 import { pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
+import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -20,6 +21,7 @@ const Detalle = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
+  const escalon = useEscalon(user);
   const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
@@ -149,6 +151,7 @@ const Detalle = () => {
         : await evaluarCodigo(codigo, lenguajeId, problema.ejemplos[0]?.entrada, problema.ejemplos[0]?.salida);
       setResultado(resultadoJudge0);
       setEnviado(true);
+      olvidarEscalon();
     } catch (error) {
       setErrorEnvio(error.message || 'No se pudo evaluar el código.');
     } finally {
@@ -213,6 +216,13 @@ const Detalle = () => {
               <span className="nb-ex-meta-value">{problema.memoriaLimite} MB</span>
             </div>
           </div>
+          {/* Bloqueo suave (S4): se puede enviar igual, solo se avisa. */}
+          {escalon && problema.nivel > escalon.actual && (
+            <p className="nb-ex-escalon">
+              <span className="nb-pb-escalon">Fuera de tu escalón</span>
+              Puedes intentarlo, pero te conviene afianzar antes los de nivel «{NIVELES[escalon.actual]}».
+            </p>
+          )}
 
           {/* Descripción */}
           <Plegable titulo="Descripción" abiertoInicial>

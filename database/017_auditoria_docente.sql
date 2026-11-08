@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS auditoria_docente (
   docente_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   estudiante_id UUID REFERENCES users(id) ON DELETE SET NULL,
   clase_id UUID REFERENCES clases(id) ON DELETE SET NULL,
-  accion TEXT NOT NULL CHECK (accion IN ('ver_clase', 'ver_estudiante')),
+  accion TEXT NOT NULL CHECK (accion IN ('ver_clase', 'ver_estudiante', 'cambiar_escalon')),
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_auditoria_docente_fecha ON auditoria_docente (docente_id, creado_en);

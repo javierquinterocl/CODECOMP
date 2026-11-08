@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getFichaEstudiante } from '../scripts/docenteApi';
+import { cambiarEscalon, getFichaEstudiante } from '../scripts/docenteApi';
+import { NIVELES } from '../scripts/problemsData';
+import NbSelect from '../components/NbSelect';
 import {
   CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, veredictoEs,
 } from '../scripts/docenteData';
@@ -15,6 +17,48 @@ const Seccion = ({ titulo, sub, children }) => (
     {children}
   </section>
 );
+
+/** Escalón del estudiante y piso que el docente puede subir (bloqueo suave, S4). */
+const EscalonDocente = ({ user, estudianteId, escalon, onCambio }) => {
+  const [minimo, setMinimo] = useState(escalon.minimo);
+  const [guardando, setGuardando] = useState(false);
+  const [mensaje, setMensaje] = useState(null);
+
+  const guardar = async () => {
+    setGuardando(true);
+    setMensaje(null);
+    try {
+      const data = await cambiarEscalon(user, estudianteId, minimo);
+      onCambio(data.escalon);
+      setMensaje({ ok: true, texto: 'Escalón mínimo guardado.' });
+    } catch (e) {
+      setMensaje({ ok: false, texto: e.message });
+    } finally {
+      setGuardando(false);
+    }
+  };
+
+  return (
+    <Seccion titulo={`Escalón: ${NIVELES[escalon.actual]}`} sub={`Escalón ${escalon.actual} de 5 · por nivel ${escalon.porNivel} · por resueltos ${escalon.porResueltos} · mínimo ${escalon.minimo}`}>
+      <p className="nb-doc-nota nb-doc-nota-top">
+        Sube solo con su nivel real o con 5 resueltos del escalón. Si ya sabe más, súbele el mínimo: ve marcados como
+        «Fuera de su escalón» los problemas de arriba, pero nunca se le impide enviarlos.
+      </p>
+      <div className="nb-dash-clase-form">
+        <NbSelect
+          label="Escalón mínimo"
+          value={minimo}
+          onChange={setMinimo}
+          options={[1, 2, 3, 4, 5].map((n) => ({ value: n, label: `${n} · ${NIVELES[n]}` }))}
+        />
+        <button type="button" className={`nb-ex-send${guardando ? ' is-busy' : ''}`} disabled={guardando || minimo === escalon.minimo} onClick={guardar}>
+          Guardar
+        </button>
+      </div>
+      {mensaje && <p className={`nb-dash-clase-msg${mensaje.ok ? '' : ' is-error'}`} role="status">{mensaje.texto}</p>}
+    </Seccion>
+  );
+};
 
 const EstudianteFichaPage = () => {
   const { id } = useParams();
@@ -73,6 +117,15 @@ const EstudianteFichaPage = () => {
       </div>
 
       <div className="nb-doc-stack">
+        {ficha.escalon && (
+          <EscalonDocente
+            key={ficha.escalon.minimo}
+            user={user}
+            estudianteId={id}
+            escalon={ficha.escalon}
+            onCambio={(escalon) => setFicha((f) => ({ ...f, escalon }))}
+          />
+        )}
         <Seccion titulo="Evolución del nivel" sub={`${evolucion.length} problemas cerrados · ${evolucion.filter((r) => r.aceptado).length} resueltos`}>
           {evolucion.length ? (
             <>

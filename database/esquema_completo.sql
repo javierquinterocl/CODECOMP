@@ -773,7 +773,7 @@ CREATE TABLE IF NOT EXISTS auditoria_docente (
   docente_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
   estudiante_id UUID REFERENCES users(id) ON DELETE SET NULL,
   clase_id UUID REFERENCES clases(id) ON DELETE SET NULL,
-  accion TEXT NOT NULL CHECK (accion IN ('ver_clase', 'ver_estudiante')),
+  accion TEXT NOT NULL CHECK (accion IN ('ver_clase', 'ver_estudiante', 'cambiar_escalon')),
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_auditoria_docente_fecha ON auditoria_docente (docente_id, creado_en);
@@ -800,3 +800,9 @@ CREATE TRIGGER auditoria_docente_inmutable
 ALTER TABLE auditoria_docente ENABLE ROW LEVEL SECURITY;
 
 COMMIT;
+-- ── 018_escalones.sql ──
+-- Escalones de practica (S4): escalon minimo que el docente puede fijar a un estudiante.
+-- El escalon actual se calcula (nivel real o 5 resueltos); este piso solo lo sube.
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS escalon_minimo SMALLINT NOT NULL DEFAULT 1
+  CHECK (escalon_minimo BETWEEN 1 AND 5);

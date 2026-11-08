@@ -12,6 +12,8 @@ import {
 import { getAllProblems } from '../scripts/problemsApi';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { useIdioma } from '../scripts/useIdioma';
+import useEscalon from '../scripts/useEscalon';
+import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
 
 const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
@@ -34,7 +36,7 @@ const TODOS = {
   ink: '#fff',
 };
 
-const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar, idioma }) => {
+const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar, idioma, fueraDeEscalon }) => {
   const marcado = esFavorito(ejercicio.numero);
   const titulo = (idioma === 'es' && ejercicio.tituloEs) || ejercicio.titulo;
 
@@ -54,6 +56,7 @@ const ProblemRow = ({ ejercicio, categoriaSlug, esFavorito, alternar, idioma }) 
       <div className="nb-pb-row-nivel">
         <span className="nb-pb-row-nivel-label">{NIVELES[ejercicio.nivel]}</span>
         <NivelBarra nivel={ejercicio.nivel} />
+        {fueraDeEscalon && <span className="nb-pb-escalon" title="Puedes intentarlo, pero aún no es de tu escalón">Fuera de tu escalón</span>}
       </div>
 
       <button
@@ -76,6 +79,8 @@ const ProblemsCategoryPage = () => {
   const { slug } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { idioma, cambiar } = useIdioma();
+  const { user } = useAuth();
+  const escalon = useEscalon(user);
   const [soloFavoritos, setSoloFavoritos] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [problemas, setProblemas] = useState([]);
@@ -191,6 +196,7 @@ const ProblemsCategoryPage = () => {
             esFavorito={esFavorito}
             alternar={alternar}
             idioma={idioma}
+            fueraDeEscalon={Boolean(escalon) && e.nivel > escalon.actual}
           />
         ))}
 
