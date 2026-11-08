@@ -1,7 +1,9 @@
 
 
 import { cargarConfig } from '../_compartido/config.ts';
-import { cabecerasCors, rechazo, responder, tokenDe } from '../_compartido/http.ts';
+import { cabecerasCors, origenConfiable, rechazo, responder, tokenDe } from '../_compartido/http.ts';
+import { abrir, cookieDe, llaveDe } from '../_compartido/sesion.ts';
+import { sesion } from '../_compartido/rutas/sesion.ts';
 import { conexion } from '../_compartido/db.ts';
 import { segmentosDe } from '../_compartido/enrutado.ts';
 import { identidadDelToken } from '../_compartido/auth.ts';
@@ -49,7 +51,14 @@ Deno.serve(async (req: Request) => {
   }
 
   // Se verifica una vez; cada ruta decide si lo exige.
-  const identidad = await identidadDelToken(tokenDe(req), config.firebaseProjectId);
+  let identidad = await identidadDelToken(tokenDe(req), config.firebaseProjectId);
+  // Sin token, la actividad puede llegar con la cookie cifrada (sendBeacon no lleva cabeceras),
+  // y solo si viene de un origen de la lista.
+  if (!identidad && ruta === 'actividad' && origenConfiable(origen, config.origenesPermitidos)) {
+    const llave = await llaveDe(config.sesionLlave);
+    const valor = cookieDe(req);
+    if (llave && valor) identidad = await abrir(valor, llave);
+  }
   const ctx: Contexto = { req, url, sql, config, cors, identidad };
 
   try {
@@ -82,6 +91,8 @@ Deno.serve(async (req: Request) => {
         return await docente(ctx, segmentos[1], segmentos[2], segmentos[3]);
       case 'mi-progreso':
         return await miProgreso(ctx);
+      case 'sesion':
+        return await sesion(ctx);
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }

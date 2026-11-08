@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
-import { enviarResumen } from './registroApi';
+import { abrirSesionCookie, enviarResumen, USA_COOKIE } from './registroApi';
 
 const TICK_MS = 15_000;
+const RENOVAR_MS = 60 * 60_000;
 const ENVIO_MS = 5 * 60_000;
 // Sin teclado, ratón ni scroll en este tiempo, la pestaña abierta no cuenta como actividad.
 const INACTIVO_MS = 2 * 60_000;
@@ -19,9 +20,12 @@ const useActividad = (user, activo) => {
     let token = null;
     const refrescarToken = () => user.getIdToken().then((t) => { token = t; }).catch(() => {});
     refrescarToken();
+    // Con dominio propio la actividad viaja con la cookie cifrada; se renueva cada hora.
+    abrirSesionCookie(user);
+    const renovar = USA_COOKIE ? setInterval(() => abrirSesionCookie(user), RENOVAR_MS) : null;
 
     const vaciar = () => {
-      if (!token || (!resumen.segundos && !resumen.pegados)) return;
+      if ((!USA_COOKIE && !token) || (!resumen.segundos && !resumen.pegados)) return;
       enviarResumen(resumen, token);
       resumen = { segundos: 0, pegados: 0, caracteres: 0 };
     };
@@ -52,6 +56,7 @@ const useActividad = (user, activo) => {
       vaciar();
       clearInterval(tick);
       clearInterval(envio);
+      if (renovar) clearInterval(renovar);
       eventos.forEach((e) => window.removeEventListener(e, usar));
       document.removeEventListener('paste', pegar);
       document.removeEventListener('visibilitychange', ocultar);

@@ -33,20 +33,58 @@ export const responderDatos = async (user, acepta) =>
 export const registrarApertura = (user, problemNumber) =>
   pedir(user, URL_ABRIR, { cuerpo: { problem_number: problemNumber } }).catch(() => {});
 
+// La cookie cifrada solo sirve si la API es del mismo sitio y va por HTTPS
+// (codecomp.online y api.codecomp.online). Si no, el navegador la trataría como de terceros.
+const dominio = (host) => host.split('.').slice(-2).join('.');
+export const USA_COOKIE = (() => {
+  try {
+    const api = new URL(URL_RESUMEN, window.location.href);
+    return api.protocol === 'https:' && dominio(api.hostname) === dominio(window.location.hostname);
+  } catch {
+    return false;
+  }
+})();
+
+const URL_SESION = rutaApi('sesion');
+
+/** Emite (o renueva) la cookie de actividad con el token de Firebase. */
+export const abrirSesionCookie = async (user) => {
+  if (!USA_COOKIE) return false;
+  const response = await fetch(URL_SESION, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { Authorization: `Bearer ${await user.getIdToken()}` },
+  }).catch(() => null);
+  return Boolean(response?.ok);
+};
+
+/** Borra la cookie al cerrar sesión. */
+export const cerrarSesionCookie = () => {
+  if (!USA_COOKIE) return;
+  fetch(URL_SESION, { method: 'DELETE', credentials: 'include', keepalive: true }).catch(() => {});
+};
+
 /**
- * Resumen de actividad. Con `token` no espera a Firebase: sirve al cerrar la pestaña,
- * cuando ya no hay tiempo para promesas largas (keepalive).
+ * Resumen de actividad. Con cookie va por sendBeacon (sobrevive al cierre de la pestaña);
+ * sin ella, con el `token` ya pedido y keepalive.
  */
-export const enviarResumen = (resumen, token) => fetch(URL_RESUMEN, {
-  method: 'POST',
-  keepalive: true,
-  headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-  body: JSON.stringify({
+export const enviarResumen = (resumen, token) => {
+  const cuerpo = JSON.stringify({
     segundos: resumen.segundos,
     pegados: resumen.pegados,
     caracteres_pegados: resumen.caracteres,
-  }),
-}).catch(() => {});
+  });
+  if (USA_COOKIE && navigator.sendBeacon?.(URL_RESUMEN, new Blob([cuerpo], { type: 'text/plain' }))) {
+    return;
+  }
+  if (!token) return;
+  fetch(URL_RESUMEN, {
+    method: 'POST',
+    keepalive: true,
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: cuerpo,
+  }).catch(() => {});
+};
 
 /** `{ docente, clases }`: las del docente con su código, o a las que pertenece el estudiante. */
 export const getClases = async (user) =>

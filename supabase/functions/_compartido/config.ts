@@ -56,6 +56,7 @@ export interface Config {
   pseintTopeDiario: number;
 
   docentes: Set<string>;
+  sesionLlave: string;
 }
 
 export const cargarConfig = (): Config => ({
@@ -127,6 +128,9 @@ export const cargarConfig = (): Config => ({
       .map((c) => c.trim().toLowerCase())
       .filter(Boolean),
   ),
+
+  // 32 bytes en base64 para cifrar la cookie de actividad; vacia = sin cookie.
+  sesionLlave: env('SESION_LLAVE') ?? '',
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

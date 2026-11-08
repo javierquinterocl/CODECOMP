@@ -6,11 +6,12 @@ export interface Rechazo {
 
 const CABECERAS_BASE = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+  'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS',
   'Access-Control-Max-Age': '86400',
 };
 
 // null = origen rechazado. Sin Origin pasa: CORS solo protege al navegador.
+// Con credenciales (cookie) solo para un origen de la lista explicita, nunca con '*'.
 export const cabecerasCors = (
   origen: string | null,
   origenesPermitidos: string[],
@@ -20,10 +21,19 @@ export const cabecerasCors = (
   }
   if (!origen) return { ...CABECERAS_BASE };
   if (origenesPermitidos.includes(origen)) {
-    return { ...CABECERAS_BASE, 'Access-Control-Allow-Origin': origen, Vary: 'Origin' };
+    return {
+      ...CABECERAS_BASE,
+      'Access-Control-Allow-Origin': origen,
+      'Access-Control-Allow-Credentials': 'true',
+      Vary: 'Origin',
+    };
   }
   return null;
 };
+
+/** La cookie solo cuenta si la peticion trae un Origin de la lista: freno a CSRF. */
+export const origenConfiable = (origen: string | null, origenesPermitidos: string[]): boolean =>
+  Boolean(origen && origenesPermitidos.includes(origen));
 
 export const tokenDe = (req: Request): string | null => {
   const [esquema, token] = (req.headers.get('authorization') ?? '').split(' ');

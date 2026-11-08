@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../scripts/firebaseConfig';
 import { ADMIN_EMAILS } from '../scripts/config';
 import { getUserSessions, updateSessionExit } from '../scripts/registerService';
+import { cerrarSesionCookie } from '../scripts/registroApi';
 
 const AuthContext = createContext(null);
 
@@ -54,6 +55,7 @@ export const AuthProvider = ({ children }) => {
         const activeSessions = sessions.filter((s) => s.status === 'activo');
         await Promise.all(activeSessions.map((s) => updateSessionExit(s.id, Date.now())));
       }
+      cerrarSesionCookie();
       await signOut(auth);
       navigate('/');
     } catch (error) {
