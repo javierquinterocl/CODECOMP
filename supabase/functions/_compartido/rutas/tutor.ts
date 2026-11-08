@@ -88,7 +88,7 @@ export const tutor = async (ctx: Contexto): Promise<Response> => {
 
 
     const [problema] = await sql`
-      SELECT title, description_markdown, difficulty_rating
+      SELECT id, title, description_markdown, difficulty_rating
       FROM problems WHERE problem_number = ${problemaNumero as number} AND is_active
     `;
     if (!problema) {
@@ -152,6 +152,12 @@ export const tutor = async (ctx: Contexto): Promise<Response> => {
     if (!respuesta.ok) {
       return responder(rechazo(502, 'tutor', respuesta.mensaje!), cors);
     }
+
+    // Si no se puede guardar la pista, el estudiante la recibe igual.
+    await sql`
+      INSERT INTO pistas (user_id, problem_id, veredicto, pista)
+      VALUES (${userId}, ${problema.id}, ${veredicto as string}, ${respuesta.texto ?? ''})
+    `.catch((error) => console.error('No se pudo guardar la pista:', error));
 
     return responder({ status: 200, cuerpo: { hint: respuesta.texto } }, cors);
   } catch (error) {

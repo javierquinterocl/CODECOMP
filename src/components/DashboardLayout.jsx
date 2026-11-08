@@ -3,6 +3,7 @@ import { AuthProvider } from '../context/AuthContext';
 import AppNavbar from './AppNavbar';
 import AppSidebar from './AppSidebar';
 import AppFooter from './AppFooter';
+import RegistroEstudiante from './RegistroEstudiante';
 
 const DashboardLayout = () => (
   <AuthProvider>
@@ -15,6 +16,7 @@ const DashboardLayout = () => (
         </main>
       </div>
       <AppFooter />
+      <RegistroEstudiante />
     </div>
   </AuthProvider>
 );

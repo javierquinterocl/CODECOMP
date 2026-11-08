@@ -150,7 +150,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     userId = await idDeUsuario(sql, identidad);
     // Los ejemplos salen de la base, nunca del navegador; y el candado se mide con su reloj.
     [ejercicio] = await sql`
-      SELECT e.ejemplos, p.abierto_en, now() AS ahora
+      SELECT e.id, e.ejemplos, p.abierto_en, now() AS ahora
       FROM fundamentos_ejercicios e
       LEFT JOIN fundamentos_progreso p ON p.ejercicio_id = e.id AND p.user_id = ${userId}
       WHERE e.nivel = ${nivel} AND e.numero = ${numero} AND e.is_active
@@ -247,7 +247,14 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
       codigo,
       ejemplos.map((e) => e.entrada),
     );
-    return responder({ status: 200, cuerpo: juzgar(ejemplos, ejecuciones) }, cors);
+    const resultado = juzgar(ejemplos, ejecuciones);
+    // Si no se puede guardar el envio, el estudiante recibe su veredicto igual.
+    const fallido = 'ejemplo' in resultado ? resultado.ejemplo : null;
+    await sql`
+      INSERT INTO fundamentos_envios (user_id, ejercicio_id, codigo, veredicto, ejemplo_fallido)
+      VALUES (${userId}, ${ejercicio.id}, ${codigo}, ${resultado.veredicto}, ${fallido})
+    `.catch((error) => console.error('No se pudo guardar el envio de Fundamentos:', error));
+    return responder({ status: 200, cuerpo: resultado }, cors);
   } catch (error) {
     console.error('Fallo al invocar el juez de PSeInt:', error);
     await devolverEnvio();

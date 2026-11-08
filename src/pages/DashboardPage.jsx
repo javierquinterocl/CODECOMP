@@ -5,6 +5,7 @@ import { getProgress } from '../scripts/progressApi';
 import { getRecommendations } from '../scripts/recommendationApi';
 import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
 import { PencilIcon, CpuIcon, TrophyIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
+import ClaseCard from '../components/ClaseCard';
 
 /* ── Datos de muestra del diseño (aún sin fuente real) ───────── */
 const RPC_EVENTS = [
@@ -354,6 +355,8 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
+
+        <ClaseCard />
 
         {/* ── Grupo estable ── */}
         <div className="nb-dash-card nb-dash-pad">

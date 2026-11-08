@@ -10,6 +10,7 @@ import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
 import { pedirPista } from '../scripts/tutorApi';
+import { registrarApertura } from '../scripts/registroApi';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -43,6 +44,11 @@ const Detalle = () => {
     if (import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return;
     getProblem(numero).then(setProblemaReal).catch((e) => setErrorCarga(e.message));
   }, [numero]);
+
+  // Primera y última apertura, para medir cuánto tarda en resolverlo. Sin autorización no guarda nada.
+  useEffect(() => {
+    if (user && Number.isInteger(Number(numero))) registrarApertura(user, Number(numero));
+  }, [user, numero]);
 
   useEffect(() => {
     if (!pistaHasta) return undefined;

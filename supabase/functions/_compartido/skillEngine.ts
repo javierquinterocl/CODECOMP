@@ -65,11 +65,14 @@ export const procesarResultado = async (
       LIMIT 1
     `;
 
-    // El indice one_accepted_submission_per_problem no permite dos accepted.
+    // Un aceptado repetido se guarda para el historial, pero no puntua ni suma contadores.
     if (veredicto === 'ACCEPTED' && yaResuelto) {
-      await tx`DELETE FROM submissions WHERE id = ${submissionId}`;
+      await tx`
+        UPDATE submissions SET verdict = 'ACCEPTED', rating_change = 0, processed_at = now()
+        WHERE id = ${submissionId}
+      `;
       return {
-        submission_id: yaResuelto.id as string,
+        submission_id: submissionId,
         verdict: 'ACCEPTED',
         rating_change: 0,
         first_solve: false,

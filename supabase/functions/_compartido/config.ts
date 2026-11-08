@@ -54,6 +54,8 @@ export interface Config {
   pseintMaxMensual: number;
   pseintEsperaSegundos: number;
   pseintTopeDiario: number;
+
+  docentes: Set<string>;
 }
 
 export const cargarConfig = (): Config => ({
@@ -116,6 +118,15 @@ export const cargarConfig = (): Config => ({
   pseintMaxMensual: num(env('PSEINT_MAX_MENSUAL'), 30000),
   pseintEsperaSegundos: num(env('PSEINT_ESPERA_SEGUNDOS'), 5),
   pseintTopeDiario: num(env('PSEINT_TOPE_DIARIO'), 200),
+
+  // Docentes y administradores: los mismos correos de ADMIN_EMAILS del frontend.
+  docentes: new Set(
+    (env('DOCENTES_EMAILS') ||
+      'afsalasn@ufpso.edu.co,acastillac@ufpso.edu.co,jaquinterocl@ufpso.edu.co')
+      .split(',')
+      .map((c) => c.trim().toLowerCase())
+      .filter(Boolean),
+  ),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

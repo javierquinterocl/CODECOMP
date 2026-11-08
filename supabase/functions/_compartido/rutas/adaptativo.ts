@@ -11,6 +11,13 @@ import { ejecutar, veredictoDe } from '../judge0.ts';
 import { procesarResultado } from '../skillEngine.ts';
 import { idDeUsuario } from '../usuarios.ts';
 
+// No cuenta para el nivel ni como intento; si falla, el envio queda PENDING como antes.
+const marcarErrorJuez = (sql: Contexto['sql'], id: string) =>
+  sql`
+    UPDATE submissions SET verdict = 'ERROR_JUEZ', processed_at = now()
+    WHERE id = ${id} AND processed_at IS NULL
+  `.catch((error) => console.error('No se pudo cerrar el envio:', error));
+
 export const adaptativo = async (ctx: Contexto): Promise<Response> => {
   const { req, sql, config, cors, identidad } = ctx;
 
@@ -47,6 +54,8 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
 
   const hoy = dia(config.zonaHoraria);
   const esteMes = mes(config.zonaHoraria);
+  // Envio creado y aun sin veredicto: si algo corta la evaluacion, se cierra como ERROR_JUEZ.
+  let envioAbierto: string | null = null;
 
   try {
     const userId = await idDeUsuario(sql, identidad);
@@ -94,12 +103,15 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
     }
 
     const { submissionId, casos } = preparado;
+    envioAbierto = submissionId;
     const limite = Date.now() + config.deadlineMs;
     let ultimo: Record<string, unknown> | null = null;
     let veredicto = 'RUNTIME_ERROR';
+    let casoFallido: number | null = null;
 
-    for (const caso of casos) {
+    for (const [indice, caso] of casos.entries()) {
       if (Date.now() > limite) {
+        await marcarErrorJuez(sql, submissionId);
         return responder(
           rechazo(504, 'timeout', 'La evaluacion tardo demasiado. Intentalo de nuevo.'),
           cors,
@@ -118,12 +130,14 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
         );
       } catch (error) {
         console.error('Fallo al revisar el presupuesto:', error);
+        await marcarErrorJuez(sql, submissionId);
         return responder(
           rechazo(503, 'presupuesto', 'El juez no esta disponible en este momento.'),
           cors,
         );
       }
       if (!presupuesto.permitido) {
+        await marcarErrorJuez(sql, submissionId);
         return responder(rechazo(503, presupuesto.codigo!, presupuesto.mensaje!), cors);
       }
 
@@ -138,12 +152,28 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
       );
 
       const status = resultado.data?.status as { id?: number } | undefined;
-      veredicto = veredictoDe(status?.id);
+      // Una respuesta sin veredicto es fallo del juez, no del estudiante.
+      if (!resultado.ok || !status?.id) {
+        console.error('Judge0 no dio veredicto:', resultado.status);
+        await marcarErrorJuez(sql, submissionId);
+        return responder(
+          rechazo(503, 'juez', 'El juez no esta disponible en este momento.'),
+          cors,
+        );
+      }
+      veredicto = veredictoDe(status.id);
       ultimo = resultado.data;
-      if (veredicto !== 'ACCEPTED') break;
+      if (veredicto !== 'ACCEPTED') {
+        casoFallido = indice + 1;
+        break;
+      }
     }
 
+    if (casoFallido) {
+      await sql`UPDATE submissions SET caso_fallido = ${casoFallido} WHERE id = ${submissionId}`;
+    }
     const procesado = await procesarResultado(sql, submissionId, veredicto);
+    envioAbierto = null;
 
     return responder(
       {
@@ -160,6 +190,7 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
     );
   } catch (error) {
     console.error('Adaptive submission error:', error);
+    if (envioAbierto) await marcarErrorJuez(sql, envioAbierto);
     return responder(rechazo(500, 'envio', 'No se pudo procesar el envio.'), cors);
   }
 };
