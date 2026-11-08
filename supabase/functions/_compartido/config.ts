@@ -57,6 +57,11 @@ export interface Config {
 
   docentes: Set<string>;
   sesionLlave: string;
+
+  domjudgeUrl: string;
+  domjudgeUsuario: string;
+  domjudgeClave: string;
+  domjudgeTimeoutMs: number;
 }
 
 export const cargarConfig = (): Config => ({
@@ -131,6 +136,12 @@ export const cargarConfig = (): Config => ({
 
   // 32 bytes en base64 para cifrar la cookie de actividad; vacia = sin cookie.
   sesionLlave: env('SESION_LLAVE') ?? '',
+
+  // Juez de competencias (DOMjudge). Cuenta de servicio de la Edge; vacia = modulo apagado.
+  domjudgeUrl: (env('DOMJUDGE_URL') ?? 'https://juez.codecomp.online').replace(/\/+$/, ''),
+  domjudgeUsuario: env('DOMJUDGE_USUARIO') ?? '',
+  domjudgeClave: env('DOMJUDGE_CLAVE') ?? '',
+  domjudgeTimeoutMs: num(env('DOMJUDGE_TIMEOUT_MS'), 10000),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

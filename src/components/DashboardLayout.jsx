@@ -6,12 +6,13 @@ import AppFooter from './AppFooter';
 import RegistroEstudiante from './RegistroEstudiante';
 import ActualizarCodigo from './ActualizarCodigo';
 
-/* Avisos fijos abajo a la derecha, apilados. En Mi cuenta no se muestran: ahí están los mismos
-   controles. RegistroEstudiante se monta igual porque además registra la actividad. */
+/* Avisos fijos abajo a la derecha, apilados. En Mi cuenta (ahí están los mismos controles) y en
+   Competencias (taparían el juez) no se muestran. RegistroEstudiante se monta igual: registra la actividad. */
+const SIN_AVISOS = ['/dashboard/cuenta', '/dashboard/competencias'];
 const Avisos = () => {
-  const enCuenta = useLocation().pathname === '/dashboard/cuenta';
+  const oculto = SIN_AVISOS.includes(useLocation().pathname);
   return (
-    <div className={`nb-dash-avisos${enCuenta ? ' is-oculto' : ''}`}>
+    <div className={`nb-dash-avisos${oculto ? ' is-oculto' : ''}`}>
       <ActualizarCodigo />
       <RegistroEstudiante />
     </div>

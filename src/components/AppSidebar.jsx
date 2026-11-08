@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HomeIcon, BookIcon, CpuIcon, TargetIcon, TrophyIcon, UsersIcon, ChartIcon, CollapseIcon, ExpandIcon } from './AppIcons';
+import { HomeIcon, BookIcon, CpuIcon, TargetIcon, TrophyIcon, UsersIcon, ChartIcon, FlagIcon, CollapseIcon, ExpandIcon } from './AppIcons';
 
 /* Cada entrada repite el icono de su módulo en el tablero. El `title` deja
    identificar la entrada cuando el sidebar está plegado a solo iconos. */
@@ -67,6 +67,7 @@ const AppSidebar = () => {
         <NavItem label="Fundamentos" to="/dashboard/fundamentos" icono={<BookIcon />} />
         <NavItem label="Problemas" to="/dashboard/problemas" icono={<CpuIcon />} />
         <NavItem label="Retos Diarios" to="/dashboard/retos" icono={<TargetIcon />} />
+        <NavItem label="Competencias" to="/dashboard/competencias" icono={<FlagIcon />} />
         {/* Mi progreso es del estudiante; el docente tiene su vista en Estudiantes. */}
         {!isAdmin && <NavItem label="Mi progreso" to="/dashboard/progreso" icono={<ChartIcon />} />}
         <NavItemSoon label="Rankings" icono={<TrophyIcon />} />

@@ -38,3 +38,6 @@ functions/.secret.local
 
 # Cache local de Wrangler (Worker de Cloudflare)
 .wrangler/
+
+# Archivos de trabajo del banco local de problemas
+/banco/
