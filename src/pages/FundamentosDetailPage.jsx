@@ -12,6 +12,7 @@ import { abrirEjercicio, enviarSolucion, guardarBorrador } from '../scripts/fund
 import { explicarError } from '../scripts/pseintErrores';
 import { useFundamentos } from '../scripts/useFundamentos';
 import { useAuth } from '../context/AuthContext';
+import { olvidarEscalon } from '../scripts/useEscalon';
 import FundamentosCarga from '../components/FundamentosCarga';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
@@ -239,6 +240,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     try {
       const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
       setResultado(respuesta);
+      olvidarEscalon(); // el envío cuenta para la racha de la cabecera
       setLineaError(respuesta.veredicto === 'ERROR' || respuesta.veredicto === 'SIN_DATOS' ? respuesta.linea : null);
     } catch (error) {
       setResultado({ falla: error.message, codigo: error.codigo });

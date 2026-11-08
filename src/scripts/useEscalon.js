@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { getProgress } from './progressApi';
 
-// Una petición por usuario y visita: el listado, el ejercicio y el inicio la comparten.
+// Una petición por usuario y visita: la cabecera, el listado, el ejercicio y el inicio la comparten.
 let enMemoria = { uid: null, promesa: null };
+const EVENTO = 'codecomp:progreso';
 
-const pedirEscalon = (user) => {
+const pedirResumen = (user) => {
   if (enMemoria.uid !== user.uid || !enMemoria.promesa) {
     enMemoria = {
       uid: user.uid,
-      promesa: getProgress(user).then((data) => data?.escalon || null).catch(() => {
+      promesa: getProgress(user).catch(() => {
         enMemoria = { uid: null, promesa: null };
         return null;
       }),
@@ -17,22 +18,30 @@ const pedirEscalon = (user) => {
   return enMemoria.promesa;
 };
 
-/** Tras un envío el escalón puede subir: el siguiente que lo pida trae el nuevo. */
-export const olvidarEscalon = () => { enMemoria = { uid: null, promesa: null }; };
+/** Tras un envío el escalón y la racha pueden cambiar: se vuelven a pedir en todas partes. */
+export const olvidarEscalon = () => {
+  enMemoria = { uid: null, promesa: null };
+  window.dispatchEvent(new Event(EVENTO));
+};
 
-/**
- * Escalón de práctica del estudiante (`{ actual, nivelParaSubir, resueltosEnActual, ... }`)
- * o null mientras carga o sin el juez adaptativo. Bloqueo suave: solo sirve para marcar.
- */
-const useEscalon = (user) => {
-  const [escalon, setEscalon] = useState(null);
+/** Resumen de /progress (`escalon`, `racha`, …) o null mientras carga o sin el juez adaptativo. */
+export const useResumenProgreso = (user) => {
+  const [resumen, setResumen] = useState(null);
   useEffect(() => {
     if (!user || import.meta.env.VITE_ENABLE_ADAPTIVE !== 'true') return undefined;
     let vigente = true;
-    pedirEscalon(user).then((e) => { if (vigente) setEscalon(e); });
-    return () => { vigente = false; };
+    const cargar = () => pedirResumen(user).then((r) => { if (vigente) setResumen(r); });
+    cargar();
+    window.addEventListener(EVENTO, cargar);
+    return () => { vigente = false; window.removeEventListener(EVENTO, cargar); };
   }, [user]);
-  return escalon;
+  return resumen;
 };
+
+/**
+ * Escalón de práctica del estudiante (`{ actual, nivelParaSubir, resueltosEnActual, ... }`)
+ * o null mientras carga. Bloqueo suave: solo sirve para marcar.
+ */
+const useEscalon = (user) => useResumenProgreso(user)?.escalon || null;
 
 export default useEscalon;

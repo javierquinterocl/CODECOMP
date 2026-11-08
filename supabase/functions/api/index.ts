@@ -4,6 +4,7 @@ import { cargarConfig } from '../_compartido/config.ts';
 import { cabecerasCors, origenConfiable, rechazo, responder, tokenDe } from '../_compartido/http.ts';
 import { abrir, cookieDe, llaveDe } from '../_compartido/sesion.ts';
 import { sesion } from '../_compartido/rutas/sesion.ts';
+import { notificaciones } from '../_compartido/rutas/notificaciones.ts';
 import { conexion } from '../_compartido/db.ts';
 import { segmentosDe } from '../_compartido/enrutado.ts';
 import { identidadDelToken } from '../_compartido/auth.ts';
@@ -93,6 +94,8 @@ Deno.serve(async (req: Request) => {
         return await miProgreso(ctx);
       case 'sesion':
         return await sesion(ctx);
+      case 'notificaciones':
+        return await notificaciones(ctx);
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }

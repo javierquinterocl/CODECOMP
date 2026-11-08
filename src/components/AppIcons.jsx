@@ -17,6 +17,7 @@ export const UsersIcon  = () => <Stroke><circle cx="9" cy="8" r="3.5" /><path d=
 export const ReloadIcon = () => <Stroke><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 3.5V9h-5.5" /></Stroke>;
 /* Barras que suben: el avance del estudiante. */
 export const ChartIcon  = () => <Stroke><path d="M3 21h18" /><path d="M6 17v-5M11 17V8M16 17v-8M21 17V4" /></Stroke>;
+export const BellIcon   = () => <Stroke><path d="M6 17V10a6 6 0 0 1 12 0v7l2 2H4l2-2Z" /><path d="M10 21h4" /></Stroke>;
 export const SearchIcon = () => <Stroke><circle cx="10.5" cy="10.5" r="6.5" /><path d="M15.5 15.5 21 21" /></Stroke>;
 export const LockIcon   = () => <Stroke><rect x="5" y="11" width="14" height="10" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /><path d="M12 15v2" /></Stroke>;
 /* Cronómetro: el temporizador de práctica de Fundamentos. */

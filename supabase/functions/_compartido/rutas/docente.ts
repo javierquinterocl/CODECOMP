@@ -23,15 +23,8 @@ const auditar = (
     VALUES (${docenteId}, ${estudianteId}, ${claseId}, ${accion})
   `;
 
-const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
-  const { sql, cors } = ctx;
-  const [clase] = await sql`
-    SELECT id, nombre, codigo FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
-  `;
-  if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
-  await auditar(sql, docenteId, 'ver_clase', claseId, null);
-
-  const miembros = () => sql`SELECT user_id FROM clase_miembros WHERE clase_id = ${claseId}`;
+/** Estudiantes de una clase con sus datos y alertas; lo usan el panel y las notificaciones. */
+export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) => {
   const estudiantes = await sql`
     SELECT u.id, u.firebase_uid, u.username, u.email, u.nivel, u.solved_count, m.unido_en,
       (SELECT count(*)::int FROM submissions s
@@ -62,6 +55,40 @@ const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) =
     WHERE m.clase_id = ${claseId}
     ORDER BY u.nivel DESC
   `;
+  const ahora = new Date();
+  return estudiantes.map((e) => ({
+    id: e.id as string,
+    firebaseUid: e.firebase_uid,
+    username: e.username,
+    email: e.email,
+    nivel: Number(e.nivel),
+    resueltos: e.solved_count,
+    fundamentosResueltos: e.fundamentos_resueltos,
+    envios: e.envios,
+    unidoEn: e.unido_en as Date,
+    ultimaActividad: e.ultima_actividad,
+    segundosSemana: e.segundos_semana,
+    pegadosSemana: e.pegados_semana,
+    alertas: alertasDe({
+      ahora,
+      ultimaActividad: e.ultima_actividad as Date | null,
+      fallosSinAceptar: Number(e.fallos_sin_aceptar),
+      nivelActual: Number(e.nivel),
+      nivelHace14Dias: Number(e.nivel_hace_14),
+    }),
+  }));
+};
+
+const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
+  const { sql, cors } = ctx;
+  const [clase] = await sql`
+    SELECT id, nombre, codigo FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
+  `;
+  if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
+  await auditar(sql, docenteId, 'ver_clase', claseId, null);
+
+  const miembros = () => sql`SELECT user_id FROM clase_miembros WHERE clase_id = ${claseId}`;
+  const estudiantes = await estudiantesDeClase(sql, claseId);
   const temas = await sql`
     SELECT m.user_id, t.name AS tag, m.attempts AS intentos, m.successes AS aciertos
     FROM user_tag_mastery m JOIN tags t ON t.id = m.tag_id
@@ -87,32 +114,11 @@ const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) =
     GROUP BY dia ORDER BY dia
   `;
 
-  const ahora = new Date();
   return responder({
     status: 200,
     cuerpo: {
       clase,
-      estudiantes: estudiantes.map((e) => ({
-        id: e.id,
-        firebaseUid: e.firebase_uid,
-        username: e.username,
-        email: e.email,
-        nivel: Number(e.nivel),
-        resueltos: e.solved_count,
-        fundamentosResueltos: e.fundamentos_resueltos,
-        envios: e.envios,
-        unidoEn: e.unido_en,
-        ultimaActividad: e.ultima_actividad,
-        segundosSemana: e.segundos_semana,
-        pegadosSemana: e.pegados_semana,
-        alertas: alertasDe({
-          ahora,
-          ultimaActividad: e.ultima_actividad as Date | null,
-          fallosSinAceptar: Number(e.fallos_sin_aceptar),
-          nivelActual: Number(e.nivel),
-          nivelHace14Dias: Number(e.nivel_hace_14),
-        }),
-      })),
+      estudiantes,
       temas,
       problemas,
       actividad,
