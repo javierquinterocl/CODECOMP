@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
+import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio, categoriaDeProblema } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,8 @@ import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
 import { pedirPista } from '../scripts/tutorApi';
+import { registrarApertura } from '../scripts/registroApi';
+import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -19,6 +21,7 @@ const Detalle = () => {
   const { slug, numero } = useParams();
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
+  const escalon = useEscalon(user);
   const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
@@ -44,6 +47,11 @@ const Detalle = () => {
     getProblem(numero).then(setProblemaReal).catch((e) => setErrorCarga(e.message));
   }, [numero]);
 
+  // Primera y última apertura, para medir cuánto tarda en resolverlo. Sin autorización no guarda nada.
+  useEffect(() => {
+    if (user && Number.isInteger(Number(numero))) registrarApertura(user, Number(numero));
+  }, [user, numero]);
+
   useEffect(() => {
     if (!pistaHasta) return undefined;
     const tic = setInterval(() => {
@@ -56,6 +64,9 @@ const Detalle = () => {
   const esperaPista = pistaHasta ? Math.max(0, Math.ceil((pistaHasta - ahora) / 1000)) : 0;
 
   const problema = problemaReal || ejercicio;
+  const temaDelProblema = problema
+    ? buscarCategoria(categoriaDeProblema({ tags: problema.tags || [], dificultadRating: problema.dificultadRating }))
+    : null;
   if (!problema) {
     return (
       <div className="nb-dash-inner">
@@ -140,6 +151,7 @@ const Detalle = () => {
         : await evaluarCodigo(codigo, lenguajeId, problema.ejemplos[0]?.entrada, problema.ejemplos[0]?.salida);
       setResultado(resultadoJudge0);
       setEnviado(true);
+      olvidarEscalon();
     } catch (error) {
       setErrorEnvio(error.message || 'No se pudo evaluar el código.');
     } finally {
@@ -204,6 +216,13 @@ const Detalle = () => {
               <span className="nb-ex-meta-value">{problema.memoriaLimite} MB</span>
             </div>
           </div>
+          {/* Bloqueo suave (S4): se puede enviar igual, solo se avisa. */}
+          {escalon && problema.nivel > escalon.actual && (
+            <p className="nb-ex-escalon">
+              <span className="nb-pb-escalon">Fuera de tu escalón</span>
+              Puedes intentarlo, pero te conviene afianzar antes los de nivel «{NIVELES[escalon.actual]}».
+            </p>
+          )}
 
           {/* Descripción */}
           <Plegable titulo="Descripción" abiertoInicial>
@@ -278,6 +297,21 @@ const Detalle = () => {
                     <span>Tiempo: <strong>{resultado.time || '(no disponible)'}</strong></span>
                     <span>Memoria: <strong>{resultado.memory || '(no disponible)'}</strong></span>
                   </div>
+                  {/* Lo que este envío significa para su avance (S5); solo con el juez adaptativo. */}
+                  {resultado.intento > 0 && (
+                    <div className="nb-ex-feedback-metrics">
+                      <span>Intento: <strong>{resultado.intento}</strong></span>
+                      {resultado.ratingChange !== 0 && (
+                        <span>Nivel: <strong>{resultado.ratingChange > 0 ? '+' : ''}{resultado.ratingChange}</strong></span>
+                      )}
+                      {resultado.casoFallido > 0 && <span>Falló en el caso: <strong>{resultado.casoFallido}</strong></span>}
+                      {resultado.verdict !== 'ACCEPTED' && temaDelProblema && (
+                        <Link className="nb-ex-feedback-repaso" to={`/dashboard/problemas/${temaDelProblema.slug}`}>
+                          Repasa {temaDelProblema.titulo} →
+                        </Link>
+                      )}
+                    </div>
+                  )}
                   {resultado.stdout !== undefined && (
                     <div className="nb-ex-feedback-output">
                       <span className="nb-ex-feedback-label">Salida</span>

@@ -95,6 +95,9 @@
 
 .nb-pb-row-nivel { flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: clamp(84px, 7vw, 122px); }
 .nb-pb-row-nivel-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
+/* Bloqueo suave (S4): marca, no impide enviar. */
+.nb-pb-escalon { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 2px dashed #000; background: #fff; color: #000; padding: 2px 6px; white-space: nowrap; }
+.nb-ex-escalon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: clamp(8px, 0.7vw, 14px) 0 0; font-size: var(--fs-sm); color: var(--nb-ink-soft); }
 .nb-pb-nivel { display: inline-flex; gap: 3px; vertical-align: middle; }
 .nb-pb-nivel-seg { width: clamp(9px, 0.7vw, 14px); height: clamp(9px, 0.7vw, 14px); border: 2px solid #000; background: #fff; }
 .nb-pb-nivel-seg.is-on { background: var(--nb-blue); }
@@ -296,6 +299,9 @@
 .nb-ex-feedback-status strong { color: #fff; }
 .nb-ex-feedback-metrics { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--fs-xs); color: rgba(255,255,255,0.74); }
 .nb-ex-feedback-metrics strong { color: #fff; }
+.nb-ex-feedback-repaso { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.nb-ex-feedback-repaso:hover { text-decoration-thickness: 2px; }
+.nb-ex-feedback.is-ok .nb-ex-feedback-repaso { color: #000; }
 .nb-ex-feedback-output { margin-top: 2px; }
 /* ---------- Tutor ---------- */
 .nb-ex-tutor { margin-top: 4px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }

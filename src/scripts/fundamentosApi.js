@@ -58,15 +58,20 @@ const enviar = async (user, url, cuerpo, extra = {}) => fetch(url, await conToke
   body: JSON.stringify(cuerpo),
 }));
 
-/** Último ejercicio visto en cada nivel: `{ fundamentos: 12, practica: 3 }`. */
-export const getUltimasVisitas = async (user) => {
-  if (!user) return {};
+/**
+ * Avance por nivel: el último ejercicio visto (`visitas`, ej. `{ fundamentos: 12 }`) y los
+ * resueltos, con al menos un envío aceptado (`resueltos`, ej. `{ fundamentos: Set{1, 2} }`).
+ */
+export const getAvance = async (user) => {
+  if (!user) return { visitas: {}, resueltos: {} };
   const response = await fetch(URL_PROGRESO, await conToken(user));
   const data = await leer(response, 'No se pudo cargar tu avance.');
   const visitas = {};
   // Vienen de la más reciente a la más antigua: gana la primera de cada nivel.
   for (const fila of data.progreso) visitas[fila.nivel] ??= fila.numero;
-  return visitas;
+  const resueltos = {};
+  for (const fila of data.resueltos || []) (resueltos[fila.nivel] ||= new Set()).add(fila.numero);
+  return { visitas, resueltos };
 };
 
 /** Registra la apertura. Devuelve los milisegundos desde la primera vez y el borrador guardado. */

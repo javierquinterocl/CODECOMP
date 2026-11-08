@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { registerUserInFirestore } from '../scripts/registerService';
+import { errorDeCodigo, LARGO_CODIGO } from '../scripts/codigoUfpso';
 import AuthShell from '../components/AuthShell';
 
 const RegisterPage = () => {
@@ -33,11 +34,8 @@ const RegisterPage = () => {
       newErrors.apellido = 'El apellido debe tener maximo 50 caracteres.';
     }
 
-    if (!formData.codigo.trim()) {
-      newErrors.codigo = 'El codigo es obligatorio.';
-    } else if (formData.codigo.trim().length > 6) {
-      newErrors.codigo = 'El codigo debe tener maximo 6 caracteres.';
-    }
+    const errorCodigo = errorDeCodigo(formData.codigo);
+    if (errorCodigo) newErrors.codigo = errorCodigo;
 
     if (!formData.email.trim()) {
       newErrors.email = 'El correo electronico es obligatorio.';
@@ -160,8 +158,9 @@ const RegisterPage = () => {
             id="codigo"
             name="codigo"
             type="text"
-            maxLength={6}
-            placeholder="Ej: 191000"
+            inputMode="numeric"
+            maxLength={LARGO_CODIGO}
+            placeholder="Ej: 1191000"
             value={formData.codigo}
             onChange={handleInputChange}
             className={field('codigo')}

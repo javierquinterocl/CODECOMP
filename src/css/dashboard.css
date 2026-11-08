@@ -52,7 +52,29 @@
 .nb-dash-headright { display: flex; align-items: center; gap: clamp(8px,0.7vw,16px); }
 .nb-dash-streak { display: flex; align-items: center; gap: 8px; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(5px,0.4vw,9px) clamp(9px,0.7vw,16px); }
 .nb-dash-streak-icon { font-size: var(--fs-base); line-height: 1; }
+
+/* Campana de avisos: botón cuadrado como la racha y panel desplegable bajo él. */
+.nb-dash-notif { position: relative; }
+.nb-dash-notif-btn { position: relative; display: grid; place-items: center; width: clamp(38px, 2.8vw, 48px); aspect-ratio: 1; border: 2px solid #000; background: #fff; color: #000; cursor: pointer; padding: 0; box-shadow: 3px 3px 0px var(--nb-blue); transition: var(--nb-tr); }
+.nb-dash-notif-btn svg { width: 55%; height: auto; }
+.nb-dash-notif-btn:hover, .nb-dash-notif-btn.is-open { transform: translate(2px, 2px); box-shadow: 1px 1px 0px var(--nb-blue); }
+.nb-dash-notif-cuenta { position: absolute; top: -8px; right: -8px; min-width: 20px; padding: 1px 5px; border: 2px solid #000; background: var(--nb-blue); color: #fff; font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; line-height: 1.3; text-align: center; }
+.nb-dash-notif-panel { position: absolute; right: 0; top: calc(100% + 12px); z-index: 60; width: min(380px, calc(100vw - 32px)); background: #fff; border: 2px solid #000; box-shadow: 5px 5px 0px #000; }
+.nb-dash-notif-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 2px solid #000; }
+.nb-dash-notif-head .nb-dash-aviso-mas { font-size: var(--fs-xs); }
+.nb-dash-notif-lista { list-style: none; margin: 0; padding: 0; max-height: 60vh; overflow-y: auto; }
+.nb-dash-notif-lista li + li { border-top: 1px solid #000; }
+.nb-dash-notif-lista a { display: flex; flex-direction: column; gap: 4px; padding: 12px 16px; color: #000; text-decoration: none; transition: var(--nb-tr); }
+.nb-dash-notif-lista a:hover { background: var(--nb-hover); }
+.nb-dash-notif-lista a:hover strong { color: var(--nb-blue); }
+.nb-dash-notif-lista a:focus-visible { outline-offset: -3px; }
+.nb-dash-notif-lista strong { font-size: var(--fs-sm); font-weight: 700; }
+.nb-dash-notif-lista small { font-size: var(--fs-xs); color: var(--nb-ink-soft); line-height: 1.45; }
+.nb-dash-notif-lista li.is-nuevo a { border-left: 4px solid var(--nb-blue); padding-left: 12px; }
+.nb-dash-notif-vacio { margin: 0; padding: 16px; }
 .nb-dash-user { display: flex; align-items: center; gap: 10px; }
+a.nb-dash-user { color: inherit; text-decoration: none; }
+a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 .nb-dash-avatar { width: clamp(32px, 2vw + 22px, 52px); height: clamp(32px, 2vw + 22px, 52px); flex: 0 0 auto; aspect-ratio: 1; background: var(--nb-blue); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-lg); color: #fff; overflow: hidden; }
 .nb-dash-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .nb-dash-usertext { display: flex; flex-direction: column; gap: 1px; }
@@ -328,6 +350,8 @@
   .nb-dash-header { gap: 10px; }
   /* La racha y el nombre no caben junto al botón de salir */
   .nb-dash-streak, .nb-dash-usertext { display: none; }
+  .nb-dash-notif { position: static; }
+  .nb-dash-notif-panel { left: 16px; right: 16px; width: auto; top: calc(var(--header-h) + 4px); position: fixed; box-shadow: 3px 3px 0px #000; }
   .nb-dash-card { box-shadow: 3px 3px 0px #000; }
   .nb-dash-terminal { flex-basis: 100%; }
   .nb-dash-photo { flex-basis: 84px; }
@@ -356,6 +380,129 @@
 .nb-dash-reco-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; opacity: 0.85; }
 /* Sobre el color de la dificultad el negro se pierde: se invierte el par. */
 .nb-dash-reco-val { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; background: var(--cat-ink, #000); color: var(--cat-bg, #fff); padding: 3px 7px; }
+
+/* Avisos fijos abajo a la derecha (cookies, código UFPSO), apilados hasta que el estudiante responde. */
+.nb-dash-avisos { position: fixed; right: var(--sp-main); bottom: var(--sp-main); z-index: 60; width: min(440px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+.nb-dash-avisos.is-oculto { display: none; }
+.nb-dash-aviso { pointer-events: auto; box-shadow: 5px 5px 0px #000; }
+.nb-dash-aviso.is-corto { padding: clamp(14px, 1vw, 20px); }
+.nb-dash-aviso-text { font-size: var(--fs-sm); line-height: 1.55; color: var(--nb-ink-soft); margin: 0 0 14px; }
+.nb-dash-aviso-text strong { color: #000; }
+.nb-dash-aviso-text.is-detalle { border-left: 4px solid var(--nb-blue); padding-left: 12px; }
+.nb-dash-aviso-mas { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--nb-blue); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.nb-dash-aviso-mas:hover { color: #000; }
+.nb-dash-aviso-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Mi cuenta: la acción de retirar la autorización es pequeña y roja para no tocarla por accidente. */
+.nb-cuenta-revocar { border: none; background: none; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-danger); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.nb-cuenta-revocar:hover:not(:disabled) { color: #000; }
+.nb-cuenta-revocar:disabled { opacity: 0.6; cursor: wait; }
+.nb-cuenta-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+.nb-cuenta-acciones .nb-dash-btn-claro { flex: 0 0 auto; }
+.nb-dash-btn-claro { flex: 1 1 140px; border: 2px solid #000; background: #fff; color: #000; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); cursor: pointer; box-shadow: 4px 4px 0px #000; transition: var(--nb-tr); }
+.nb-dash-btn-claro:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-dash-btn-claro:disabled { opacity: 0.6; cursor: wait; }
+
+/* Tarjeta de clase: código para entrar o, si es docente, sus clases. */
+.nb-dash-clases { list-style: none; margin: 0 0 16px; padding: 0; border-top: 1px solid #000; }
+.nb-dash-clases li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 10px 0; border-bottom: 1px solid #000; font-size: var(--fs-sm); }
+.nb-dash-clases li > span:first-child { flex: 1 1 160px; min-width: 0; font-weight: 700; }
+.nb-dash-clase-codigo { font-family: 'JetBrains Mono', monospace; font-weight: 700; letter-spacing: 0.16em; background: #000; color: #fff; padding: 3px 8px; }
+.nb-dash-clase-form { display: flex; flex-wrap: wrap; gap: 12px; }
+.nb-dash-clase-form .nb-input { flex: 1 1 220px; min-width: 0; }
+.nb-dash-clase-form .nb-ex-send:disabled:not(.is-busy) { opacity: 0.6; cursor: not-allowed; }
+.nb-dash-clase-form .nb-ex-send:disabled:hover { transform: none; box-shadow: 4px 4px 0px #000; }
+.nb-dash-clase-msg { margin: 12px 0 0; font-size: var(--fs-sm); font-weight: 600; }
+.nb-dash-clase-msg.is-error { color: var(--nb-danger); }
+
+@media (max-width: 640px) {
+  .nb-dash-avisos { left: 16px; right: 16px; bottom: 16px; width: auto; }
+  .nb-dash-aviso { box-shadow: 3px 3px 0px #000; }
+  .nb-dash-btn-claro { box-shadow: 3px 3px 0px #000; }
+}
+
+/* ── Vista docente (Estudiantes y ficha del estudiante) ── */
+.nb-doc-stack { display: flex; flex-direction: column; gap: var(--sp-gap); margin-bottom: var(--sp-gap); }
+.nb-doc-clase { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+.nb-doc-clase .nb-dash-section-title { margin: 0; }
+.nb-doc-vacio { margin: 12px 0 0; font-size: var(--fs-sm); color: var(--nb-ink-mute); }
+.nb-doc-nota { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--nb-ink-soft); }
+.nb-doc-nota-top { margin: 12px 0; line-height: 1.55; }
+.nb-doc-fila > a.nb-doc-filtro { flex: 0 0 auto; text-decoration: none; }
+a.nb-doc-filtro { display: inline-block; text-decoration: none; }
+.nb-doc-escalon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.nb-doc-escalon .nb-doc-nota-top { flex: 1 1 320px; margin: 0; }
+.nb-doc-buscar { flex: 0 1 340px; }
+
+.nb-doc-alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; position: relative; z-index: 1; }
+.nb-doc-alerta { background: #000; color: #fff; }
+
+.nb-doc-lista { list-style: none; margin: 16px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.nb-doc-estudiante { flex-wrap: wrap; }
+.nb-doc-estudiante .nb-pb-row-main { display: flex; flex-direction: column; align-items: flex-start; }
+.nb-doc-dato { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; min-width: clamp(70px, 6vw, 110px); }
+.nb-doc-dato small { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-doc-dato strong { font-size: var(--fs-base); font-weight: 700; }
+
+.nb-doc-tabla { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid #000; }
+.nb-doc-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid #000; }
+.nb-doc-fila.is-col { flex-direction: column; align-items: stretch; }
+/* En columna, la base de 200px de .is-grande se volvería altura. */
+.nb-doc-fila.is-col > .nb-doc-celda { flex: 0 0 auto; }
+.nb-doc-fila-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.nb-doc-celda { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); }
+.nb-doc-celda.is-grande { flex: 1 1 200px; }
+.nb-doc-celda strong { font-weight: 700; overflow-wrap: anywhere; }
+.nb-doc-celda small { color: var(--nb-ink-soft); overflow-wrap: anywhere; }
+.nb-doc-estado { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 2px solid #000; background: #fff; padding: 3px 8px; }
+.nb-doc-estado.is-on { background: #0AB05D; color: #000; }
+.nb-doc-pista { margin: 0; font-size: var(--fs-sm); line-height: 1.55; border-left: 4px solid var(--nb-blue); padding-left: 12px; }
+
+/* Mapa de calor: 0 sin práctica, 1 bajo, 2 medio, 3 alto. */
+.nb-doc-mapa-scroll { overflow-x: auto; margin-top: 14px; border: 2px solid #000; }
+.nb-doc-mapa { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.nb-doc-mapa th, .nb-doc-mapa td { border: 1px solid #000; padding: 8px 10px; text-align: center; white-space: nowrap; }
+.nb-doc-mapa thead th { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: #000; color: #fff; }
+.nb-doc-mapa tbody th { text-align: left; font-weight: 700; background: #fff; }
+.nb-doc-mapa td, .nb-doc-pct { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-doc-mapa .is-0, .nb-doc-pct.is-0 { color: var(--nb-ink-mute); background: #fff; }
+.nb-doc-mapa .is-1, .nb-doc-pct.is-1 { background: #fff; color: #000; }
+.nb-doc-mapa .is-2, .nb-doc-pct.is-2 { background: var(--nb-hover); color: var(--nb-blue); }
+.nb-doc-mapa .is-3, .nb-doc-pct.is-3 { background: var(--nb-blue); color: #fff; }
+.nb-doc-pct { flex: 0 0 auto; border: 2px solid #000; padding: 3px 8px; font-size: var(--fs-xs); }
+
+/* Barras de actividad: la altura viene de los datos en --alto. */
+.nb-doc-barras { display: flex; align-items: flex-end; gap: 6px; height: 180px; margin-top: 16px; padding-bottom: 4px; border-bottom: 2px solid #000; }
+.nb-doc-barra { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; }
+.nb-doc-barra span { width: 100%; height: var(--alto); background: var(--nb-blue); border: 2px solid #000; }
+.nb-doc-barra small { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; }
+
+/* Línea del nivel. */
+.nb-doc-linea { display: block; width: 100%; height: 160px; margin-top: 16px; border: 2px solid #000; background: #fff; }
+.nb-doc-linea-base { stroke: var(--nb-ink-mute); stroke-width: 1; stroke-dasharray: 6 6; vector-effect: non-scaling-stroke; }
+.nb-doc-linea-trazo { fill: none; stroke: var(--nb-blue); stroke-width: 3; vector-effect: non-scaling-stroke; }
+.nb-doc-linea-punto { fill: #000; }
+
+.nb-doc-codigo summary { cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-doc-codigo summary:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 3px; }
+.nb-doc-codigo pre { margin: 10px 0 0; max-height: 360px; overflow: auto; background: var(--nb-editor); color: #fff; border: 2px solid #000; padding: 14px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); line-height: 1.5; }
+
+/* Historial de inicios de sesión. */
+.nb-doc-plegable { margin-bottom: var(--sp-gap); }
+.nb-doc-sesiones { display: flex; flex-direction: column; gap: 14px; }
+.nb-doc-herramientas { display: flex; flex-wrap: wrap; gap: 12px; }
+.nb-doc-herramientas .nb-ex-send { flex: 0 0 auto; }
+.nb-doc-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.nb-doc-filtro { border: 2px solid #000; background: #fff; color: #000; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 10px; cursor: pointer; box-shadow: 3px 3px 0px #000; transition: var(--nb-tr); }
+.nb-doc-filtro:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+.nb-doc-filtro.is-active { background: #000; color: #fff; }
+.nb-doc-filtro:disabled { opacity: 0.6; cursor: not-allowed; }
+.nb-doc-paginas { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+
+@media (max-width: 640px) {
+  .nb-doc-filtro { box-shadow: 2px 2px 0px #000; }
+  .nb-doc-barras { height: 140px; gap: 3px; }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .nb-dash-reco-track { animation: none; }

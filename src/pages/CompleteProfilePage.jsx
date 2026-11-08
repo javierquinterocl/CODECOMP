@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { auth } from '../scripts/firebaseConfig';
 import { saveGoogleUserToFirestore, updateActiveSessionsCodigo } from '../scripts/registerService';
 import AuthShell from '../components/AuthShell';
+import { errorDeCodigo, LARGO_CODIGO } from '../scripts/codigoUfpso';
 
 const CompleteProfilePage = () => {
   const navigate = useNavigate();
@@ -41,8 +42,8 @@ const CompleteProfilePage = () => {
     if (!formData.apellido.trim()) newErrors.apellido = 'El apellido es obligatorio.';
     else if (formData.apellido.trim().length > 50) newErrors.apellido = 'Máximo 50 caracteres.';
 
-    if (!formData.codigo.trim()) newErrors.codigo = 'El código es obligatorio.';
-    else if (formData.codigo.trim().length > 6) newErrors.codigo = 'El código debe tener máximo 6 caracteres.';
+    const errorCodigo = errorDeCodigo(formData.codigo);
+    if (errorCodigo) newErrors.codigo = errorCodigo;
 
     return newErrors;
   };
@@ -129,8 +130,9 @@ const CompleteProfilePage = () => {
             id="codigo"
             name="codigo"
             type="text"
-            maxLength={6}
-            placeholder="Ej: 191000"
+            inputMode="numeric"
+            maxLength={LARGO_CODIGO}
+            placeholder="Ej: 1191000"
             value={formData.codigo}
             onChange={handleInputChange}
             className={field('codigo')}

@@ -5,6 +5,9 @@ import { getProgress } from '../scripts/progressApi';
 import { getRecommendations } from '../scripts/recommendationApi';
 import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
 import { PencilIcon, CpuIcon, TrophyIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
+import ClaseCard from '../components/ClaseCard';
+import { getClases } from '../scripts/registroApi';
+import { nombreVisible } from '../scripts/docenteData';
 
 /* ── Datos de muestra del diseño (aún sin fuente real) ───────── */
 const RPC_EVENTS = [
@@ -14,13 +17,6 @@ const RPC_EVENTS = [
   { mes: 'Mar', dia: '14', destacado: false, titulo: 'Competencia 02 RPC 2026', estado: 'Finalizado',
     cuando: 'Sáb 14 de marzo · 13:00 UTC-5 · 5 horas',
     detalle: 'Maratón con ~12 retos para continuar el ciclo de entrenamiento latino.' },
-];
-
-const GRUPO = [
-  { nombre: 'Andres Salas',    codigo: '192164',  tiempo: '3 semestres', envios: 114, puntos: 0 },
-  { nombre: 'Andrey Castilla', codigo: '1021634', tiempo: '2 semestres', envios: 96,  puntos: 0 },
-  { nombre: 'Laura Aura',      codigo: '1021592', tiempo: '2 semestres', envios: 75,  puntos: 0 },
-  { nombre: 'Ivan Cepeda',     codigo: '1021718', tiempo: '1 semestre',  envios: 41,  puntos: 0 },
 ];
 
 const RECURSOS = [
@@ -104,27 +100,27 @@ const MemberField = ({ label, value }) => (
   </div>
 );
 
-const MemberRow = ({ pos, nombre, codigo, tiempo, envios, puntos, me = false, inicial }) => (
+const MemberRow = ({ pos, nombre, desde, resueltos, envios, nivel, me = false }) => (
   <div className={`nb-dash-member${me ? ' is-me' : ''}`}>
     <span className="nb-dash-member-pos">{pos}</span>
-    <div className="nb-dash-member-av">{inicial}</div>
+    <div className="nb-dash-member-av">{nombre[0]?.toUpperCase() || '?'}</div>
     <div className="nb-dash-member-main">
       <div className="nb-dash-member-name">
         {nombre}{me && <span className="nb-dash-member-you"> (tú)</span>}
       </div>
-      <div className="nb-dash-member-code">{codigo}</div>
+      <div className="nb-dash-member-code">En la clase desde {desde}</div>
     </div>
-    <MemberField label="Tiempo inscrito" value={tiempo} />
+    <MemberField label="Resueltos" value={resueltos} />
     <MemberField label="Envíos" value={envios} />
     <div className="nb-dash-member-points">
-      <div className="nb-dash-member-label">Puntos</div>
-      <div className="nb-dash-member-points-value">{puntos}</div>
+      <div className="nb-dash-member-label">Nivel</div>
+      <div className="nb-dash-member-points-value">{nivel}</div>
     </div>
   </div>
 );
 
 const DashboardPage = () => {
-  const { user, displayName, firstName, codigoEstudiante, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
+  const { user, isAdmin, displayName, firstName, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
   const [photoError, setPhotoError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
@@ -148,8 +144,24 @@ const DashboardPage = () => {
     traerRecomendados();
   }, [user, traerRecomendados]);
 
+  // Clase del estudiante (o del docente): la tarjeta de clase y el grupo comparten estos datos.
+  const [clase, setClase] = useState(null);
+  const [recargaClase, setRecargaClase] = useState(0);
+  useEffect(() => {
+    if (!user) return undefined;
+    let vigente = true;
+    getClases(user).then((data) => { if (vigente) setClase(data); }).catch(() => {});
+    return () => { vigente = false; };
+  }, [user, recargaClase]);
+  const companeros = clase?.companeros || [];
+
+  // Bloqueo suave (S4): no se recomienda nada por encima del escalón del estudiante.
+  const escalonActual = progress?.escalon?.actual;
+  const recomendadosDelEscalon = escalonActual
+    ? recommendations.filter((r) => nivelDeRating(r.difficulty_rating) <= escalonActual)
+    : recommendations;
+
   const photo = storedPhotoURL || user?.photoURL || null;
-  const inicial = (displayName || user?.email || '?')[0].toUpperCase();
 
   return (
     <div className="nb-dash-inner">
@@ -170,11 +182,15 @@ const DashboardPage = () => {
         </div>
 
         <div className="nb-dash-hero-inner">
-          <div className="nb-dash-hero-kicker">Panel del estudiante</div>
+          <div className="nb-dash-hero-kicker">{isAdmin ? 'Panel docente' : 'Panel del estudiante'}</div>
           <h1 className="nb-dash-hero-title">
             Bienvenido de nuevo,<span className="nb-dash-hero-name">{firstName}!</span>
           </h1>
-          <p className="nb-dash-hero-text">¿Listo para los algoritmos de hoy? Sigue explorando y mejorando tus habilidades en código.</p>
+          <p className="nb-dash-hero-text">
+            {isAdmin
+              ? 'Revisa cómo va tu clase en Estudiantes y comparte el código de la clase con quienes falten.'
+              : '¿Listo para los algoritmos de hoy? Sigue explorando y mejorando tus habilidades en código.'}
+          </p>
         </div>
       </div>
 
@@ -208,7 +224,7 @@ const DashboardPage = () => {
                   <h3 className="nb-dash-name">{displayName}</h3>
                   <div className="nb-dash-email">{user?.email}</div>
                 </div>
-                <Link to="/reset" title="Editar perfil" aria-label="Editar perfil" className="nb-dash-edit">
+                <Link to="/dashboard/cuenta" title="Mi cuenta" aria-label="Mi cuenta" className="nb-dash-edit">
                   <PencilIcon />
                 </Link>
               </div>
@@ -295,8 +311,8 @@ const DashboardPage = () => {
               <Link to="/dashboard/problemas" className="nb-dash-outline">Ver banco ↗</Link>
             </div>
           </div>
-          {recommendations.length > 0 ? (
-            <RecoCarrusel recomendados={recommendations} />
+          {recomendadosDelEscalon.length > 0 ? (
+            <RecoCarrusel recomendados={recomendadosDelEscalon} />
           ) : (
             <p className="nb-dash-body-text">Completa un envío para construir tu primera ruta de práctica.</p>
           )}
@@ -355,40 +371,48 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* ── Grupo estable ── */}
-        <div className="nb-dash-card nb-dash-pad">
-          <div className="nb-dash-sechead">
-            <div>
-              <h3 className="nb-dash-section-title">Grupo Estable</h3>
-              <div className="nb-dash-section-sub">Maratón de Programación · UFPSO</div>
-            </div>
-            <div className="nb-dash-stats">
-              {[['Integrantes', 5], ['Sesiones', 24], ['Envíos totales', 454]].map(([label, value]) => (
-                <div key={label} className="nb-dash-stat">
-                  <div className="nb-dash-stat-label">{label}</div>
-                  <div className="nb-dash-stat-value">{value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
+        <ClaseCard estado={clase} onCambio={() => setRecargaClase((n) => n + 1)} />
 
-          <div className="nb-dash-list is-tight">
-            <MemberRow
-              me pos="01" inicial={inicial}
-              nombre={displayName}
-              codigo={codigoEstudiante || '—'}
-              tiempo="3 semestres" envios={128} puntos={0}
-            />
-            {GRUPO.map((m, i) => (
-              <MemberRow
-                key={m.codigo}
-                pos={String(i + 2).padStart(2, '0')}
-                inicial={m.nombre[0]}
-                {...m}
-              />
-            ))}
+        {/* ── Grupo de la clase ── */}
+        {clase?.clases?.length > 0 && (
+          <div className="nb-dash-card nb-dash-pad">
+            <div className="nb-dash-sechead">
+              <div>
+                <h3 className="nb-dash-section-title">{clase.clases[0].nombre}</h3>
+                <div className="nb-dash-section-sub">Tu grupo · ordenado por nivel</div>
+              </div>
+              <div className="nb-dash-stats">
+                {[
+                  ['Integrantes', companeros.length],
+                  ['Resueltos', companeros.reduce((t, m) => t + m.resueltos, 0)],
+                  ['Envíos totales', companeros.reduce((t, m) => t + m.envios, 0)],
+                ].map(([label, value]) => (
+                  <div key={label} className="nb-dash-stat">
+                    <div className="nb-dash-stat-label">{label}</div>
+                    <div className="nb-dash-stat-value">{value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {companeros.length ? (
+              <div className="nb-dash-list is-tight">
+                {companeros.map((m, i) => (
+                  <MemberRow
+                    key={`${m.username}-${i}`}
+                    me={m.yo}
+                    pos={String(i + 1).padStart(2, '0')}
+                    nombre={nombreVisible(m.username)}
+                    desde={new Date(m.unido_en).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
+                    resueltos={m.resueltos}
+                    envios={m.envios}
+                    nivel={Math.round(Number(m.nivel))}
+                  />
+                ))}
+              </div>
+            ) : <p className="nb-doc-vacio">Todavía no hay estudiantes en esta clase.</p>}
           </div>
-        </div>
+        )}
 
       </div>
     </div>

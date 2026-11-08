@@ -1,7 +1,10 @@
 
 
 import { cargarConfig } from '../_compartido/config.ts';
-import { cabecerasCors, rechazo, responder, tokenDe } from '../_compartido/http.ts';
+import { cabecerasCors, origenConfiable, rechazo, responder, tokenDe } from '../_compartido/http.ts';
+import { abrir, cookieDe, llaveDe } from '../_compartido/sesion.ts';
+import { sesion } from '../_compartido/rutas/sesion.ts';
+import { notificaciones } from '../_compartido/rutas/notificaciones.ts';
 import { conexion } from '../_compartido/db.ts';
 import { segmentosDe } from '../_compartido/enrutado.ts';
 import { identidadDelToken } from '../_compartido/auth.ts';
@@ -12,6 +15,9 @@ import { detalleProblema, listarProblemas } from '../_compartido/rutas/problemas
 import { progreso, recomendaciones, sincronizarUsuario } from '../_compartido/rutas/progreso.ts';
 import { tutor } from '../_compartido/rutas/tutor.ts';
 import { fundamentos } from '../_compartido/rutas/fundamentos.ts';
+import { actividad, clases, datos } from '../_compartido/rutas/registro.ts';
+import { docente } from '../_compartido/rutas/docente.ts';
+import { miProgreso } from '../_compartido/rutas/miProgreso.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -46,7 +52,14 @@ Deno.serve(async (req: Request) => {
   }
 
   // Se verifica una vez; cada ruta decide si lo exige.
-  const identidad = await identidadDelToken(tokenDe(req), config.firebaseProjectId);
+  let identidad = await identidadDelToken(tokenDe(req), config.firebaseProjectId);
+  // Sin token, la actividad puede llegar con la cookie cifrada (sendBeacon no lleva cabeceras),
+  // y solo si viene de un origen de la lista.
+  if (!identidad && ruta === 'actividad' && origenConfiable(origen, config.origenesPermitidos)) {
+    const llave = await llaveDe(config.sesionLlave);
+    const valor = cookieDe(req);
+    if (llave && valor) identidad = await abrir(valor, llave);
+  }
   const ctx: Contexto = { req, url, sql, config, cors, identidad };
 
   try {
@@ -69,6 +82,20 @@ Deno.serve(async (req: Request) => {
           : await listarProblemas(ctx);
       case 'fundamentos':
         return await fundamentos(ctx, segmentos[1]);
+      case 'datos':
+        return await datos(ctx);
+      case 'actividad':
+        return await actividad(ctx, segmentos[1]);
+      case 'clases':
+        return await clases(ctx, segmentos[1]);
+      case 'docente':
+        return await docente(ctx, segmentos[1], segmentos[2], segmentos[3]);
+      case 'mi-progreso':
+        return await miProgreso(ctx);
+      case 'sesion':
+        return await sesion(ctx);
+      case 'notificaciones':
+        return await notificaciones(ctx);
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }

@@ -64,7 +64,13 @@ const progreso = async (ctx: Contexto): Promise<Response> => {
         WHERE p.user_id = ${userId} AND e.is_active
         ORDER BY p.visto_en DESC
       `;
-      return responder({ status: 200, cuerpo: { progreso: filas } }, cors);
+      // Resuelto = al menos un envio aceptado (desde la migracion 015 se guardan).
+      const resueltos = await sql`
+        SELECT DISTINCT e.nivel, e.numero
+        FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
+        WHERE f.user_id = ${userId} AND f.veredicto = 'ACEPTADO' AND e.is_active
+      `;
+      return responder({ status: 200, cuerpo: { progreso: filas, resueltos } }, cors);
     } catch (error) {
       console.error('Fundamentos progress error:', error);
       return responder(rechazo(500, 'consulta', 'No se pudo consultar tu avance.'), cors);
@@ -150,7 +156,7 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
     userId = await idDeUsuario(sql, identidad);
     // Los ejemplos salen de la base, nunca del navegador; y el candado se mide con su reloj.
     [ejercicio] = await sql`
-      SELECT e.ejemplos, p.abierto_en, now() AS ahora
+      SELECT e.id, e.ejemplos, p.abierto_en, now() AS ahora
       FROM fundamentos_ejercicios e
       LEFT JOIN fundamentos_progreso p ON p.ejercicio_id = e.id AND p.user_id = ${userId}
       WHERE e.nivel = ${nivel} AND e.numero = ${numero} AND e.is_active
@@ -247,7 +253,14 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
       codigo,
       ejemplos.map((e) => e.entrada),
     );
-    return responder({ status: 200, cuerpo: juzgar(ejemplos, ejecuciones) }, cors);
+    const resultado = juzgar(ejemplos, ejecuciones);
+    // Si no se puede guardar el envio, el estudiante recibe su veredicto igual.
+    const fallido = 'ejemplo' in resultado ? resultado.ejemplo : null;
+    await sql`
+      INSERT INTO fundamentos_envios (user_id, ejercicio_id, codigo, veredicto, ejemplo_fallido)
+      VALUES (${userId}, ${ejercicio.id}, ${codigo}, ${resultado.veredicto}, ${fallido})
+    `.catch((error) => console.error('No se pudo guardar el envio de Fundamentos:', error));
+    return responder({ status: 200, cuerpo: resultado }, cors);
   } catch (error) {
     console.error('Fallo al invocar el juez de PSeInt:', error);
     await devolverEnvio();

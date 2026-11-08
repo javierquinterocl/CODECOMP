@@ -18,6 +18,7 @@ export interface Identidad {
   uid: string;
   email: string | null;
   nombre: string | null;
+  emailVerificado?: boolean;
 }
 
 // Nunca lanza: un token invalido es 401, no 500.
@@ -38,6 +39,7 @@ export const identidadDelToken = async (
       uid,
       email: typeof payload.email === 'string' ? payload.email : null,
       nombre: typeof payload.name === 'string' ? payload.name : null,
+      emailVerificado: payload.email_verified === true,
     };
   } catch {
     return null;
@@ -52,3 +54,10 @@ export const usernameDe = (identidad: Identidad): string => {
 
 export const emailDe = (identidad: Identidad): string =>
   identidad.email ?? `${identidad.uid}@firebase.local`;
+
+// El rol sale del token en cada peticion: si un correo sale de la lista, deja de ser docente.
+export const esDocente = (identidad: Identidad | null, docentes: Set<string>): boolean =>
+  Boolean(
+    identidad?.email && identidad.emailVerificado &&
+      docentes.has(identidad.email.trim().toLowerCase()),
+  );

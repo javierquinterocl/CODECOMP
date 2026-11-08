@@ -639,3 +639,170 @@ BEGIN
   RETURN QUERY SELECT true, NULL::TEXT, 0, v_conteo + 1;
 END;
 $$;
+-- ── 015_registro_estudiante.sql ──
+-- Registro del estudiante: todos los intentos, pistas, aperturas, actividad diaria,
+-- envios de Fundamentos, clases y autorizacion de datos (Ley 1581).
+
+-- Envios cortados por el juez (plazo, presupuesto, error): se guardan pero no cuentan.
+ALTER TYPE submission_verdict ADD VALUE IF NOT EXISTS 'ERROR_JUEZ';
+
+BEGIN;
+
+-- Se guardan tambien los aceptados repetidos; el primero se decide con el bloqueo del usuario.
+DROP INDEX IF EXISTS one_accepted_submission_per_problem;
+CREATE INDEX IF NOT EXISTS idx_submissions_usuario_problema
+  ON submissions (user_id, problem_id, created_at);
+
+-- Numero (desde 1) del caso donde fallo el envio; NULL si fue aceptado o no se evaluo.
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS caso_fallido INTEGER
+  CHECK (caso_fallido IS NULL OR caso_fallido > 0);
+
+-- NULL: aun no responde. La fecha guarda la ultima respuesta.
+ALTER TABLE users
+  ADD COLUMN IF NOT EXISTS datos_autorizados BOOLEAN,
+  ADD COLUMN IF NOT EXISTS datos_respondido_en TIMESTAMPTZ;
+
+-- Cada pista del tutor, con el problema y el veredicto que la motivo.
+CREATE TABLE IF NOT EXISTS pistas (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  veredicto TEXT NOT NULL,
+  pista TEXT NOT NULL,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_pistas_usuario_problema ON pistas (user_id, problem_id, creado_en);
+
+-- Primera y ultima vez que el estudiante abrio cada problema (hora de la base).
+CREATE TABLE IF NOT EXISTS aperturas_problema (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  primera TIMESTAMPTZ NOT NULL DEFAULT now(),
+  ultima TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, problem_id)
+);
+
+-- Actividad acumulada por estudiante y dia: tiempo con la pestana visible y pegados.
+CREATE TABLE IF NOT EXISTS actividad_diaria (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  dia DATE NOT NULL,
+  segundos_activos INTEGER NOT NULL DEFAULT 0 CHECK (segundos_activos BETWEEN 0 AND 86400),
+  pegados INTEGER NOT NULL DEFAULT 0 CHECK (pegados >= 0),
+  caracteres_pegados INTEGER NOT NULL DEFAULT 0 CHECK (caracteres_pegados >= 0),
+  actualizado_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (user_id, dia)
+);
+
+-- Envios de Fundamentos (antes no se guardaban).
+CREATE TABLE IF NOT EXISTS fundamentos_envios (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  ejercicio_id INTEGER NOT NULL REFERENCES fundamentos_ejercicios(id) ON DELETE CASCADE,
+  codigo TEXT NOT NULL CHECK (char_length(codigo) <= 20000),
+  veredicto TEXT NOT NULL,
+  ejemplo_fallido INTEGER,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_fundamentos_envios_usuario
+  ON fundamentos_envios (user_id, ejercicio_id, creado_en);
+
+-- Clases: el docente las crea y el estudiante entra con el codigo.
+CREATE TABLE IF NOT EXISTS clases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  nombre TEXT NOT NULL CHECK (char_length(nombre) BETWEEN 3 AND 80),
+  codigo TEXT NOT NULL UNIQUE CHECK (codigo ~ '^[A-Z0-9]{6}$'),
+  docente_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS clase_miembros (
+  clase_id UUID NOT NULL REFERENCES clases(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  unido_en TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (clase_id, user_id)
+);
+
+-- Solo entra la Edge Function, con el rol de la conexion directa.
+ALTER TABLE pistas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE aperturas_problema ENABLE ROW LEVEL SECURITY;
+ALTER TABLE actividad_diaria ENABLE ROW LEVEL SECURITY;
+ALTER TABLE fundamentos_envios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clases ENABLE ROW LEVEL SECURITY;
+ALTER TABLE clase_miembros ENABLE ROW LEVEL SECURITY;
+
+COMMIT;
+-- ── 016_nivel_real.sql ──
+-- Nivel real (Elo educativo, supabase/functions/_compartido/nivel.ts): nivel con decimales y
+-- un resultado por estudiante y problema. global_rating queda como su redondeo.
+
+BEGIN;
+
+-- Copia del rating calculado con la formula anterior.
+CREATE TABLE IF NOT EXISTS users_rating_previo_016 AS
+  SELECT id AS user_id, global_rating, now() AS copiado_en FROM users;
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS nivel NUMERIC(10, 3) NOT NULL DEFAULT 1000;
+
+-- Un resultado por problema: aceptado (puntaje segun fallos y pista) o cerrado sin resolver.
+CREATE TABLE IF NOT EXISTS resultados_problema (
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  problem_id UUID NOT NULL REFERENCES problems(id) ON DELETE CASCADE,
+  submission_id UUID REFERENCES submissions(id) ON DELETE SET NULL,
+  aceptado BOOLEAN NOT NULL,
+  puntaje NUMERIC(5, 4) NOT NULL CHECK (puntaje BETWEEN 0 AND 1),
+  esperado NUMERIC(5, 4) NOT NULL CHECK (esperado BETWEEN 0 AND 1),
+  cambio NUMERIC(10, 3) NOT NULL,
+  nivel_despues NUMERIC(10, 3) NOT NULL,
+  cerrado_en TIMESTAMPTZ NOT NULL,
+  PRIMARY KEY (user_id, problem_id)
+);
+CREATE INDEX IF NOT EXISTS idx_resultados_usuario_fecha ON resultados_problema (user_id, cerrado_en);
+
+ALTER TABLE users_rating_previo_016 ENABLE ROW LEVEL SECURITY;
+ALTER TABLE resultados_problema ENABLE ROW LEVEL SECURITY;
+
+COMMIT;
+-- ── 017_auditoria_docente.sql ──
+-- Auditoria de la vista docente (Ley 1581): que docente consulto que estudiante y cuando.
+-- Solo se inserta: actualizar o borrar filas falla.
+
+BEGIN;
+
+CREATE TABLE IF NOT EXISTS auditoria_docente (
+  id BIGSERIAL PRIMARY KEY,
+  docente_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+  estudiante_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  clase_id UUID REFERENCES clases(id) ON DELETE SET NULL,
+  accion TEXT NOT NULL CHECK (accion IN ('ver_clase', 'ver_estudiante', 'cambiar_escalon')),
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_auditoria_docente_fecha ON auditoria_docente (docente_id, creado_en);
+
+CREATE OR REPLACE FUNCTION auditoria_solo_insercion() RETURNS trigger
+LANGUAGE plpgsql AS $$
+BEGIN
+  -- Las claves foraneas pueden poner NULL al borrar un usuario o una clase.
+  IF TG_OP = 'UPDATE' AND NEW.id = OLD.id AND NEW.docente_id = OLD.docente_id
+     AND NEW.accion = OLD.accion AND NEW.creado_en = OLD.creado_en
+     AND (NEW.estudiante_id IS NULL OR NEW.estudiante_id = OLD.estudiante_id)
+     AND (NEW.clase_id IS NULL OR NEW.clase_id = OLD.clase_id) THEN
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'La auditoria docente solo admite inserciones.';
+END;
+$$;
+
+DROP TRIGGER IF EXISTS auditoria_docente_inmutable ON auditoria_docente;
+CREATE TRIGGER auditoria_docente_inmutable
+  BEFORE UPDATE OR DELETE ON auditoria_docente
+  FOR EACH ROW EXECUTE FUNCTION auditoria_solo_insercion();
+
+ALTER TABLE auditoria_docente ENABLE ROW LEVEL SECURITY;
+
+COMMIT;
+-- ── 018_escalones.sql ──
+-- Escalones de practica (S4): escalon minimo que el docente puede fijar a un estudiante.
+-- El escalon actual se calcula (nivel real o 5 resueltos); este piso solo lo sube.
+
+ALTER TABLE users ADD COLUMN IF NOT EXISTS escalon_minimo SMALLINT NOT NULL DEFAULT 1
+  CHECK (escalon_minimo BETWEEN 1 AND 5);

@@ -35,3 +35,6 @@ functions/.secret.local
 
 # Archivos de trabajo de la traduccion del catalogo
 /traduccion/
+
+# Cache local de Wrangler (Worker de Cloudflare)
+.wrangler/

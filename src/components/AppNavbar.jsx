@@ -1,5 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useResumenProgreso } from '../scripts/useEscalon';
+import CampanaAvisos from './CampanaAvisos';
 
 /** Avatar cuadrado del dashboard: foto si existe, inicial si no. */
 const DashAvatar = ({ user, photoURL }) => {
@@ -33,7 +36,9 @@ const BrandCat = () => (
 );
 
 const AppNavbar = () => {
-  const { user, codigoEstudiante, storedPhotoURL, displayName, isLoggingOut, handleLogout } = useAuth();
+  const { user, isAdmin, codigoEstudiante, storedPhotoURL, displayName, isLoggingOut, handleLogout } = useAuth();
+  // Días seguidos con algún envío (Problemas o Fundamentos); null mientras carga.
+  const racha = useResumenProgreso(user)?.racha;
 
   return (
     <header className="nb-dash-header">
@@ -43,23 +48,24 @@ const AppNavbar = () => {
       </div>
 
       <div className="nb-dash-headright">
-        <div className="nb-dash-streak">
+        <CampanaAvisos user={user} />
+        <div className="nb-dash-streak" title="Días seguidos con al menos un envío">
           <span className="nb-dash-streak-icon">🔥</span>
           <div className="nb-dash-usertext">
-            <span className="nb-dash-username">5 días</span>
+            <span className="nb-dash-username">{racha == null ? '—' : `${racha} ${racha === 1 ? 'día' : 'días'}`}</span>
             <span className="nb-dash-userrole">Racha</span>
           </div>
         </div>
 
-        <div className="nb-dash-user">
+        <Link to="/dashboard/cuenta" className="nb-dash-user" title="Mi cuenta">
           <DashAvatar user={user} photoURL={storedPhotoURL} />
           <div className="nb-dash-usertext">
             <span className="nb-dash-username">{displayName}</span>
             <span className="nb-dash-userrole">
-              Estudiante{codigoEstudiante ? ` / ${codigoEstudiante}` : ''}
+              {isAdmin ? 'Docente' : `Estudiante${codigoEstudiante ? ` / ${codigoEstudiante}` : ''}`}
             </span>
           </div>
-        </div>
+        </Link>
 
         <button type="button" onClick={handleLogout} disabled={isLoggingOut} className="nb-dash-logout">
           {isLoggingOut ? '…' : 'Salir'}
