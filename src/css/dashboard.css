@@ -386,6 +386,8 @@
 .nb-doc-clase .nb-dash-section-title { margin: 0; }
 .nb-doc-vacio { margin: 12px 0 0; font-size: var(--fs-sm); color: var(--nb-ink-mute); }
 .nb-doc-nota { margin: 0 0 12px; font-size: var(--fs-sm); color: var(--nb-ink-soft); }
+.nb-doc-nota-top { margin: 12px 0; line-height: 1.55; }
+.nb-doc-fila > a.nb-doc-filtro { flex: 0 0 auto; text-decoration: none; }
 .nb-doc-buscar { flex: 0 1 340px; }
 
 .nb-doc-alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; position: relative; z-index: 1; }

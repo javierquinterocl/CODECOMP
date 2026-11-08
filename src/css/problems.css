@@ -296,6 +296,9 @@
 .nb-ex-feedback-status strong { color: #fff; }
 .nb-ex-feedback-metrics { display: flex; flex-wrap: wrap; gap: 16px; font-size: var(--fs-xs); color: rgba(255,255,255,0.74); }
 .nb-ex-feedback-metrics strong { color: #fff; }
+.nb-ex-feedback-repaso { color: #fff; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.nb-ex-feedback-repaso:hover { text-decoration-thickness: 2px; }
+.nb-ex-feedback.is-ok .nb-ex-feedback-repaso { color: #000; }
 .nb-ex-feedback-output { margin-top: 2px; }
 /* ---------- Tutor ---------- */
 .nb-ex-tutor { margin-top: 4px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }

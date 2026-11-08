@@ -192,7 +192,8 @@ const UserHistoryPage = () => {
               </section>
 
               <div className="nb-dash-row">
-                <section className="nb-dash-col is-7 nb-dash-card nb-dash-pad">
+                <div className="nb-dash-col is-7">
+                <section className="nb-dash-card nb-dash-pad">
                   <h2 className="nb-dash-section-title">Problemas que más cuestan</h2>
                   <div className="nb-dash-section-sub">Por envíos fallidos de la clase</div>
                   {datos.problemas.length ? (
@@ -210,8 +211,10 @@ const UserHistoryPage = () => {
                     </ul>
                   ) : <p className="nb-doc-vacio">Aún no hay envíos fallidos.</p>}
                 </section>
+                </div>
 
-                <section className="nb-dash-col is-5 nb-dash-card nb-dash-pad">
+                <div className="nb-dash-col is-5">
+                <section className="nb-dash-card nb-dash-pad">
                   <h2 className="nb-dash-section-title">Actividad de la clase</h2>
                   <div className="nb-dash-section-sub">Tiempo activo por día · últimos 14 días</div>
                   {datos.actividad.length ? (
@@ -225,6 +228,7 @@ const UserHistoryPage = () => {
                     </div>
                   ) : <p className="nb-doc-vacio">Sin actividad registrada en estos días.</p>}
                 </section>
+                </div>
               </div>
             </>
           )}

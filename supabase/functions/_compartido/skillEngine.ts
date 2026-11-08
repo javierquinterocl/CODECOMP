@@ -18,6 +18,8 @@ export interface Procesado {
   verdict: string;
   rating_change: number;
   first_solve: boolean;
+  /** Envios evaluados de este problema, contando este (sin errores del juez). */
+  intento?: number;
 }
 
 /**
@@ -141,12 +143,18 @@ export const procesarResultado = async (
     const cambios = await actualizarNivel(tx, envio.user_id as string);
     const cambio = Math.round(cambios.get(submissionId) ?? 0);
     await tx`UPDATE submissions SET rating_change = ${cambio} WHERE id = ${submissionId}`;
+    const [{ intento }] = await tx`
+      SELECT count(*)::int AS intento FROM submissions
+      WHERE user_id = ${envio.user_id} AND problem_id = ${envio.problem_id}
+        AND verdict NOT IN ('PENDING', 'ERROR_JUEZ')
+    `;
 
     return {
       submission_id: submissionId,
       verdict: veredicto,
       rating_change: cambio,
       first_solve: primerAcierto,
+      intento: intento as number,
     };
   }) as Procesado;
 };

@@ -55,5 +55,9 @@ export const getClases = async (user) =>
 export const unirseAClase = async (user, codigo) =>
   leer(await pedir(user, URL_UNIRSE, { cuerpo: { codigo } }), 'No se pudo entrar a la clase.');
 
+/** Nivel, evolución, temas, pendientes, actividad y autorización del propio estudiante. */
+export const getMiProgreso = async (user) =>
+  leer(await pedir(user, rutaApi('mi-progreso')), 'No se pudo cargar tu progreso.');
+
 export const crearClase = async (user, nombre) =>
   leer(await pedir(user, URL_CLASES, { cuerpo: { nombre } }), 'No se pudo crear la clase.');

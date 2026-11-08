@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio } from '../scripts/problemsData';
+import { LENGUAJES, NIVELES, buscarCategoria, buscarEjercicio, categoriaDeProblema } from '../scripts/problemsData';
 import { useFavoritos } from '../scripts/useFavoritos';
 import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from '../scripts/judge0Service';
 import { useAuth } from '../context/AuthContext';
@@ -62,6 +62,9 @@ const Detalle = () => {
   const esperaPista = pistaHasta ? Math.max(0, Math.ceil((pistaHasta - ahora) / 1000)) : 0;
 
   const problema = problemaReal || ejercicio;
+  const temaDelProblema = problema
+    ? buscarCategoria(categoriaDeProblema({ tags: problema.tags || [], dificultadRating: problema.dificultadRating }))
+    : null;
   if (!problema) {
     return (
       <div className="nb-dash-inner">
@@ -284,6 +287,21 @@ const Detalle = () => {
                     <span>Tiempo: <strong>{resultado.time || '(no disponible)'}</strong></span>
                     <span>Memoria: <strong>{resultado.memory || '(no disponible)'}</strong></span>
                   </div>
+                  {/* Lo que este envío significa para su avance (S5); solo con el juez adaptativo. */}
+                  {resultado.intento > 0 && (
+                    <div className="nb-ex-feedback-metrics">
+                      <span>Intento: <strong>{resultado.intento}</strong></span>
+                      {resultado.ratingChange !== 0 && (
+                        <span>Nivel: <strong>{resultado.ratingChange > 0 ? '+' : ''}{resultado.ratingChange}</strong></span>
+                      )}
+                      {resultado.casoFallido > 0 && <span>Falló en el caso: <strong>{resultado.casoFallido}</strong></span>}
+                      {resultado.verdict !== 'ACCEPTED' && temaDelProblema && (
+                        <Link className="nb-ex-feedback-repaso" to={`/dashboard/problemas/${temaDelProblema.slug}`}>
+                          Repasa {temaDelProblema.titulo} →
+                        </Link>
+                      )}
+                    </div>
+                  )}
                   {resultado.stdout !== undefined && (
                     <div className="nb-ex-feedback-output">
                       <span className="nb-ex-feedback-label">Salida</span>

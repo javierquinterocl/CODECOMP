@@ -184,6 +184,8 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
           verdict: procesado.verdict,
           ratingChange: procesado.rating_change,
           firstSolve: procesado.first_solve,
+          intento: procesado.intento,
+          casoFallido,
         },
       },
       cors,
