@@ -64,7 +64,13 @@ const progreso = async (ctx: Contexto): Promise<Response> => {
         WHERE p.user_id = ${userId} AND e.is_active
         ORDER BY p.visto_en DESC
       `;
-      return responder({ status: 200, cuerpo: { progreso: filas } }, cors);
+      // Resuelto = al menos un envio aceptado (desde la migracion 015 se guardan).
+      const resueltos = await sql`
+        SELECT DISTINCT e.nivel, e.numero
+        FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
+        WHERE f.user_id = ${userId} AND f.veredicto = 'ACEPTADO' AND e.is_active
+      `;
+      return responder({ status: 200, cuerpo: { progreso: filas, resueltos } }, cors);
     } catch (error) {
       console.error('Fundamentos progress error:', error);
       return responder(rechazo(500, 'consulta', 'No se pudo consultar tu avance.'), cors);

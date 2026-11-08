@@ -13,7 +13,7 @@ const SearchIcon = () => (
   </svg>
 );
 
-const Fila = ({ nivelSlug, ejercicio }) => (
+const Fila = ({ nivelSlug, ejercicio, resuelto }) => (
   <div className="nb-pb-row">
     <span className="nb-pb-row-num">{ejercicio.numero}</span>
 
@@ -28,6 +28,7 @@ const Fila = ({ nivelSlug, ejercicio }) => (
     <div className="nb-pb-row-nivel">
       <span className="nb-pb-row-nivel-label">{NIVELES[ejercicio.nivel]}</span>
       <NivelBarra nivel={ejercicio.nivel} />
+      {resuelto && <span className="nb-doc-estado is-on">Resuelto</span>}
     </div>
 
     <span className="nb-pb-row-go" aria-hidden="true">→</span>
@@ -38,7 +39,7 @@ const FundamentosListPage = () => {
   const { nivel: nivelSlug } = useParams();
   const nivel = buscarNivel(nivelSlug);
   const [busqueda, setBusqueda] = useState('');
-  const { ejercicios, cargando, error } = useFundamentos();
+  const { ejercicios, resueltos, cargando, error } = useFundamentos({ conVisitas: true });
   const delNivel = useMemo(() => (nivel && ejercicios?.[nivel.slug]) || [], [nivel, ejercicios]);
 
   const temas = useMemo(() => temasDe(delNivel), [delNivel]);
@@ -116,7 +117,9 @@ const FundamentosListPage = () => {
             <span className="nb-fd-grupo-text">{tema.resumen}</span>
           </div>
           <div className="nb-pb-list">
-            {ejercicios.map((e) => <Fila key={e.numero} nivelSlug={nivel.slug} ejercicio={e} />)}
+            {ejercicios.map((e) => (
+              <Fila key={e.numero} nivelSlug={nivel.slug} ejercicio={e} resuelto={Boolean(resueltos[nivel.slug]?.has(e.numero))} />
+            ))}
           </div>
         </section>
       ))}

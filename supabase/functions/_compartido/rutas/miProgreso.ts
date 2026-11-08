@@ -46,11 +46,19 @@ export const miProgreso = async (ctx: Contexto): Promise<Response> => {
       SELECT dia::text, segundos_activos AS segundos
       FROM actividad_diaria WHERE user_id = ${userId} AND dia >= current_date - 13 ORDER BY dia
     `;
+    // Fundamentos (PSeInt) cuenta en el avance, no en el nivel: sus ejercicios no tienen rating.
+    const fundamentos = await sql`
+      SELECT e.nivel, count(*)::int AS total,
+        count(*) FILTER (WHERE EXISTS (SELECT 1 FROM fundamentos_envios f
+          WHERE f.ejercicio_id = e.id AND f.user_id = ${userId} AND f.veredicto = 'ACEPTADO'))::int AS resueltos
+      FROM fundamentos_ejercicios e WHERE e.is_active GROUP BY e.nivel ORDER BY e.nivel
+    `;
     const escalon = await escalonDelUsuario(sql, userId);
     return responder({
       status: 200,
       cuerpo: {
         escalon,
+        fundamentos,
         usuario: { ...usuario, nivel: Number(usuario.nivel) },
         evolucion,
         temas,

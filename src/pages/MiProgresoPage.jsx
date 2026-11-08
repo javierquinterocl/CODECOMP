@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMiProgreso, responderDatos } from '../scripts/registroApi';
+import { getMiProgreso } from '../scripts/registroApi';
+import { buscarNivel } from '../scripts/fundamentosData';
 import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria } from '../scripts/docenteData';
 import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
+import NivelEvolucion from '../components/NivelEvolucion';
 
 const RESUELTOS_PARA_SUBIR = 5;
-import NivelEvolucion from '../components/NivelEvolucion';
 
 // La columna envuelve a la tarjeta: si la tarjeta fuera la columna, heredaría su separación grande.
 const Seccion = ({ titulo, sub, children, className = '' }) => {
@@ -38,19 +39,18 @@ const PendienteFila = ({ p }) => {
 
 /** Lo que el estudiante necesita para saber qué mejorar y qué resolver. Textos: borrador. */
 const MiProgresoPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
-  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
-    if (!user) return undefined;
+    if (!user || isAdmin) return undefined;
     let vigente = true;
     getMiProgreso(user)
       .then((data) => { if (vigente) setDatos(data); })
       .catch((e) => { if (vigente) setError(e.message); });
     return () => { vigente = false; };
-  }, [user]);
+  }, [user, isAdmin]);
 
   // Del tema más débil al más fuerte; los que nunca practicó van primero.
   const temas = useMemo(() => {
@@ -60,6 +60,8 @@ const MiProgresoPage = () => {
       .sort((a, b) => (porcentaje(a.dato) ?? -1) - (porcentaje(b.dato) ?? -1));
   }, [datos]);
 
+  // Solo para estudiantes (decisión del equipo): el docente va a su vista.
+  if (isAdmin) return <Navigate to="/historial-usuarios" replace />;
   if (error) return <div className="nb-dash-inner"><div className="nb-pb-empty"><p className="nb-pb-empty-title">{error}</p></div></div>;
   if (!datos) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando tu progreso…</p></div>;
 
@@ -69,19 +71,8 @@ const MiProgresoPage = () => {
   const abiertos = pendientes.filter((p) => !p.cerrado);
   const cerrados = pendientes.filter((p) => p.cerrado);
 
-  const cambiarAutorizacion = async () => {
-    const acepta = usuario.datos_autorizados !== true;
-    if (!acepta && !window.confirm('Si retiras la autorización, borraremos tu actividad registrada. ¿Continuar?')) return;
-    setGuardando(true);
-    try {
-      const r = await responderDatos(user, acepta);
-      setDatos((d) => ({ ...d, usuario: { ...d.usuario, datos_autorizados: r.autorizado }, actividad: r.autorizado ? d.actividad : [] }));
-    } catch (e) {
-      setError(e.message);
-    } finally {
-      setGuardando(false);
-    }
-  };
+  const fundamentos = datos.fundamentos || [];
+  const fundamentosHechos = fundamentos.reduce((t, f) => t + f.resueltos, 0);
 
   return (
     <div className="nb-dash-inner">
@@ -94,6 +85,7 @@ const MiProgresoPage = () => {
         <div className="nb-pb-hero-stats">
           <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Nivel</div><div className="nb-pb-hstat-value">{Math.round(usuario.nivel)}</div></div>
           <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Resueltos</div><div className="nb-pb-hstat-value">{usuario.resueltos}</div></div>
+          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Fundamentos</div><div className="nb-pb-hstat-value">{fundamentosHechos}</div></div>
           <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Esta semana</div><div className="nb-pb-hstat-value">{duracion(semana)}</div></div>
         </div>
       </div>
@@ -157,7 +149,7 @@ const MiProgresoPage = () => {
         <div className="nb-dash-row">
           <Seccion titulo="Tu actividad" sub="Tiempo activo por día · últimos 14 días" className="nb-dash-col is-7">
             {usuario.datos_autorizados !== true ? (
-              <p className="nb-doc-vacio">No registramos tu actividad porque no la has autorizado.</p>
+              <p className="nb-doc-vacio">No registramos tu actividad porque no la has autorizado. Puedes cambiarlo en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>
             ) : actividad.length ? (
               <div className="nb-doc-barras" role="img" aria-label="Tu tiempo activo por día">
                 {actividad.map((d) => (
@@ -170,22 +162,19 @@ const MiProgresoPage = () => {
             ) : <p className="nb-doc-vacio">Aún no hay actividad registrada.</p>}
           </Seccion>
 
-          <Seccion titulo="Tus datos" sub="Ley 1581 de 2012" className="nb-dash-col is-5">
-            <p className="nb-doc-nota nb-doc-nota-top">
-              {usuario.datos_autorizados === true
-                ? 'Autorizaste registrar tu tiempo activo, cuándo abres cada problema y cuántas veces pegas código. Si la retiras, borramos esa actividad.'
-                : 'No has autorizado el registro de tu actividad. Tus envíos y las pistas del tutor se guardan siempre, porque son parte del servicio.'}
-            </p>
-            <div className="nb-dash-aviso-acciones">
-              <button
-                type="button"
-                className={usuario.datos_autorizados === true ? `nb-dash-btn-claro${guardando ? ' is-busy' : ''}` : `nb-ex-send${guardando ? ' is-busy' : ''}`}
-                disabled={guardando}
-                onClick={cambiarAutorizacion}
-              >
-                {usuario.datos_autorizados === true ? 'Retirar autorización' : 'Autorizar'}
-              </button>
-            </div>
+          <Seccion titulo="Fundamentos (PSeInt)" sub="Ejercicios resueltos por nivel" className="nb-dash-col is-5">
+            <ul className="nb-doc-tabla">
+              {fundamentos.map((f) => (
+                <li key={f.nivel} className="nb-doc-fila">
+                  <span className="nb-doc-celda is-grande">
+                    <strong>{buscarNivel(f.nivel)?.titulo || f.nivel}</strong>
+                    <small>{f.resueltos} de {f.total} resueltos</small>
+                  </span>
+                  <Link className="nb-doc-filtro" to={`/dashboard/fundamentos/${f.nivel}`}>Practicar</Link>
+                </li>
+              ))}
+            </ul>
+            {!fundamentos.length && <p className="nb-doc-vacio">Aún no hay ejercicios de Fundamentos.</p>}
           </Seccion>
         </div>
       </div>

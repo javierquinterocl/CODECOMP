@@ -36,6 +36,8 @@ const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) =
     SELECT u.id, u.firebase_uid, u.username, u.email, u.nivel, u.solved_count, m.unido_en,
       (SELECT count(*)::int FROM submissions s
         WHERE s.user_id = u.id AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS envios,
+      (SELECT count(DISTINCT f.ejercicio_id)::int FROM fundamentos_envios f
+        WHERE f.user_id = u.id AND f.veredicto = 'ACEPTADO') AS fundamentos_resueltos,
       GREATEST(
         (SELECT max(created_at) FROM submissions WHERE user_id = u.id),
         (SELECT max(actualizado_en) FROM actividad_diaria WHERE user_id = u.id),
@@ -97,6 +99,7 @@ const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) =
         email: e.email,
         nivel: Number(e.nivel),
         resueltos: e.solved_count,
+        fundamentosResueltos: e.fundamentos_resueltos,
         envios: e.envios,
         unidoEn: e.unido_en,
         ultimaActividad: e.ultima_actividad,

@@ -193,6 +193,13 @@ export const updateSessionExit = async (sessionId, exitTime) => {
   }
 };
 
+/** Cambia el código del perfil (paso de 6 a 7 dígitos) y el de las sesiones abiertas. */
+export const actualizarCodigoPerfil = async (uid, codigo) => {
+  if (!hasFirebaseConfig || !db) throw new Error('La configuracion del proyecto no es valida.');
+  await updateDoc(doc(db, USERS_COLLECTION, uid), { codigo: normalizeString(codigo) });
+  await updateActiveSessionsCodigo(uid, normalizeString(codigo));
+};
+
 export const updateActiveSessionsCodigo = async (uid, codigo) => {
   if (!hasFirebaseConfig || !db) return;
   try {

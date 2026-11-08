@@ -53,6 +53,8 @@
 .nb-dash-streak { display: flex; align-items: center; gap: 8px; border: 2px solid #000; box-shadow: 3px 3px 0px var(--nb-blue); padding: clamp(5px,0.4vw,9px) clamp(9px,0.7vw,16px); }
 .nb-dash-streak-icon { font-size: var(--fs-base); line-height: 1; }
 .nb-dash-user { display: flex; align-items: center; gap: 10px; }
+a.nb-dash-user { color: inherit; text-decoration: none; }
+a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 .nb-dash-avatar { width: clamp(32px, 2vw + 22px, 52px); height: clamp(32px, 2vw + 22px, 52px); flex: 0 0 auto; aspect-ratio: 1; background: var(--nb-blue); border: 2px solid #000; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: var(--fs-lg); color: #fff; overflow: hidden; }
 .nb-dash-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .nb-dash-usertext { display: flex; flex-direction: column; gap: 1px; }
@@ -357,10 +359,24 @@
 /* Sobre el color de la dificultad el negro se pierde: se invierte el par. */
 .nb-dash-reco-val { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; background: var(--cat-ink, #000); color: var(--cat-bg, #fff); padding: 3px 7px; }
 
-/* Aviso de datos (Ley 1581): tarjeta fija abajo a la derecha hasta que el estudiante responde. */
-.nb-dash-aviso { position: fixed; right: var(--sp-main); bottom: var(--sp-main); z-index: 60; width: min(480px, calc(100vw - 32px)); box-shadow: 5px 5px 0px #000; }
-.nb-dash-aviso-text { font-size: var(--fs-sm); line-height: 1.55; color: var(--nb-ink-soft); margin: 0 0 16px; }
+/* Avisos fijos abajo a la derecha (cookies, código UFPSO), apilados hasta que el estudiante responde. */
+.nb-dash-avisos { position: fixed; right: var(--sp-main); bottom: var(--sp-main); z-index: 60; width: min(440px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
+.nb-dash-avisos.is-oculto { display: none; }
+.nb-dash-aviso { pointer-events: auto; box-shadow: 5px 5px 0px #000; }
+.nb-dash-aviso.is-corto { padding: clamp(14px, 1vw, 20px); }
+.nb-dash-aviso-text { font-size: var(--fs-sm); line-height: 1.55; color: var(--nb-ink-soft); margin: 0 0 14px; }
+.nb-dash-aviso-text strong { color: #000; }
+.nb-dash-aviso-text.is-detalle { border-left: 4px solid var(--nb-blue); padding-left: 12px; }
+.nb-dash-aviso-mas { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--nb-blue); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.nb-dash-aviso-mas:hover { color: #000; }
 .nb-dash-aviso-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+
+/* Mi cuenta: la acción de retirar la autorización es pequeña y roja para no tocarla por accidente. */
+.nb-cuenta-revocar { border: none; background: none; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-danger); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.nb-cuenta-revocar:hover:not(:disabled) { color: #000; }
+.nb-cuenta-revocar:disabled { opacity: 0.6; cursor: wait; }
+.nb-cuenta-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+.nb-cuenta-acciones .nb-dash-btn-claro { flex: 0 0 auto; }
 .nb-dash-btn-claro { flex: 1 1 140px; border: 2px solid #000; background: #fff; color: #000; font-family: inherit; font-weight: 700; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); cursor: pointer; box-shadow: 4px 4px 0px #000; transition: var(--nb-tr); }
 .nb-dash-btn-claro:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
 .nb-dash-btn-claro:disabled { opacity: 0.6; cursor: wait; }
@@ -378,7 +394,8 @@
 .nb-dash-clase-msg.is-error { color: var(--nb-danger); }
 
 @media (max-width: 640px) {
-  .nb-dash-aviso { left: 16px; right: 16px; bottom: 16px; width: auto; box-shadow: 3px 3px 0px #000; }
+  .nb-dash-avisos { left: 16px; right: 16px; bottom: 16px; width: auto; }
+  .nb-dash-aviso { box-shadow: 3px 3px 0px #000; }
   .nb-dash-btn-claro { box-shadow: 3px 3px 0px #000; }
 }
 
@@ -408,6 +425,8 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-tabla { list-style: none; margin: 14px 0 0; padding: 0; border-top: 1px solid #000; }
 .nb-doc-fila { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid #000; }
 .nb-doc-fila.is-col { flex-direction: column; align-items: stretch; }
+/* En columna, la base de 200px de .is-grande se volvería altura. */
+.nb-doc-fila.is-col > .nb-doc-celda { flex: 0 0 auto; }
 .nb-doc-fila-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .nb-doc-celda { flex: 0 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-sm); }
 .nb-doc-celda.is-grande { flex: 1 1 200px; }

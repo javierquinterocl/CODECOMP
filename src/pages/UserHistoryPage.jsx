@@ -151,6 +151,7 @@ const UserHistoryPage = () => {
                       </span>
                       <span className="nb-doc-dato"><small>Nivel</small><strong>{Math.round(e.nivel)}</strong></span>
                       <span className="nb-doc-dato"><small>Resueltos</small><strong>{e.resueltos}</strong></span>
+                      <span className="nb-doc-dato"><small>Fundamentos</small><strong>{e.fundamentosResueltos}</strong></span>
                       <span className="nb-doc-dato"><small>Envíos</small><strong>{e.envios}</strong></span>
                       <span className="nb-doc-dato"><small>Esta semana</small><strong>{duracion(e.segundosSemana)}</strong></span>
                       <span className="nb-pb-row-go" aria-hidden="true">→</span>

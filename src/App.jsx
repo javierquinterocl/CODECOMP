@@ -8,6 +8,7 @@ import DashboardPage from './pages/DashboardPage';
 import UserHistoryPage from './pages/UserHistoryPage';
 import EstudianteFichaPage from './pages/EstudianteFichaPage';
 import MiProgresoPage from './pages/MiProgresoPage';
+import MiCuentaPage from './pages/MiCuentaPage';
 import RecoverPage from './pages/RecoverPage';
 import ResetPage from './pages/ResetPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -105,6 +106,7 @@ function App() {
           <Route path="/dashboard/fundamentos/:nivel/:numero"     element={<FundamentosDetailPage />} />
           <Route path="/dashboard/retos"    element={<DailyChallengesPage />} />
           <Route path="/dashboard/progreso" element={<MiProgresoPage />} />
+          <Route path="/dashboard/cuenta"   element={<MiCuentaPage />} />
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/grupos"   element={<GruposPage />} />
           <Route path="/historial-usuarios" element={<UserHistoryPage />} />

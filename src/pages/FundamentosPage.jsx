@@ -79,13 +79,12 @@ const Logros = ({ logros }) => (
   </Plegable>
 );
 
-/* Pie de la tarjeta: dónde quedó el estudiante, el botón para seguir y el
-   interruptor del temporizador. Marca el último ejercicio abierto, no los
-   resueltos; sin visitas la barra va vacía y el botón lleva al primero. */
-const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) => {
+/* Pie de la tarjeta: cuántos resolvió (barra), dónde quedó (último abierto), el
+   botón para seguir y el interruptor del temporizador. Sin visitas el botón lleva al primero. */
+const PieNivel = ({ nivel, ejercicios, numero, resueltos, temporizador, onTemporizador }) => {
   const total = ejercicios.length;
   const ejercicio = ejercicios.find((e) => e.numero === numero);
-  const actual = ejercicio ? numero : 0;
+  const hechos = ejercicios.filter((e) => resueltos?.has(e.numero)).length;
   const destino = ejercicio ? numero : ejercicios[0]?.numero;
   const accionReloj = temporizador ? 'Desactivar el temporizador' : 'Activar el temporizador';
 
@@ -94,11 +93,11 @@ const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) =
       <div className="nb-fd-avance">
         {!nivel.pronto && (
           <div className="nb-fd-avance-info">
-            <span className="nb-fd-avance-label">
-              {ejercicio ? `Vas en el ejercicio ${actual} de ${total}` : `Ejercicio 0 de ${total}`}
-            </span>
+            <span className="nb-fd-avance-label">{`${hechos} de ${total} resueltos`}</span>
             {ejercicio && (
-              <span className="nb-fd-avance-tema">{buscarTema(ejercicio.tema).titulo} · {ejercicio.titulo}</span>
+              <span className="nb-fd-avance-tema">
+                Último: {numero} · {buscarTema(ejercicio.tema).titulo} · {ejercicio.titulo}
+              </span>
             )}
           </div>
         )}
@@ -107,10 +106,10 @@ const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) =
           role="progressbar"
           aria-valuemin={0}
           aria-valuemax={total}
-          aria-valuenow={actual}
-          aria-label={`Ejercicio ${actual} de ${total}`}
+          aria-valuenow={hechos}
+          aria-label={`${hechos} de ${total} ejercicios resueltos`}
         >
-          {actual > 0 && <div style={{ width: `${(actual / total) * 100}%` }} />}
+          {hechos > 0 && <div style={{ width: `${(hechos / total) * 100}%` }} />}
         </div>
       </div>
 
@@ -137,7 +136,7 @@ const PieNivel = ({ nivel, ejercicios, numero, temporizador, onTemporizador }) =
 
 /* Tres franjas: el nivel arriba, la presentación al centro (texto a la
    izquierda, ventana de código a la derecha) y el avance abajo. */
-const TarjetaNivel = ({ nivel, ejercicios, visita, temporizador, onTemporizador }) => (
+const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTemporizador }) => (
   <div
     className={`nb-fd-card${nivel.pronto ? ' is-soon' : ''}`}
     style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.franja }}
@@ -175,6 +174,7 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, temporizador, onTemporizador 
       nivel={nivel}
       ejercicios={ejercicios}
       numero={visita}
+      resueltos={resueltos}
       temporizador={temporizador}
       onTemporizador={onTemporizador}
     />
@@ -184,7 +184,7 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, temporizador, onTemporizador 
 const FundamentosPage = () => {
   const [actual, setActual] = useState(0);
   // Se piden al entrar: al volver de un ejercicio la página se monta de nuevo.
-  const { ejercicios, visitas, cargando, error } = useFundamentos({ conVisitas: true });
+  const { ejercicios, visitas, resueltos, cargando, error } = useFundamentos({ conVisitas: true });
   // Una sola preferencia para todos los niveles; el editor la lee al abrir un ejercicio.
   const [temporizador, setTemporizador] = useState(temporizadorActivo);
   const alternarTemporizador = () => setTemporizador((v) => {
@@ -251,6 +251,7 @@ const FundamentosPage = () => {
                     nivel={nivel}
                     ejercicios={delNivel}
                     visita={visitas[nivel.slug]}
+                    resueltos={resueltos[nivel.slug]}
                     temporizador={temporizador}
                     onTemporizador={alternarTemporizador}
                   />

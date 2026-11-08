@@ -220,7 +220,7 @@ const DashboardPage = () => {
                   <h3 className="nb-dash-name">{displayName}</h3>
                   <div className="nb-dash-email">{user?.email}</div>
                 </div>
-                <Link to="/reset" title="Editar perfil" aria-label="Editar perfil" className="nb-dash-edit">
+                <Link to="/dashboard/cuenta" title="Mi cuenta" aria-label="Mi cuenta" className="nb-dash-edit">
                   <PencilIcon />
                 </Link>
               </div>

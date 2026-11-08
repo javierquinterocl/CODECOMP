@@ -26,8 +26,14 @@ const pedir = async (user, url, { cuerpo, ...extra } = {}) => fetch(url, {
 export const getDatos = async (user) =>
   leer(await pedir(user, URL_DATOS), 'No se pudo consultar tu autorización.');
 
-export const responderDatos = async (user, acepta) =>
-  leer(await pedir(user, URL_DATOS, { cuerpo: { acepta } }), 'No se pudo guardar tu respuesta.');
+/** Se emite al cambiar la autorización; el registro de actividad lo escucha. */
+export const EVENTO_DATOS = 'codecomp:datos';
+
+export const responderDatos = async (user, acepta) => {
+  const data = await leer(await pedir(user, URL_DATOS, { cuerpo: { acepta } }), 'No se pudo guardar tu respuesta.');
+  window.dispatchEvent(new CustomEvent(EVENTO_DATOS, { detail: data.autorizado }));
+  return data;
+};
 
 /** Primera y última apertura de un problema. Si falla, el ejercicio sigue usable. */
 export const registrarApertura = (user, problemNumber) =>

@@ -4,7 +4,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../scripts/firebaseConfig';
 import { ADMIN_EMAILS } from '../scripts/config';
-import { getUserSessions, updateSessionExit } from '../scripts/registerService';
+import { actualizarCodigoPerfil, getUserSessions, updateSessionExit } from '../scripts/registerService';
 import { cerrarSesionCookie } from '../scripts/registroApi';
 
 const AuthContext = createContext(null);
@@ -65,6 +65,13 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Guarda el código nuevo en el perfil y lo refleja en la cabecera sin recargar.
+  const actualizarCodigoEstudiante = async (codigo) => {
+    if (!user) return;
+    await actualizarCodigoPerfil(user.uid, codigo);
+    setCodigoEstudiante(codigo.trim());
+  };
+
   const displayName = user?.displayName || user?.email?.split('@')[0] || 'Usuario';
   const firstName = displayName.trim().split(/\s+/)[0];
 
@@ -72,6 +79,7 @@ export const AuthProvider = ({ children }) => {
     user,
     isAdmin,
     codigoEstudiante,
+    actualizarCodigoEstudiante,
     storedPhotoURL,
     displayName,
     firstName,

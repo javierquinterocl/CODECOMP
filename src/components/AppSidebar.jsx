@@ -67,7 +67,8 @@ const AppSidebar = () => {
         <NavItem label="Fundamentos" to="/dashboard/fundamentos" icono={<BookIcon />} />
         <NavItem label="Problemas" to="/dashboard/problemas" icono={<CpuIcon />} />
         <NavItem label="Retos Diarios" to="/dashboard/retos" icono={<TargetIcon />} />
-        <NavItem label="Mi progreso" to="/dashboard/progreso" icono={<ChartIcon />} />
+        {/* Mi progreso es del estudiante; el docente tiene su vista en Estudiantes. */}
+        {!isAdmin && <NavItem label="Mi progreso" to="/dashboard/progreso" icono={<ChartIcon />} />}
         <NavItemSoon label="Rankings" icono={<TrophyIcon />} />
         {/* Estudiantes queda restringido a administradores, como estaba antes */}
         {isAdmin && <NavItem label="Estudiantes" to="/historial-usuarios" icono={<UsersIcon />} />}
