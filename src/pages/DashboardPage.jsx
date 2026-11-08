@@ -120,7 +120,7 @@ const MemberRow = ({ pos, nombre, desde, resueltos, envios, nivel, me = false })
 );
 
 const DashboardPage = () => {
-  const { user, displayName, firstName, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
+  const { user, isAdmin, displayName, firstName, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
   const [photoError, setPhotoError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
@@ -182,11 +182,15 @@ const DashboardPage = () => {
         </div>
 
         <div className="nb-dash-hero-inner">
-          <div className="nb-dash-hero-kicker">Panel del estudiante</div>
+          <div className="nb-dash-hero-kicker">{isAdmin ? 'Panel docente' : 'Panel del estudiante'}</div>
           <h1 className="nb-dash-hero-title">
             Bienvenido de nuevo,<span className="nb-dash-hero-name">{firstName}!</span>
           </h1>
-          <p className="nb-dash-hero-text">¿Listo para los algoritmos de hoy? Sigue explorando y mejorando tus habilidades en código.</p>
+          <p className="nb-dash-hero-text">
+            {isAdmin
+              ? 'Revisa cómo va tu clase en Estudiantes y comparte el código de la clase con quienes falten.'
+              : '¿Listo para los algoritmos de hoy? Sigue explorando y mejorando tus habilidades en código.'}
+          </p>
         </div>
       </div>
 
