@@ -85,7 +85,13 @@ try {
           description_markdown_es = EXCLUDED.description_markdown_es,
           translated_at = EXCLUDED.translated_at, difficulty_rating = EXCLUDED.difficulty_rating,
           time_limit_sec = EXCLUDED.time_limit_sec, memory_limit_mb = EXCLUDED.memory_limit_mb,
-          is_active = EXCLUDED.is_active, deactivation_reasons = EXCLUDED.deactivation_reasons,
+          -- Una reserva de torneo hecha desde el panel del jurado no se deshace al recargar.
+          is_active = EXCLUDED.is_active AND NOT ('torneo' = ANY(problems.deactivation_reasons)),
+          deactivation_reasons = CASE
+            WHEN 'torneo' = ANY(problems.deactivation_reasons)
+              AND NOT ('torneo' = ANY(EXCLUDED.deactivation_reasons))
+            THEN array_append(EXCLUDED.deactivation_reasons, 'torneo')
+            ELSE EXCLUDED.deactivation_reasons END,
           fuente = EXCLUDED.fuente, fuente_url = EXCLUDED.fuente_url,
           rating_origen = EXCLUDED.rating_origen, casos_generados = EXCLUDED.casos_generados
         WHERE problems.fuente IS NOT NULL

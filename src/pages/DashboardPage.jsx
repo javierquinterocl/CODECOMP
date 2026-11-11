@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getProgress } from '../scripts/progressApi';
 import { getRecommendations } from '../scripts/recommendationApi';
 import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
-import { PencilIcon, CpuIcon, TrophyIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
+import { PencilIcon, CpuIcon, FlagIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
 import ClaseCard from '../components/ClaseCard';
 import { getClases } from '../scripts/registroApi';
 import { nombreVisible } from '../scripts/docenteData';
@@ -254,17 +254,19 @@ const DashboardPage = () => {
               <span className="nb-dash-module-go" aria-hidden="true">↗</span>
             </Link>
 
-            <div className="nb-dash-pad nb-dash-module is-soon">
-              <div className="nb-dash-icon is-white"><TrophyIcon /></div>
+            <Link to="/dashboard/competencias" className="nb-dash-card nb-dash-link-card nb-dash-pad nb-dash-module">
+              <div className="nb-dash-icon"><FlagIcon /></div>
               <div className="nb-dash-grow">
-                <div className="nb-dash-kicker-row">
-                  <span className="nb-dash-kicker is-ink">Módulo</span>
-                  <span className="nb-dash-tag">Próximamente</span>
-                </div>
+                <div className="nb-dash-kicker">Módulo</div>
                 <h3 className="nb-dash-h3 is-gap">Competencias</h3>
-                <p className="nb-dash-body-text">Este módulo se activa en la feria de proyectos de la UFPSO.</p>
+                <p className="nb-dash-body-text">
+                  {isAdmin
+                    ? 'Organiza maratones con juez oficial: equipos, problemas y marcador desde CODECOMP.'
+                    : 'Compite con tu equipo en maratones con juez oficial, como en la sede.'}
+                </p>
               </div>
-            </div>
+              <span className="nb-dash-module-go" aria-hidden="true">↗</span>
+            </Link>
           </div>
         </div>
 
@@ -277,7 +279,7 @@ const DashboardPage = () => {
               Has resuelto {progress?.user?.solved_count ?? 0} problemas de {progress?.user?.attempted_count ?? 0} intentos registrados. Continúa practicando para fortalecer tus tags más débiles.
             </p>
             <div className="nb-dash-progress"><div style={{ width: `${Math.min(100, ((progress?.user?.solved_count || 0) / Math.max(progress?.user?.attempted_count || 1, 1)) * 100)}%` }} /></div>
-            <Link to="/dashboard/retos" className="nb-dash-cta">Continuar<span className="nb-mono">→</span></Link>
+            <Link to="/dashboard/problemas" className="nb-dash-cta">Continuar<span className="nb-mono">→</span></Link>
           </div>
 
           <div className="nb-dash-terminal">
