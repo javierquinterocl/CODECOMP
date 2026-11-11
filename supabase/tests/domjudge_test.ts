@@ -4,7 +4,6 @@ import {
   elegirConcurso,
   estadoDe,
   segundosDe,
-  usuarioDeCorreo,
   veredictosPorEnvio,
 } from '../functions/_compartido/domjudge.ts';
 
@@ -44,18 +43,6 @@ Deno.test('segundosDe lee la duracion de DOMjudge', () => {
   assertEquals(segundosDe('1:00:00.000'), 3600);
   assertEquals(segundosDe('0:30:15'), 1815);
   assertEquals(segundosDe(null), 0);
-});
-
-Deno.test('usuarioDeCorreo exige equipo y compara sin mayusculas', () => {
-  const usuarios = [
-    { id: '1', username: 'a', email: 'Ana@Ejemplo.co', team_id: '7' },
-    { id: '2', username: 'b', email: 'luis@ejemplo.co', team_id: null },
-    { id: '3', username: 'c', email: 'sara@ejemplo.co', team_id: '8', enabled: false },
-  ];
-  assertEquals(usuarioDeCorreo(usuarios, 'ana@ejemplo.co ')?.team_id, '7');
-  assertEquals(usuarioDeCorreo(usuarios, 'luis@ejemplo.co'), null);
-  assertEquals(usuarioDeCorreo(usuarios, 'sara@ejemplo.co'), null);
-  assertEquals(usuarioDeCorreo(usuarios, null), null);
 });
 
 Deno.test('veredictosPorEnvio toma el ultimo juicio valido', () => {

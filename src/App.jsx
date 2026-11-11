@@ -15,6 +15,8 @@ import CompleteProfilePage from './pages/CompleteProfilePage';
 import DailyChallengesPage from './pages/DailyChallengesPage';
 import TournamentsPage from './pages/TournamentsPage';
 import CompetenciasPage from './pages/CompetenciasPage';
+import JuradoCompetenciasPage from './pages/JuradoCompetenciasPage';
+import JuradoCompetenciaPage from './pages/JuradoCompetenciaPage';
 import GruposPage from './pages/GruposPage';
 import HomePage from './pages/HomePage';
 import ProblemsPage from './pages/ProblemsPage';
@@ -110,6 +112,8 @@ function App() {
           <Route path="/dashboard/cuenta"   element={<MiCuentaPage />} />
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/competencias" element={<CompetenciasPage />} />
+          <Route path="/dashboard/competencias/jurado" element={<JuradoCompetenciasPage />} />
+          <Route path="/dashboard/competencias/jurado/:cid" element={<JuradoCompetenciaPage />} />
           <Route path="/dashboard/grupos"   element={<GruposPage />} />
           <Route path="/historial-usuarios" element={<UserHistoryPage />} />
           <Route path="/historial-usuarios/:id" element={<EstudianteFichaPage />} />

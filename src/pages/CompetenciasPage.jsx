@@ -2,9 +2,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { FlagIcon } from '../components/AppIcons';
 import NbSelect from '../components/NbSelect';
-import { Editor } from '../components/ExerciseBits';
+import { Link } from 'react-router-dom';
+import { Editor, Ejemplo } from '../components/ExerciseBits';
+import { Enunciado } from '../components/ProblemBits';
 import { JUEZ_URL } from '../scripts/config';
-import { enviarSolucion, getCompetencia, getEnunciado, getMarcador, getMisEnvios } from '../scripts/competenciasApi';
+import {
+  enviarSolucion, getCompetencia, getEnunciado, getMarcador, getMisEnvios, getProblemaCompetencia,
+} from '../scripts/competenciasApi';
 
 // Lenguaje de DOMjudge -> resaltado del editor y plantilla inicial.
 const LENGUAJES = {
@@ -71,9 +75,9 @@ const Cabecera = ({ datos, tiempo }) => (
       <div className="nb-dash-kicker">Competencias</div>
       <h1 className="nb-comp-titulo">{datos.concurso.nombre}</h1>
       <p className="nb-comp-sub">
-        {datos.equipo
-          ? <>Tu equipo: <strong>{datos.equipo.nombre}</strong>. Juez oficial de maratón, sin ayudas de IA.</>
-          : 'No estás inscrito en esta competencia. Pídele a tu docente que agregue tu correo a un equipo.'}
+        {datos.equipo.retirado
+          ? <>Tu equipo <strong>{datos.equipo.nombre}</strong> fue retirado de esta competencia: no puede enviar.</>
+          : <>Tu equipo: <strong>{datos.equipo.nombre}</strong>. Juez oficial de maratón, sin ayudas de IA.</>}
       </p>
     </div>
     {tiempo && (
@@ -91,7 +95,8 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
   const elegido = datos.problemas.some((p) => p.id === elegidoManual) ? elegidoManual : datos.problemas[0]?.id ?? null;
   const [lenguaje, setLenguaje] = useState(datos.lenguajes[0]?.id ?? 'cpp');
   const [borradores, setBorradores] = useState(leerBorradores);
-  const [pdf, setPdf] = useState({ id: null, url: null, error: '' });
+  // Enunciado del problema elegido: del banco (texto de CODECOMP) o PDF de un paquete propio.
+  const [pdf, setPdf] = useState({ id: null, url: null, banco: null, error: '' });
   const [enviando, setEnviando] = useState(false);
   const [aviso, setAviso] = useState(null);
   const [claro, setClaro] = useState(false);
@@ -101,16 +106,24 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
   const llave = `${datos.concurso.id}:${elegido}:${lenguaje}`;
   const codigo = borradores[llave] ?? LENGUAJES[lenguaje]?.plantilla ?? '';
 
-  // El PDF se pide al elegir un problema; la URL local se libera al cambiar.
+  // El enunciado se pide al elegir un problema; la URL local del PDF se libera al cambiar.
+  const esBanco = Boolean(problema?.banco);
   useEffect(() => {
     if (!elegido) return undefined;
     let vivo = true;
     let url = null;
-    getEnunciado(user, elegido)
-      .then((u) => { url = u; if (vivo) setPdf({ id: elegido, url: u, error: '' }); else URL.revokeObjectURL(u); })
-      .catch((e) => { if (vivo) setPdf({ id: elegido, url: null, error: e.message }); });
+    const fallo = (e) => { if (vivo) setPdf({ id: elegido, url: null, banco: null, error: e.message }); };
+    if (esBanco) {
+      getProblemaCompetencia(user, elegido)
+        .then((p) => { if (vivo) setPdf({ id: elegido, url: null, banco: p, error: '' }); })
+        .catch(fallo);
+    } else {
+      getEnunciado(user, elegido)
+        .then((u) => { url = u; if (vivo) setPdf({ id: elegido, url: u, banco: null, error: '' }); else URL.revokeObjectURL(u); })
+        .catch(fallo);
+    }
     return () => { vivo = false; if (url) URL.revokeObjectURL(url); };
-  }, [user, elegido]);
+  }, [user, elegido, esBanco]);
 
   const cambiarCodigo = (v) => {
     setBorradores((previos) => {
@@ -145,8 +158,9 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
   }
 
   const ultimos = envios.filter((e) => e.problema === problema?.letra).slice(0, 3);
-  const puedeEnviar = Boolean(datos.equipo) && tiempo?.fase === 'en-curso';
-  const pdfActual = pdf.id === elegido ? pdf : { url: null, error: '' };
+  const puedeEnviar = Boolean(datos.equipo) && !datos.equipo.retirado && tiempo?.fase === 'en-curso';
+  const pdfActual = pdf.id === elegido ? pdf : { url: null, banco: null, error: '' };
+  const textoBanco = pdfActual.banco && (pdfActual.banco.textos.es || pdfActual.banco.textos.en);
 
   return (
     <div className={`nb-ex nb-comp-ex${expandido ? ' is-expanded' : ''}`}>
@@ -175,7 +189,18 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
             </div>
             {problema.limiteSegundos && <span className="nb-pb-tag">{problema.limiteSegundos} s</span>}
           </div>
-          {pdfActual.url ? (
+          {textoBanco ? (
+            <div className="nb-comp-texto-enunciado">
+              <Enunciado bloques={textoBanco.descripcion} lang={pdfActual.banco.textos.es ? 'es' : 'en'} />
+              {pdfActual.banco.ejemplos.length > 0 && (
+                <div className="nb-ex-samples">
+                  {pdfActual.banco.ejemplos.map((ej, i) => (
+                    <Ejemplo key={i} n={i + 1} entrada={ej.entrada} salida={ej.salida} />
+                  ))}
+                </div>
+              )}
+            </div>
+          ) : pdfActual.url ? (
             <>
               <object className="nb-comp-pdf" data={pdfActual.url} type="application/pdf" aria-label={`Enunciado de ${problema.nombre}`}>
                 <p className="nb-doc-vacio">Tu navegador no muestra PDF aquí.</p>
@@ -308,7 +333,7 @@ const Marcador = ({ user }) => {
 
 /** Competencias: concurso en vivo con el juez DOMjudge por debajo. */
 const CompetenciasPage = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
   const [pestana, setPestana] = useState('problemas');
@@ -372,13 +397,20 @@ const CompetenciasPage = () => {
       </div>
     );
   }
+  const panelJurado = isAdmin && (
+    <Link className="nb-dash-btn-claro nb-comp-jurado" to="/dashboard/competencias/jurado">Panel del jurado</Link>
+  );
+
   if (!datos) return <div className="nb-dash-inner is-wide nb-comp"><p className="nb-doc-vacio">Cargando competencia…</p></div>;
   if (!datos.concurso) {
     return (
       <div className="nb-dash-inner is-wide nb-comp">
         <div className="nb-pb-empty">
-          <div className="nb-pb-empty-title">No hay competencias programadas</div>
-          <p>Cuando tu docente programe una, aparecerá aquí.</p>
+          <div className="nb-pb-empty-title">{isAdmin ? 'Organiza una competencia' : 'No estás inscrito en ninguna competencia'}</div>
+          <p>{isAdmin
+            ? 'Desde el panel del jurado creas la competencia, armas los equipos y eliges los problemas.'
+            : 'Cuando tu docente te agregue a un equipo, la competencia aparecerá aquí.'}</p>
+          {panelJurado}
         </div>
       </div>
     );
@@ -386,6 +418,7 @@ const CompetenciasPage = () => {
 
   return (
     <div className="nb-dash-inner is-wide nb-comp">
+      {panelJurado}
       <Cabecera datos={datos} tiempo={tiempo} />
 
       <div className="nb-doc-filtros nb-comp-pestanas" role="tablist">

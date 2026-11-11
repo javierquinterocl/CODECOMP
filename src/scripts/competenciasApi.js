@@ -1,4 +1,5 @@
 import { rutaApi } from './apiBase';
+import { mapProblem } from './problemsApi';
 
 const leer = async (response, porDefecto) => {
   const data = await response.json().catch(() => ({}));
@@ -37,3 +38,18 @@ export const getEnunciado = async (user, problema) => {
   }
   return URL.createObjectURL(await r.blob());
 };
+
+/** Enunciado de un problema que viene del banco, ya con la forma de `mapProblem`. */
+export const getProblemaCompetencia = async (user, problema) => {
+  const { problem } = await leer(
+    await pedir(user, `competencias/problema/${encodeURIComponent(problema)}`),
+    'No se pudo abrir el enunciado.',
+  );
+  return mapProblem(problem);
+};
+
+export const getAclaraciones = async (user) =>
+  leer(await pedir(user, 'competencias/aclaraciones'), 'No se pudieron cargar las aclaraciones.');
+
+export const preguntarAlJurado = async (user, texto, problema) =>
+  leer(await pedir(user, 'competencias/aclaraciones', { texto, problema: problema || undefined }), 'No se pudo enviar la pregunta.');

@@ -19,6 +19,7 @@ import { actividad, clases, datos } from '../_compartido/rutas/registro.ts';
 import { docente } from '../_compartido/rutas/docente.ts';
 import { miProgreso } from '../_compartido/rutas/miProgreso.ts';
 import { competencias } from '../_compartido/rutas/competencias.ts';
+import { jurado } from '../_compartido/rutas/jurado.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -99,6 +100,8 @@ Deno.serve(async (req: Request) => {
         return await notificaciones(ctx);
       case 'competencias':
         return await competencias(ctx, segmentos[1], segmentos[2]);
+      case 'jurado':
+        return await jurado(ctx, segmentos.slice(1));
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }
