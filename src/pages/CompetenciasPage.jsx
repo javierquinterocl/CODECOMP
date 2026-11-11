@@ -6,9 +6,13 @@ import { Link } from 'react-router-dom';
 import { Editor, Ejemplo } from '../components/ExerciseBits';
 import { Enunciado } from '../components/ProblemBits';
 import { JUEZ_URL } from '../scripts/config';
+import MarcadorTabla from '../components/competencias/MarcadorTabla';
+import Aclaraciones from '../components/competencias/Aclaraciones';
 import {
-  enviarSolucion, getCompetencia, getEnunciado, getMarcador, getMisEnvios, getProblemaCompetencia,
+  enviarSolucion, getAclaraciones, getCompetencia, getEnunciado, getMarcador, getMisEnvios,
+  getProblemaCompetencia, preguntarAlJurado,
 } from '../scripts/competenciasApi';
+import { claseVeredicto, VEREDICTOS } from '../scripts/competenciasData';
 
 // Lenguaje de DOMjudge -> resaltado del editor y plantilla inicial.
 const LENGUAJES = {
@@ -18,19 +22,7 @@ const LENGUAJES = {
   python3: { resaltado: 'python', plantilla: 'import sys\n\n\ndef main():\n    pass\n\n\nmain()\n' },
 };
 
-const VEREDICTOS = {
-  AC: 'Aceptado',
-  WA: 'Respuesta incorrecta',
-  TLE: 'Tiempo límite excedido',
-  RTE: 'Error en ejecución',
-  CE: 'Error de compilación',
-  MLE: 'Memoria excedida',
-  OLE: 'Salida demasiado larga',
-  NO: 'Sin salida',
-  pendiente: 'Juzgando…',
-};
-
-const PESTANAS = [['problemas', 'Problemas'], ['envios', 'Mis envíos'], ['marcador', 'Marcador']];
+const PESTANAS = [['problemas', 'Problemas'], ['envios', 'Mis envíos'], ['marcador', 'Marcador'], ['aclaraciones', 'Aclaraciones']];
 
 const BORRADORES = 'codecomp:competencia:borradores';
 const leerBorradores = () => {
@@ -46,8 +38,6 @@ const reloj = (segundos) => {
   const m = Math.floor((s % 3600) / 60);
   return `${h}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
 };
-
-const claseVeredicto = (v) => (v === 'AC' ? 'is-ok' : v === 'pendiente' ? 'is-wait' : 'is-fail');
 
 /** Reloj del concurso con la hora del servidor, para no depender del reloj del computador. */
 const useReloj = (concurso, desfase) => {
@@ -295,39 +285,33 @@ const Marcador = ({ user }) => {
     return <div className="nb-pb-empty"><div className="nb-pb-empty-title">El marcador aparece cuando empiece</div></div>;
   }
   return (
-    <div className="nb-dash-card nb-comp-panel">
-      {tabla.congelado && <p className="nb-comp-congelado">Marcador congelado: los envíos de la última hora se revelan al final.</p>}
-      <div className="nb-comp-tabla-caja">
-        <table className="nb-comp-tabla">
-          <thead>
-            <tr>
-              <th>#</th><th className="is-equipo">Equipo</th><th>Resueltos</th><th>Tiempo</th>
-              {tabla.letras.map((l) => <th key={l}>{l}</th>)}
-            </tr>
-          </thead>
-          <tbody>
-            {tabla.filas.map((f) => (
-              <tr key={f.equipo} className={f.propio ? 'is-propio' : ''}>
-                <td>{f.puesto}</td>
-                <td className="is-equipo">{f.equipo}</td>
-                <td><strong>{f.resueltos}</strong></td>
-                <td>{f.tiempo}</td>
-                {f.problemas.map((p) => (
-                  <td key={p.letra} className={`nb-comp-celda${p.resuelto ? ' is-ok' : p.pendientes ? ' is-wait' : p.intentos ? ' is-fail' : ''}${p.primero ? ' is-primero' : ''}`}>
-                    {p.intentos > 0 && (
-                      <>
-                        <span>{p.intentos} {p.intentos === 1 ? 'intento' : 'intentos'}</span>
-                        {p.resuelto && <small>{p.minuto} min</small>}
-                      </>
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <MarcadorTabla
+      tabla={tabla}
+      aviso={tabla.congelado ? 'Marcador congelado: los envíos de la última hora se revelan al final.' : ''}
+    />
+  );
+};
+
+const AclaracionesEstudiante = ({ user, datos, tiempo }) => {
+  const [lista, setLista] = useState(null);
+  const [error, setError] = useState('');
+  const cargar = useCallback(() => getAclaraciones(user)
+    .then((d) => { setLista(d.aclaraciones); setError(''); })
+    .catch((e) => setError(e.message)), [user]);
+  useEffect(() => {
+    cargar();
+    const t = setInterval(cargar, 30_000);
+    return () => clearInterval(t);
+  }, [cargar]);
+
+  if (!lista) return <p className="nb-doc-vacio">{error || 'Cargando aclaraciones…'}</p>;
+  return (
+    <Aclaraciones
+      lista={lista}
+      problemas={datos.problemas}
+      puedeEnviar={tiempo?.fase === 'en-curso' && !datos.equipo.retirado}
+      onEnviar={async ({ texto, problema }) => { await preguntarAlJurado(user, texto, problema); await cargar(); }}
+    />
   );
 };
 
@@ -442,6 +426,7 @@ const CompetenciasPage = () => {
       )}
       {pestana === 'envios' && <MisEnvios envios={envios} />}
       {pestana === 'marcador' && <Marcador user={user} />}
+      {pestana === 'aclaraciones' && <AclaracionesEstudiante user={user} datos={datos} tiempo={tiempo} />}
     </div>
   );
 };

@@ -73,3 +73,30 @@ export const quitarProblema = (user, cid, djId) =>
 
 export const liberarProblemas = (user, cid) =>
   pedir(user, `competencias/${enc(cid)}/liberar`, { cuerpo: {}, porDefecto: 'No se pudieron liberar los problemas.' });
+
+// ── Durante la competencia ──
+
+export const getEnviosJurado = (user, cid) =>
+  pedir(user, `competencias/${enc(cid)}/envios`, { porDefecto: 'No se pudieron cargar los envíos.' });
+
+export const getCodigoEnvio = (user, cid, id) =>
+  pedir(user, `competencias/${enc(cid)}/envios/${enc(id)}/codigo`, { porDefecto: 'No se pudo abrir el código.' });
+
+export const getAclaracionesJurado = (user, cid) =>
+  pedir(user, `competencias/${enc(cid)}/aclaraciones`, { porDefecto: 'No se pudieron cargar las aclaraciones.' });
+
+/** `{ texto, equipo (teamId o null = todos), responderA (id o null) }`. */
+export const responderAclaracion = (user, cid, datos) =>
+  pedir(user, `competencias/${enc(cid)}/aclaraciones`, { cuerpo: datos, porDefecto: 'No se pudo enviar.' });
+
+export const getGlobos = (user, cid) =>
+  pedir(user, `competencias/${enc(cid)}/globos`, { porDefecto: 'No se pudieron cargar los globos.' });
+
+export const marcarGlobo = (user, cid, id) =>
+  pedir(user, `competencias/${enc(cid)}/globos/${enc(id)}`, { cuerpo: {}, porDefecto: 'No se pudo marcar el globo.' });
+
+export const getMarcadorJurado = (user, cid) =>
+  pedir(user, `competencias/${enc(cid)}/marcador`, { porDefecto: 'No se pudo cargar el marcador.' });
+
+export const descongelarMarcador = (user, cid) =>
+  pedir(user, `competencias/${enc(cid)}/descongelar`, { cuerpo: {}, porDefecto: 'No se pudo descongelar.' });

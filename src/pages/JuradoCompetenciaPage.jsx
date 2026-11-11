@@ -3,15 +3,38 @@ import { Link, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { FlagIcon } from '../components/AppIcons';
 import NbSelect from '../components/NbSelect';
+import MarcadorTabla from '../components/competencias/MarcadorTabla';
+import Aclaraciones from '../components/competencias/Aclaraciones';
 import { JUEZ_URL } from '../scripts/config';
 import {
   agregarDelBanco, agregarMiembro, archivarCompetencia, buscarBanco, buscarEstudiantes, cambiarInicio,
-  crearEquipo, editarEquipo, getCompetenciaJurado, liberarProblemas, nuevaClaveEquipo, quitarMiembro,
-  quitarProblema, subirPaquete,
+  crearEquipo, descongelarMarcador, editarEquipo, getAclaracionesJurado, getCodigoEnvio, getCompetenciaJurado,
+  getEnviosJurado, getGlobos, getMarcadorJurado, liberarProblemas, marcarGlobo, nuevaClaveEquipo, quitarMiembro,
+  quitarProblema, responderAclaracion, subirPaquete,
 } from '../scripts/juradoApi';
-import { ESTADOS, fechaCorta, isoDesdeLocal, LETRAS, localDesdeIso } from '../scripts/competenciasData';
+import {
+  claseVeredicto, ESTADOS, fechaCorta, isoDesdeLocal, LETRAS, localDesdeIso, VEREDICTOS,
+} from '../scripts/competenciasData';
 
-const PESTANAS = [['datos', 'Datos'], ['equipos', 'Equipos'], ['problemas', 'Problemas']];
+const PESTANAS = [
+  ['datos', 'Datos'], ['equipos', 'Equipos'], ['problemas', 'Problemas'],
+  ['envios', 'Envíos'], ['aclaraciones', 'Aclaraciones'], ['globos', 'Globos'], ['marcador', 'Marcador'],
+];
+
+/** Carga periódica para las pestañas en vivo; devuelve los datos, el error y cómo recargar. */
+const useEnVivo = (cargar, cadaMs) => {
+  const [datos, setDatos] = useState(null);
+  const [error, setError] = useState('');
+  const recargar = useCallback(() => cargar()
+    .then((d) => { setDatos(d); setError(''); })
+    .catch((e) => setError(e.message)), [cargar]);
+  useEffect(() => {
+    recargar();
+    const t = setInterval(recargar, cadaMs);
+    return () => clearInterval(t);
+  }, [recargar, cadaMs]);
+  return { datos, error, recargar };
+};
 
 /** Ejecuta una acción del jurado mostrando su error; devuelve el resultado o null. */
 const useAccion = () => {
@@ -310,6 +333,114 @@ const Problemas = ({ user, cid, problemas, recargar }) => {
   );
 };
 
+// ── Durante la competencia ──
+
+const CodigoEnvio = ({ user, cid, id }) => {
+  const [archivos, setArchivos] = useState(null);
+  const [error, setError] = useState('');
+  const abrir = (e) => {
+    if (!e.currentTarget.open || archivos) return;
+    getCodigoEnvio(user, cid, id).then((d) => setArchivos(d.archivos)).catch((err) => setError(err.message));
+  };
+  return (
+    <details className="nb-doc-codigo" onToggle={abrir}>
+      <summary>Ver código</summary>
+      {error && <p className="nb-comp-aviso is-fail">{error}</p>}
+      {!archivos && !error && <p className="nb-doc-vacio">Cargando…</p>}
+      {archivos?.map((a) => <pre key={a.nombre}>{`// ${a.nombre}\n${a.codigo}`}</pre>)}
+    </details>
+  );
+};
+
+const EnviosJurado = ({ user, cid }) => {
+  const cargar = useCallback(() => getEnviosJurado(user, cid), [user, cid]);
+  const { datos, error } = useEnVivo(cargar, 10_000);
+  if (!datos) return <p className="nb-doc-vacio">{error || 'Cargando envíos…'}</p>;
+  if (!datos.envios.length) return <div className="nb-pb-empty"><div className="nb-pb-empty-title">Aún no hay envíos</div></div>;
+  return (
+    <div className="nb-dash-card nb-comp-panel">
+      <p className="nb-comp-sub">Para rejuzgar un envío usa la <a className="nb-dash-aviso-mas" href={`${JUEZ_URL}/jury/submissions`} target="_blank" rel="noopener noreferrer">interfaz de jurado de DOMjudge</a>.</p>
+      <ul className="nb-comp-envios is-jurado">
+        {datos.envios.map((e) => (
+          <li key={e.id}>
+            <span className="nb-comp-hora">{e.tiempo.split('.')[0]}</span>
+            <span><strong>{e.equipo}</strong> · {e.problema} · {e.lenguaje} <small className="nb-comp-hora">#{e.id}</small></span>
+            <span className={`nb-comp-veredicto ${claseVeredicto(e.veredicto)}`}>{VEREDICTOS[e.veredicto] || e.veredicto}</span>
+            <CodigoEnvio user={user} cid={cid} id={e.id} />
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+const AclaracionesJurado = ({ user, cid, equipos }) => {
+  const cargar = useCallback(() => getAclaracionesJurado(user, cid), [user, cid]);
+  const { datos, error, recargar } = useEnVivo(cargar, 15_000);
+  if (!datos) return <p className="nb-doc-vacio">{error || 'Cargando aclaraciones…'}</p>;
+  return (
+    <Aclaraciones
+      jurado
+      lista={datos.aclaraciones}
+      equipos={equipos.filter((e) => !e.retirado)}
+      onEnviar={async (d) => { await responderAclaracion(user, cid, d); await recargar(); }}
+    />
+  );
+};
+
+const Globos = ({ user, cid }) => {
+  const cargar = useCallback(() => getGlobos(user, cid), [user, cid]);
+  const { datos, error, recargar } = useEnVivo(cargar, 15_000);
+  const { ocupado, error: errorAccion, ejecutar } = useAccion();
+  if (!datos) return <p className="nb-doc-vacio">{error || 'Cargando globos…'}</p>;
+  if (!datos.globos.length) {
+    return <div className="nb-pb-empty"><div className="nb-pb-empty-title">Sin globos todavía</div><p>Cada problema aceptado genera un globo para entregar al equipo.</p></div>;
+  }
+  return (
+    <div className="nb-dash-card nb-comp-panel">
+      <ul className="nb-doc-tabla">
+        {datos.globos.map((g) => (
+          <li key={g.id} className="nb-doc-fila">
+            <span className={`nb-comp-letra is-chica${g.hecho ? '' : ' is-active'}`}>{g.problema}</span>
+            <div className="nb-doc-celda is-grande"><strong>{g.equipo}</strong></div>
+            {g.hecho
+              ? <span className="nb-doc-estado is-on">Entregado</span>
+              : <button type="button" className="nb-doc-filtro" disabled={ocupado} onClick={async () => { if (await ejecutar(() => marcarGlobo(user, cid, g.id))) recargar(); }}>Marcar entregado</button>}
+          </li>
+        ))}
+      </ul>
+      {errorAccion && <p className="nb-comp-aviso is-fail" role="alert">{errorAccion}</p>}
+    </div>
+  );
+};
+
+const MarcadorJurado = ({ user, cid, comp, recargarComp }) => {
+  const cargar = useCallback(() => getMarcadorJurado(user, cid), [user, cid]);
+  const { datos, error, recargar } = useEnVivo(cargar, 20_000);
+  const { ocupado, error: errorAccion, ejecutar } = useAccion();
+  const descongelar = async () => {
+    if (!window.confirm('¿Descongelar el marcador? Todos verán los resultados finales.')) return;
+    if (await ejecutar(() => descongelarMarcador(user, cid))) { recargar(); recargarComp(); }
+  };
+  if (!datos) return <p className="nb-doc-vacio">{error || 'Cargando marcador…'}</p>;
+  return (
+    <div className="nb-comp">
+      {datos.congelado && (
+        <div className="nb-comp-acciones">
+          <span className="nb-comp-sub">Los estudiantes ven el marcador congelado; aquí ves el completo.</span>
+          {comp.estado === 'terminado' && (
+            <button type="button" className="nb-dash-btn-claro" onClick={descongelar} disabled={ocupado}>Descongelar marcador</button>
+          )}
+        </div>
+      )}
+      {errorAccion && <p className="nb-comp-aviso is-fail" role="alert">{errorAccion}</p>}
+      {datos.filas.length
+        ? <MarcadorTabla tabla={datos} />
+        : <div className="nb-pb-empty"><div className="nb-pb-empty-title">Sin equipos en el marcador</div></div>}
+    </div>
+  );
+};
+
 /** Una competencia vista por el jurado. */
 const JuradoCompetenciaPage = () => {
   const { cid } = useParams();
@@ -364,6 +495,10 @@ const JuradoCompetenciaPage = () => {
       {pestana === 'datos' && <Datos key={comp.inicio} user={user} comp={comp} recargar={cargar} />}
       {pestana === 'equipos' && <Equipos user={user} cid={cid} equipos={datos.equipos} recargar={cargar} />}
       {pestana === 'problemas' && <Problemas user={user} cid={cid} problemas={datos.problemas} recargar={cargar} />}
+      {pestana === 'envios' && <EnviosJurado user={user} cid={cid} />}
+      {pestana === 'aclaraciones' && <AclaracionesJurado user={user} cid={cid} equipos={datos.equipos} />}
+      {pestana === 'globos' && <Globos user={user} cid={cid} />}
+      {pestana === 'marcador' && <MarcadorJurado user={user} cid={cid} comp={comp} recargarComp={cargar} />}
     </div>
   );
 };

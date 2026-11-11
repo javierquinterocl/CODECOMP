@@ -5,10 +5,16 @@ import type { Contexto } from '../contexto.ts';
 import { esDocente } from '../auth.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
-import { liberarProblema, reservarProblema } from '../competencias.ts';
+import { equiposDelConcurso, liberarProblema, reservarProblema } from '../competencias.ts';
 import {
+  type AclaracionDJ,
   concursoJson,
   type ConcursoDJ,
+  type EnvioDJ,
+  type FilaMarcadorDJ,
+  filasMarcador,
+  type JuicioDJ,
+  veredictosPorEnvio,
   cuentaJson,
   equipoJson,
   ErrorDJ,
@@ -449,6 +455,152 @@ const liberar = async (ctx: Contexto, docenteId: string, cid: string) => {
   return ok(ctx, { liberados });
 };
 
+// ── Dirigir (durante la competencia) ──
+
+/** Equipos de la competencia (incluidos los retirados): team_id -> nombre. */
+const nombresDeEquipos = async (ctx: Contexto, cid: string) => {
+  const filas = await ctx.sql<{ team_id: string; nombre: string }[]>`
+    SELECT team_id, nombre FROM competencia_equipos WHERE cid = ${cid}
+  `;
+  return new Map(filas.map((f) => [f.team_id, f.nombre]));
+};
+
+const letrasDe = async (ctx: Contexto, cid: string) =>
+  new Map((await jsonDJ<ProblemaDJ[]>(ctx.config, `/contests/${cid}/problems`)).map((p) => [p.id, p.label]));
+
+const enviosJurado = async (ctx: Contexto, cid: string) => {
+  const [lista, juicios, letras, equipos] = await Promise.all([
+    jsonDJ<EnvioDJ[]>(ctx.config, `/contests/${cid}/submissions`),
+    jsonDJ<JuicioDJ[]>(ctx.config, `/contests/${cid}/judgements`),
+    letrasDe(ctx, cid),
+    nombresDeEquipos(ctx, cid),
+  ]);
+  const veredictos = veredictosPorEnvio(juicios);
+  return ok(ctx, {
+    envios: lista.filter((e) => equipos.has(e.team_id))
+      .sort((a, b) => Date.parse(b.time) - Date.parse(a.time))
+      .map((e) => ({
+        id: e.id,
+        equipo: equipos.get(e.team_id),
+        problema: letras.get(e.problem_id) ?? e.problem_id,
+        lenguaje: e.language_id,
+        tiempo: e.contest_time,
+        veredicto: veredictos.get(e.id) ?? 'pendiente',
+      })),
+  });
+};
+
+const codigoEnvio = async (ctx: Contexto, cid: string, id: string) => {
+  if (!/^\d+$/.test(id)) return no(ctx, 404, 'envio', 'Envio no encontrado.');
+  const [envio, equipos] = await Promise.all([
+    jsonDJ<EnvioDJ>(ctx.config, `/contests/${cid}/submissions/${id}`),
+    nombresDeEquipos(ctx, cid),
+  ]);
+  if (!equipos.has(envio.team_id)) return no(ctx, 404, 'envio', 'Envio no encontrado.');
+  const archivos = await jsonDJ<{ filename: string; source: string }[]>(
+    ctx.config,
+    `/contests/${cid}/submissions/${id}/source-code`,
+  );
+  const decodificar = (b64: string) => new TextDecoder().decode(Uint8Array.from(atob(b64), (c) => c.charCodeAt(0)));
+  return ok(ctx, { archivos: archivos.map((a) => ({ nombre: a.filename, codigo: decodificar(a.source) })) });
+};
+
+const aclaracionesJurado = async (ctx: Contexto, docenteId: string, cid: string) => {
+  const equipos = await nombresDeEquipos(ctx, cid);
+  if (ctx.req.method === 'POST') {
+    const d = await cuerpoJson(ctx);
+    const texto = String(d.texto ?? '').trim();
+    if (!texto || texto.length > 2000) return no(ctx, 400, 'texto', 'Escribe la respuesta (hasta 2000 caracteres).');
+    const equipo = typeof d.equipo === 'string' && d.equipo ? d.equipo : null;
+    if (equipo && !equipos.has(equipo)) return no(ctx, 404, 'equipo', 'Equipo no encontrado.');
+    const responderA = typeof d.responderA === 'string' && /^\d+$/.test(d.responderA) ? d.responderA : null;
+    await escribirDJ(ctx.config, `/contests/${cid}/clarifications`, {
+      tipo: 'application/json',
+      cuerpo: JSON.stringify({
+        text: texto,
+        ...(equipo ? { to_team_id: equipo } : {}),
+        ...(responderA ? { reply_to_id: responderA } : {}),
+      }),
+    });
+    await auditar(ctx, docenteId, 'competencia_dirigir', `${cid} aclaracion ${equipo ?? 'todos'}`);
+    return ok(ctx, { ok: true }, 201);
+  }
+  const [lista, letras] = await Promise.all([
+    jsonDJ<AclaracionDJ[]>(ctx.config, `/contests/${cid}/clarifications`),
+    letrasDe(ctx, cid),
+  ]);
+  return ok(ctx, {
+    aclaraciones: lista
+      .filter((a) => (a.from_team_id ? equipos.has(a.from_team_id) : true) && (a.to_team_id ? equipos.has(a.to_team_id) : true))
+      .sort((a, b) => Date.parse(b.time) - Date.parse(a.time))
+      .map((a) => ({
+        id: a.id,
+        de: a.from_team_id ? { id: a.from_team_id, nombre: equipos.get(a.from_team_id) } : null,
+        para: a.to_team_id ? { id: a.to_team_id, nombre: equipos.get(a.to_team_id) } : null,
+        respondeA: a.reply_to_id,
+        problema: a.problem_id ? letras.get(a.problem_id) ?? null : null,
+        texto: a.text,
+        tiempo: a.contest_time ?? null,
+      })),
+  });
+};
+
+/** Globos: solo los generan los envios aceptados; el texto del equipo es "tNN: nombre". */
+const globos = async (ctx: Contexto, cid: string) => {
+  const lista = await jsonDJ<{ balloonid: number; time: string; problem: string; team: string; done: boolean }[]>(
+    ctx.config,
+    `/contests/${cid}/balloons`,
+  );
+  return ok(ctx, {
+    globos: lista.map((b) => ({
+      id: b.balloonid,
+      problema: b.problem,
+      equipo: b.team.replace(/^t\d+:\s*/, ''),
+      tiempo: b.time,
+      hecho: b.done,
+    })).sort((a, b) => Number(a.hecho) - Number(b.hecho)),
+  });
+};
+
+const marcarGlobo = async (ctx: Contexto, docenteId: string, cid: string, id: string) => {
+  if (!/^\d+$/.test(id)) return no(ctx, 404, 'globo', 'Globo no encontrado.');
+  const r = await pedirDJ(ctx.config, `/contests/${cid}/balloons/${id}/done`, { metodo: 'POST' });
+  if (!r.ok) return no(ctx, 502, 'juez', 'DOMjudge no marco el globo.');
+  await auditar(ctx, docenteId, 'competencia_dirigir', `${cid} globo ${id}`);
+  return ok(ctx, { id });
+};
+
+/** Marcador del jurado: sin congelar (la cuenta de servicio ve el completo). */
+const marcadorJurado = async (ctx: Contexto, cid: string) => {
+  const [tabla, equipos, problemas] = await Promise.all([
+    jsonDJ<{ rows: FilaMarcadorDJ[]; state?: { frozen?: string | null; thawed?: string | null } }>(
+      ctx.config,
+      `/contests/${cid}/scoreboard`,
+    ),
+    equiposDelConcurso(ctx.sql, cid),
+    jsonDJ<ProblemaDJ[]>(ctx.config, `/contests/${cid}/problems`),
+  ]);
+  const ordenados = [...problemas].sort((a, b) => a.label.localeCompare(b.label));
+  return ok(ctx, {
+    congelado: Boolean(tabla.state?.frozen && !tabla.state?.thawed),
+    letras: ordenados.map((p) => p.label),
+    filas: filasMarcador(tabla.rows, equipos, new Map(ordenados.map((p) => [p.id, p.label])), null),
+  });
+};
+
+const descongelar = async (ctx: Contexto, docenteId: string, cid: string) => {
+  if (estadoDe(await concursoDJ(ctx, cid)) !== 'terminado') {
+    return no(ctx, 409, 'en-curso', 'El marcador se descongela cuando la competencia termina.');
+  }
+  await escribirDJ(ctx.config, `/contests/${cid}`, {
+    metodo: 'PATCH',
+    tipo: 'application/json',
+    cuerpo: JSON.stringify({ id: cid, scoreboard_thaw_time: isoBogota(new Date()) }),
+  });
+  await auditar(ctx, docenteId, 'competencia_dirigir', `${cid} descongelar`);
+  return ok(ctx, { cid });
+};
+
 /** /jurado/... Despacho por segmentos; todo exige docente. */
 export const jurado = async (ctx: Contexto, s: string[]): Promise<Response> => {
   if (!ctx.identidad) return no(ctx, 401, 'sin-sesion', 'Inicia sesion para continuar.');
@@ -478,6 +630,14 @@ export const jurado = async (ctx: Contexto, s: string[]): Promise<Response> => {
     if (sub === 'inicio' && m === 'POST') return await cambiarInicio(ctx, docenteId, cid);
     if (sub === 'archivar' && m === 'POST') return await archivar(ctx, docenteId, cid);
     if (sub === 'liberar' && m === 'POST') return await liberar(ctx, docenteId, cid);
+    if (sub === 'envios' && m === 'GET') {
+      return id && sub2 === 'codigo' ? await codigoEnvio(ctx, cid, id) : await enviosJurado(ctx, cid);
+    }
+    if (sub === 'aclaraciones' && (m === 'GET' || m === 'POST')) return await aclaracionesJurado(ctx, docenteId, cid);
+    if (sub === 'globos' && !id && m === 'GET') return await globos(ctx, cid);
+    if (sub === 'globos' && id && m === 'POST') return await marcarGlobo(ctx, docenteId, cid, id);
+    if (sub === 'marcador' && m === 'GET') return await marcadorJurado(ctx, cid);
+    if (sub === 'descongelar' && m === 'POST') return await descongelar(ctx, docenteId, cid);
     if (sub === 'equipos') {
       if (!id && m === 'POST') return await crearEquipo(ctx, docenteId, cid);
       if (id && !sub2 && m === 'POST') return await editarEquipo(ctx, docenteId, cid, id);

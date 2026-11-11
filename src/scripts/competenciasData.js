@@ -30,3 +30,17 @@ export const localDesdeIso = (iso) => {
 };
 
 export const LETRAS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+export const VEREDICTOS = {
+  AC: 'Aceptado',
+  WA: 'Respuesta incorrecta',
+  TLE: 'Tiempo límite excedido',
+  RTE: 'Error en ejecución',
+  CE: 'Error de compilación',
+  MLE: 'Memoria excedida',
+  OLE: 'Salida demasiado larga',
+  NO: 'Sin salida',
+  pendiente: 'Juzgando…',
+};
+
+export const claseVeredicto = (v) => (v === 'AC' ? 'is-ok' : v === 'pendiente' ? 'is-wait' : 'is-fail');

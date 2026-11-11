@@ -591,6 +591,16 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-comp-letra.is-chica { min-width: 34px; height: 34px; display: grid; place-items: center; box-shadow: 2px 2px 0px #000; cursor: default; }
 .nb-comp-letra.is-chica:hover { transform: none; }
 .nb-comp-letra-sel { max-width: 260px; }
+.nb-comp-envios.is-jurado li { grid-template-columns: minmax(70px, auto) 1fr auto; }
+.nb-comp-envios.is-jurado li > .nb-doc-codigo { grid-column: 1 / -1; }
+.nb-comp-aclarar { display: flex; flex-direction: column; gap: 10px; padding-bottom: 14px; border-bottom: 3px solid #000; }
+.nb-comp-textarea { resize: vertical; min-height: 84px; font-family: 'Space Grotesk', sans-serif; }
+.nb-comp-aclaraciones { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.nb-comp-aclaraciones li { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 2px solid #000; border-left-width: 6px; border-left-color: var(--nb-blue); background: #fff; }
+.nb-comp-aclaraciones li.is-pregunta { border-left-color: #000; background: var(--nb-hover); }
+.nb-comp-aclaracion-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 12px; }
+.nb-comp-aclaracion-texto { margin: 0; font-size: var(--fs-sm); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.nb-comp-aclaraciones .nb-dash-aviso-mas { align-self: flex-start; }
 
 @media (max-width: 640px) {
   .nb-comp-head { flex-wrap: wrap; }
