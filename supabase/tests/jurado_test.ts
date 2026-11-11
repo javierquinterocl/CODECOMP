@@ -2,6 +2,7 @@ import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert';
 import { strFromU8, unzipSync } from 'npm:fflate@0.8.2';
 import {
   aclaracionesDeEquipo,
+  colorDeGlobo,
   concursoJson,
   cuentaJson,
   duracionDJ,
@@ -51,6 +52,12 @@ Deno.test('los ids nunca pasan el formato CLICS de DOMjudge (36 caracteres)', ()
   for (const id of [cid, idEquipo(cid, nombreLargo), idProblemaDJ('icpc-latinoamerica-2024-problema-muy-largo', cid)]) {
     assert(ID_CLICS.test(id), `${id} (${id.length})`);
   }
+});
+
+Deno.test('cada letra tiene color de globo (sin color DOMjudge no lista los globos)', () => {
+  assertEquals(colorDeGlobo('A'), '#E10E15');
+  assertEquals(colorDeGlobo('b'), '#0736FE');
+  for (const l of 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') assert(/^#[0-9A-F]{6}$/.test(colorDeGlobo(l)), l);
 });
 
 Deno.test('duracionDJ e isoBogota con el formato de DOMjudge', () => {

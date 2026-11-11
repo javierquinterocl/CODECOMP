@@ -558,6 +558,9 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-comp-texto-enunciado { display: flex; flex-direction: column; gap: 12px; }
 
 /* Panel del jurado (prefijo nb-comp-, mismo sistema que la vista docente). */
+.nb-confirmar-acciones { gap: 12px; flex-wrap: wrap; }
+.nb-confirmar-acciones > button { flex: 0 0 auto; }
+.nb-ex-send.is-peligro { background: var(--nb-danger); }
 .nb-comp-boton { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; }
 .nb-comp-jurado { align-self: flex-start; }
 .nb-comp-form { display: flex; flex-direction: column; gap: 14px; }
@@ -592,6 +595,9 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-comp-letra.is-chica { min-width: 34px; height: 34px; display: grid; place-items: center; box-shadow: 2px 2px 0px #000; cursor: default; }
 .nb-comp-letra.is-chica:hover { transform: none; }
 .nb-comp-letra-sel { max-width: 260px; }
+.nb-comp-globo { flex: 0 0 auto; width: 22px; height: 22px; border: 2px solid #000; background: var(--globo, #fff); }
+.nb-dash-btn-claro.is-peligro { color: var(--nb-danger); border-color: var(--nb-danger); box-shadow: 4px 4px 0px var(--nb-danger); }
+.nb-dash-btn-claro.is-peligro:hover:not(:disabled) { box-shadow: 2px 2px 0px var(--nb-danger); }
 .nb-comp-envios.is-jurado li { grid-template-columns: minmax(70px, auto) 1fr auto; }
 .nb-comp-envios.is-jurado li > .nb-doc-codigo { grid-column: 1 / -1; }
 .nb-comp-aclarar { display: flex; flex-direction: column; gap: 10px; padding-bottom: 14px; border-bottom: 3px solid #000; }

@@ -5,6 +5,8 @@ import { FlagIcon } from '../components/AppIcons';
 import NbSelect from '../components/NbSelect';
 import MarcadorTabla from '../components/competencias/MarcadorTabla';
 import Aclaraciones from '../components/competencias/Aclaraciones';
+import ConfirmarDialogo from '../components/ConfirmarDialogo';
+import useConfirmar from '../scripts/useConfirmar';
 import { JUEZ_URL } from '../scripts/config';
 import {
   agregarDelBanco, agregarMiembro, archivarCompetencia, buscarBanco, buscarEstudiantes, cambiarInicio,
@@ -13,7 +15,7 @@ import {
   quitarProblema, responderAclaracion, subirPaquete,
 } from '../scripts/juradoApi';
 import {
-  claseVeredicto, ESTADOS, fechaCorta, isoDesdeLocal, LETRAS, localDesdeIso, VEREDICTOS,
+  claseVeredicto, estadoVisible, fechaCorta, isoDesdeLocal, LETRAS, localDesdeIso, VEREDICTOS,
 } from '../scripts/competenciasData';
 
 const PESTANAS = [
@@ -68,18 +70,26 @@ const Credencial = ({ datos, onCerrar }) => (
 
 // ── Datos ──
 
-const Datos = ({ user, comp, recargar }) => {
+const Datos = ({ user, comp, recargar, cambiar, confirmar }) => {
   const [inicio, setInicio] = useState(localDesdeIso(comp.inicio));
   const { ocupado, error, ejecutar } = useAccion();
   const [hecho, setHecho] = useState('');
+  const terminada = comp.estado === 'terminado';
 
   const guardarInicio = async (e) => {
     e.preventDefault();
-    if (await ejecutar(() => cambiarInicio(user, comp.cid, isoDesdeLocal(inicio)))) { setHecho('Hora actualizada.'); recargar(); }
+    const iso = isoDesdeLocal(inicio);
+    if (await ejecutar(() => cambiarInicio(user, comp.cid, iso))) { setHecho('Hora actualizada.'); recargar(); }
   };
+  // Se ve al instante; si el servidor falla, vuelve como estaba.
   const archivar = async () => {
-    if (!comp.archivada && !window.confirm('¿Archivar esta competencia? Dejará de verse para los estudiantes.')) return;
-    if (await ejecutar(() => archivarCompetencia(user, comp.cid, !comp.archivada))) recargar();
+    const archivada = !comp.archivada;
+    if (archivada && !(await confirmar(terminada
+      ? { titulo: 'Archivar competencia', mensaje: 'Dejará de verse en Competencias. Los resultados quedan guardados en el juez.', confirmar: 'Archivar' }
+      : { titulo: 'Cancelar competencia', mensaje: 'Los estudiantes dejarán de verla y no podrán enviar. Puedes reactivarla después.', confirmar: 'Cancelar competencia', peligro: true }))) return;
+    const poner = (valor) => cambiar((d) => ({ ...d, competencia: { ...d.competencia, archivada: valor } }));
+    poner(archivada);
+    if (!(await ejecutar(() => archivarCompetencia(user, comp.cid, archivada)))) poner(!archivada);
   };
   const liberar = async () => {
     const r = await ejecutar(() => liberarProblemas(user, comp.cid));
@@ -89,7 +99,7 @@ const Datos = ({ user, comp, recargar }) => {
   return (
     <div className="nb-dash-card nb-comp-panel nb-comp-form">
       <div className="nb-comp-datos">
-        <div className="nb-doc-dato"><small>Estado</small><strong>{ESTADOS[comp.estado] || comp.estado}</strong></div>
+        <div className="nb-doc-dato"><small>Estado</small><strong>{estadoVisible(comp)}</strong></div>
         <div className="nb-doc-dato"><small>Inicio</small><strong>{fechaCorta(comp.inicio)}</strong></div>
         <div className="nb-doc-dato"><small>Fin</small><strong>{fechaCorta(comp.fin)}</strong></div>
         <div className="nb-doc-dato"><small>Congelado</small><strong>{comp.congeladoSegundos ? `${comp.congeladoSegundos / 60} min` : 'No'}</strong></div>
@@ -109,11 +119,11 @@ const Datos = ({ user, comp, recargar }) => {
       <p className="nb-comp-sub">El nombre y la duración no se pueden cambiar después de crearla (límite de DOMjudge).</p>
 
       <div className="nb-comp-acciones">
-        {comp.estado === 'terminado' && (
+        {terminada && (
           <button type="button" className="nb-dash-btn-claro" onClick={liberar} disabled={ocupado}>Liberar problemas al banco</button>
         )}
-        <button type="button" className="nb-dash-btn-claro" onClick={archivar} disabled={ocupado}>
-          {comp.archivada ? 'Desarchivar' : 'Archivar'}
+        <button type="button" className={terminada || comp.archivada ? 'nb-dash-btn-claro' : 'nb-dash-btn-claro is-peligro'} onClick={archivar} disabled={ocupado}>
+          {comp.archivada ? (terminada ? 'Desarchivar' : 'Reactivar') : (terminada ? 'Archivar' : 'Cancelar competencia')}
         </button>
         <a className="nb-dash-aviso-mas" href={`${JUEZ_URL}/jury`} target="_blank" rel="noopener noreferrer">Abrir la interfaz de jurado de DOMjudge</a>
       </div>
@@ -161,26 +171,36 @@ const BuscarEstudiante = ({ user, onElegir, ocupado }) => {
   );
 };
 
-const EquipoTarjeta = ({ user, cid, equipo, editable, recargar, onCredencial }) => {
+const EquipoTarjeta = ({ user, cid, equipo, editable, cambiar, confirmar, onCredencial }) => {
   const { ocupado, error, ejecutar } = useAccion();
   const [nombre, setNombre] = useState(equipo.nombre);
   const [agregando, setAgregando] = useState(false);
+  // Cambia solo esta tarjeta en el estado de la página, sin volver a pedir toda la competencia.
+  const editar = (fn) => cambiar((d) => ({ ...d, equipos: d.equipos.map((e) => (e.teamId === equipo.teamId ? fn(e) : e)) }));
 
   const guardarNombre = async (e) => {
     e.preventDefault();
-    if (nombre.trim() === equipo.nombre) return;
-    if (await ejecutar(() => editarEquipo(user, cid, equipo.teamId, { nombre }))) recargar();
+    const nuevo = nombre.trim().replace(/\s+/g, ' ');
+    if (nuevo === equipo.nombre) return;
+    if (await ejecutar(() => editarEquipo(user, cid, equipo.teamId, { nombre: nuevo }))) editar((q) => ({ ...q, nombre: nuevo }));
   };
   const retirar = async () => {
-    if (!equipo.retirado && !window.confirm(`¿Retirar a ${equipo.nombre}? Sale del marcador y no podrá enviar.`)) return;
-    if (await ejecutar(() => editarEquipo(user, cid, equipo.teamId, { retirado: !equipo.retirado }))) recargar();
+    const retirado = !equipo.retirado;
+    if (retirado && !(await confirmar({
+      titulo: 'Retirar equipo', mensaje: `${equipo.nombre} saldrá del marcador y no podrá enviar.`, confirmar: 'Retirar', peligro: true,
+    }))) return;
+    editar((q) => ({ ...q, retirado }));
+    if (!(await ejecutar(() => editarEquipo(user, cid, equipo.teamId, { retirado })))) editar((q) => ({ ...q, retirado: !retirado }));
   };
   const agregar = async (userId) => {
-    if (await ejecutar(() => agregarMiembro(user, cid, equipo.teamId, userId))) { setAgregando(false); recargar(); }
+    const r = await ejecutar(() => agregarMiembro(user, cid, equipo.teamId, userId));
+    if (r?.miembro) { setAgregando(false); editar((q) => ({ ...q, miembros: [...q.miembros, r.miembro] })); }
   };
   const quitar = async (m) => {
-    if (!window.confirm(`¿Quitar a ${m.correo} del equipo?`)) return;
-    if (await ejecutar(() => quitarMiembro(user, cid, equipo.teamId, m.userId))) recargar();
+    if (!(await confirmar({ titulo: 'Quitar integrante', mensaje: `¿Quitar a ${m.correo} de ${equipo.nombre}?`, confirmar: 'Quitar', peligro: true }))) return;
+    if (await ejecutar(() => quitarMiembro(user, cid, equipo.teamId, m.userId))) {
+      editar((q) => ({ ...q, miembros: q.miembros.filter((x) => x.userId !== m.userId) }));
+    }
   };
   const clave = async () => {
     const r = await ejecutar(() => nuevaClaveEquipo(user, cid, equipo.teamId));
@@ -222,7 +242,7 @@ const EquipoTarjeta = ({ user, cid, equipo, editable, recargar, onCredencial }) 
   );
 };
 
-const Equipos = ({ user, cid, equipos, editable, recargar }) => {
+const Equipos = ({ user, cid, equipos, editable, cambiar, confirmar }) => {
   const [nombre, setNombre] = useState('');
   const [credencial, setCredencial] = useState(null);
   const { ocupado, error, ejecutar } = useAccion();
@@ -230,7 +250,11 @@ const Equipos = ({ user, cid, equipos, editable, recargar }) => {
   const crear = async (e) => {
     e.preventDefault();
     const r = await ejecutar(() => crearEquipo(user, cid, nombre));
-    if (r) { setCredencial(r); setNombre(''); recargar(); }
+    if (r) {
+      setCredencial(r);
+      setNombre('');
+      cambiar((d) => ({ ...d, equipos: [...d.equipos, { teamId: r.teamId, nombre: r.nombre, retirado: false, miembros: [] }] }));
+    }
   };
 
   return (
@@ -249,7 +273,7 @@ const Equipos = ({ user, cid, equipos, editable, recargar }) => {
       {equipos.length ? (
         <ul className="nb-comp-equipos">
           {equipos.map((eq) => (
-            <EquipoTarjeta key={eq.teamId} user={user} cid={cid} equipo={eq} editable={editable} recargar={recargar} onCredencial={setCredencial} />
+            <EquipoTarjeta key={eq.teamId} user={user} cid={cid} equipo={eq} editable={editable} cambiar={cambiar} confirmar={confirmar} onCredencial={setCredencial} />
           ))}
         </ul>
       ) : <p className="nb-doc-vacio">Aún no hay equipos.</p>}
@@ -259,7 +283,7 @@ const Equipos = ({ user, cid, equipos, editable, recargar }) => {
 
 // ── Problemas ──
 
-const Problemas = ({ user, cid, problemas, recargar }) => {
+const Problemas = ({ user, cid, problemas, recargar, cambiar, confirmar }) => {
   const usadas = new Set(problemas.map((p) => p.letra));
   const libres = LETRAS.filter((l) => !usadas.has(l));
   const [q, setQ] = useState('');
@@ -283,8 +307,12 @@ const Problemas = ({ user, cid, problemas, recargar }) => {
     if (await ejecutar(() => subirPaquete(user, cid, archivo, letraActual))) { setArchivo(null); e.target.reset(); recargar(); }
   };
   const quitar = async (p) => {
-    if (!window.confirm(`¿Quitar el problema ${p.letra} (${p.nombre}) de la competencia?`)) return;
-    if (await ejecutar(() => quitarProblema(user, cid, p.djId))) recargar();
+    if (!(await confirmar({
+      titulo: 'Quitar problema', mensaje: `¿Quitar el problema ${p.letra} (${p.nombre}) de la competencia?`, confirmar: 'Quitar', peligro: true,
+    }))) return;
+    if (await ejecutar(() => quitarProblema(user, cid, p.djId))) {
+      cambiar((d) => ({ ...d, problemas: d.problemas.filter((x) => x.djId !== p.djId) }));
+    }
   };
 
   return (
@@ -294,6 +322,7 @@ const Problemas = ({ user, cid, problemas, recargar }) => {
           {problemas.map((p) => (
             <li key={p.djId} className="nb-doc-fila">
               <span className="nb-comp-letra is-active is-chica">{p.letra}</span>
+              <span className="nb-comp-globo" style={{ '--globo': p.color || '#fff' }} title={p.color ? `Globo ${p.color}` : 'Sin color de globo'} />
               <div className="nb-doc-celda is-grande">
                 <strong>{p.nombre}</strong>
                 <small className="nb-comp-hora">
@@ -411,6 +440,7 @@ const Globos = ({ user, cid }) => {
         {datos.globos.map((g) => (
           <li key={g.id} className="nb-doc-fila">
             <span className={`nb-comp-letra is-chica${g.hecho ? '' : ' is-active'}`}>{g.problema}</span>
+            <span className="nb-comp-globo" style={{ '--globo': g.color || '#fff' }} title={g.color ? `Globo ${g.color}` : ''} />
             <div className="nb-doc-celda is-grande"><strong>{g.equipo}</strong></div>
             {g.hecho
               ? <span className="nb-doc-estado is-on">Entregado</span>
@@ -423,12 +453,14 @@ const Globos = ({ user, cid }) => {
   );
 };
 
-const MarcadorJurado = ({ user, cid, comp, recargarComp }) => {
+const MarcadorJurado = ({ user, cid, comp, recargarComp, confirmar }) => {
   const cargar = useCallback(() => getMarcadorJurado(user, cid), [user, cid]);
   const { datos, error, recargar } = useEnVivo(cargar, 20_000);
   const { ocupado, error: errorAccion, ejecutar } = useAccion();
   const descongelar = async () => {
-    if (!window.confirm('¿Descongelar el marcador? Todos verán los resultados finales.')) return;
+    if (!(await confirmar({
+      titulo: 'Descongelar marcador', mensaje: 'Todos verán los resultados finales de la competencia.', confirmar: 'Descongelar',
+    }))) return;
     if (await ejecutar(() => descongelarMarcador(user, cid))) { recargar(); recargarComp(); }
   };
   if (!datos) return <p className="nb-doc-vacio">{error || 'Cargando marcador…'}</p>;
@@ -457,6 +489,9 @@ const JuradoCompetenciaPage = () => {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
   const [pestana, setPestana] = useState('datos');
+  const { pedido, confirmar, responder } = useConfirmar();
+  // Las acciones actualizan esta copia al instante; recargar solo hace falta para datos del juez.
+  const cambiar = useCallback((fn) => setDatos((d) => (d ? fn(d) : d)), []);
 
   const cargar = useCallback(() => {
     if (!user) return;
@@ -486,7 +521,7 @@ const JuradoCompetenciaPage = () => {
       <div className="nb-dash-card nb-comp-head">
         <span className="nb-comp-icono" aria-hidden="true"><FlagIcon /></span>
         <div className="nb-comp-texto">
-          <div className="nb-dash-kicker">Jurado · {ESTADOS[comp.estado] || comp.estado}{comp.archivada ? ' · archivada' : ''}</div>
+          <div className="nb-dash-kicker">Jurado · {estadoVisible(comp)}</div>
           <h1 className="nb-comp-titulo">{comp.nombre}</h1>
           <p className="nb-comp-sub">{fechaCorta(comp.inicio)} — {fechaCorta(comp.fin)} · {datos.equipos.filter((e) => !e.retirado).length} equipos · {datos.problemas.length} problemas</p>
         </div>
@@ -501,15 +536,18 @@ const JuradoCompetenciaPage = () => {
       </div>
 
       {error && <p className="nb-comp-aviso is-fail" role="alert">{error}</p>}
-      {pestana === 'datos' && <Datos key={comp.inicio} user={user} comp={comp} recargar={cargar} />}
+      {pestana === 'datos' && <Datos key={comp.inicio} user={user} comp={comp} recargar={cargar} cambiar={cambiar} confirmar={confirmar} />}
       {pestana === 'equipos' && (
-        <Equipos user={user} cid={cid} equipos={datos.equipos} editable={comp.estado === 'antes'} recargar={cargar} />
+        <Equipos user={user} cid={cid} equipos={datos.equipos} editable={comp.estado === 'antes'} cambiar={cambiar} confirmar={confirmar} />
       )}
-      {pestana === 'problemas' && <Problemas user={user} cid={cid} problemas={datos.problemas} recargar={cargar} />}
+      {pestana === 'problemas' && (
+        <Problemas user={user} cid={cid} problemas={datos.problemas} recargar={cargar} cambiar={cambiar} confirmar={confirmar} />
+      )}
       {pestana === 'envios' && <EnviosJurado user={user} cid={cid} />}
       {pestana === 'aclaraciones' && <AclaracionesJurado user={user} cid={cid} equipos={datos.equipos} />}
       {pestana === 'globos' && <Globos user={user} cid={cid} />}
-      {pestana === 'marcador' && <MarcadorJurado user={user} cid={cid} comp={comp} recargarComp={cargar} />}
+      {pestana === 'marcador' && <MarcadorJurado user={user} cid={cid} comp={comp} recargarComp={cargar} confirmar={confirmar} />}
+      <ConfirmarDialogo pedido={pedido} onRespuesta={responder} />
     </div>
   );
 };

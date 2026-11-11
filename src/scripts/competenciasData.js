@@ -7,6 +7,15 @@ export const ESTADOS = {
   'sin-juez': 'Sin juez',
 };
 
+/**
+ * Estado que ve el jurado. DOMjudge no deja cancelar un concurso por su API: en CODECOMP,
+ * archivarlo antes de que termine lo cancela (nadie lo ve ni envía); después solo lo archiva.
+ */
+export const estadoVisible = (c) => {
+  if (!c.archivada) return ESTADOS[c.estado] || c.estado;
+  return c.estado === 'terminado' ? 'Archivada' : 'Cancelada';
+};
+
 const FORMATO = new Intl.DateTimeFormat('es-CO', {
   timeZone: 'America/Bogota',
   weekday: 'short',

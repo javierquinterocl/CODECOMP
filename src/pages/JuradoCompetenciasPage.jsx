@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { FlagIcon } from '../components/AppIcons';
 import NbSelect from '../components/NbSelect';
 import { crearCompetencia, getCompetenciasJurado } from '../scripts/juradoApi';
-import { ESTADOS, fechaCorta, isoDesdeLocal } from '../scripts/competenciasData';
+import { estadoVisible, fechaCorta, isoDesdeLocal } from '../scripts/competenciasData';
 
 const DURACIONES = [60, 90, 120, 180, 240, 300].map((m) => ({ value: String(m), label: `${m / 60} h`.replace('.5', ',5') }));
 const CONGELADOS = [0, 15, 30, 60].map((m) => ({ value: String(m), label: m ? `${m} min` : 'Sin congelar' }));
@@ -109,14 +109,14 @@ const JuradoCompetenciasPage = () => {
 
       <div className="nb-dash-card nb-comp-panel">
         <div className="nb-comp-panel-head">
-          <div className="nb-dash-kicker is-ink">{verArchivadas ? 'Archivadas' : 'Competencias'}</div>
+          <div className="nb-dash-kicker is-ink">{verArchivadas ? 'Archivadas y canceladas' : 'Competencias'}</div>
           <button type="button" className={`nb-doc-filtro${verArchivadas ? ' is-active' : ''}`} onClick={() => setVerArchivadas((v) => !v)}>
-            {verArchivadas ? 'Ver activas' : 'Ver archivadas'}
+            {verArchivadas ? 'Ver activas' : 'Ver archivadas y canceladas'}
           </button>
         </div>
         {!lista && <p className="nb-doc-vacio">{error || 'Cargando…'}</p>}
         {lista && !visibles.length && (
-          <p className="nb-doc-vacio">{verArchivadas ? 'No hay competencias archivadas.' : 'Aún no hay competencias. Crea la primera arriba.'}</p>
+          <p className="nb-doc-vacio">{verArchivadas ? 'No hay competencias archivadas ni canceladas.' : 'Aún no hay competencias. Crea la primera arriba.'}</p>
         )}
         {visibles.length > 0 && (
           <ul className="nb-doc-tabla">
@@ -126,7 +126,7 @@ const JuradoCompetenciasPage = () => {
                   <Link className="nb-comp-enlace" to={`/dashboard/competencias/jurado/${c.cid}`}>{c.nombre}</Link>
                   <small className="nb-comp-hora">{c.cid}</small>
                 </div>
-                <span className={`nb-doc-estado${c.estado === 'en-curso' ? ' is-on' : ''}`}>{ESTADOS[c.estado] || c.estado}</span>
+                <span className={`nb-doc-estado${c.estado === 'en-curso' && !c.archivada ? ' is-on' : ''}`}>{estadoVisible(c)}</span>
                 <div className="nb-doc-dato"><small>Inicio</small><strong>{fechaCorta(c.inicio)}</strong></div>
                 <div className="nb-doc-dato"><small>Equipos</small><strong>{c.equipos}</strong></div>
               </li>

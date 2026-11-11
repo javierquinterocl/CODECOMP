@@ -8,6 +8,7 @@ import { idDeUsuario } from '../usuarios.ts';
 import { equiposDelConcurso, liberarProblema, reservarProblema } from '../competencias.ts';
 import {
   type AclaracionDJ,
+  colorDeGlobo,
   concursoJson,
   type ConcursoDJ,
   type EnvioDJ,
@@ -69,8 +70,25 @@ const claveAleatoria = (): string => {
   return Array.from(bytes, (b) => letras[b % letras.length]).join('');
 };
 
-const concursoDJ = (ctx: Contexto, cid: string) =>
-  jsonDJ<ConcursoDJ>(ctx.config, `/contests/${encodeURIComponent(cid)}`);
+// Caches cortas por instancia: el concurso cambia poco y el id del docente nunca cambia.
+const CONCURSO_MS = 5_000;
+const concursos = new Map<string, { hasta: number; valor: ConcursoDJ }>();
+const docentes = new Map<string, string>();
+
+const concursoDJ = async (ctx: Contexto, cid: string, fresco = false): Promise<ConcursoDJ> => {
+  const hit = concursos.get(cid);
+  if (!fresco && hit && hit.hasta > Date.now()) return hit.valor;
+  const valor = await jsonDJ<ConcursoDJ>(ctx.config, `/contests/${encodeURIComponent(cid)}`);
+  concursos.set(cid, { hasta: Date.now() + CONCURSO_MS, valor });
+  return valor;
+};
+
+const docenteDe = async (ctx: Contexto): Promise<string> => {
+  const uid = ctx.identidad!.uid;
+  const id = docentes.get(uid) ?? await idDeUsuario(ctx.sql, ctx.identidad!);
+  docentes.set(uid, id);
+  return id;
+};
 
 const resumenConcurso = (c: ConcursoDJ) => ({
   inicio: c.start_time,
@@ -142,7 +160,7 @@ const detalle = async (ctx: Contexto, cid: string) => {
   `;
   if (!comp) return no(ctx, 404, 'competencia', 'Competencia no encontrada.');
   const [concurso, problemasDJ, equipos, miembros, problemas] = await Promise.all([
-    concursoDJ(ctx, cid),
+    concursoDJ(ctx, cid, true),
     jsonDJ<(ProblemaDJ & { test_data_count?: number })[]>(ctx.config, `/contests/${cid}/problems`),
     ctx.sql<{ team_id: string; nombre: string; retirado: boolean }[]>`
       SELECT team_id, nombre, retirado FROM competencia_equipos WHERE cid = ${cid} ORDER BY creado_en
@@ -175,6 +193,7 @@ const detalle = async (ctx: Contexto, cid: string) => {
         nombre: p.name,
         limiteSegundos: p.time_limit ?? null,
         casos: p.test_data_count ?? null,
+        color: p.rgb ?? null,
         banco: o?.problem_number ? { numero: o.problem_number, titulo: o.titulo } : null,
         liberado: o?.liberado ?? false,
       };
@@ -187,7 +206,7 @@ const cambiarInicio = async (ctx: Contexto, docenteId: string, cid: string) => {
   if (isNaN(inicio.getTime()) || inicio.getTime() < Date.now() + 60_000) {
     return no(ctx, 400, 'inicio', 'La nueva hora debe ser al menos 1 minuto en el futuro.');
   }
-  if (estadoDe(await concursoDJ(ctx, cid)) !== 'antes') {
+  if (estadoDe(await concursoDJ(ctx, cid, true)) !== 'antes') {
     return no(ctx, 409, 'empezo', 'La competencia ya empezo: DOMjudge no deja cambiar su hora.');
   }
   await escribirDJ(ctx.config, `/contests/${cid}`, {
@@ -195,6 +214,7 @@ const cambiarInicio = async (ctx: Contexto, docenteId: string, cid: string) => {
     tipo: 'application/json',
     cuerpo: JSON.stringify({ id: cid, start_time: isoBogota(inicio) }),
   });
+  concursos.delete(cid);
   await auditar(ctx, docenteId, 'competencia_editar', `${cid} inicio ${inicio.toISOString()}`);
   return ok(ctx, { cid });
 };
@@ -225,7 +245,7 @@ const crearEquipo = async (ctx: Contexto, docenteId: string, cid: string) => {
   });
   await ctx.sql`INSERT INTO competencia_equipos (team_id, cid, nombre) VALUES (${teamId}, ${cid}, ${nombre})`;
   await auditar(ctx, docenteId, 'competencia_equipos', `${cid} crear ${teamId}`);
-  return ok(ctx, { teamId, usuario: teamId, clave }, 201);
+  return ok(ctx, { teamId, nombre, usuario: teamId, clave }, 201);
 };
 
 const editarEquipo = async (ctx: Contexto, docenteId: string, cid: string, teamId: string) => {
@@ -274,26 +294,29 @@ const integrantesFijos = async (ctx: Contexto, cid: string) =>
 const agregarMiembro = async (ctx: Contexto, docenteId: string, cid: string, teamId: string) => {
   const userId = String((await cuerpoJson(ctx)).userId ?? '');
   if (!UUID.test(userId)) return no(ctx, 400, 'usuario', 'Estudiante no valido.');
-  const [eq] = await ctx.sql`SELECT 1 FROM competencia_equipos WHERE team_id = ${teamId} AND cid = ${cid}`;
-  if (!eq) return no(ctx, 404, 'equipo', 'Equipo no encontrado.');
-  const fijo = await integrantesFijos(ctx, cid);
+  // Una sola consulta para todas las validaciones, en paralelo con el estado del concurso.
+  const [fijo, [v]] = await Promise.all([
+    integrantesFijos(ctx, cid),
+    ctx.sql<{ equipo: boolean; n: number; usuario: string | null; correo: string | null; otro: string | null }[]>`
+      SELECT
+        EXISTS (SELECT 1 FROM competencia_equipos WHERE team_id = ${teamId} AND cid = ${cid}) AS equipo,
+        (SELECT count(*)::int FROM competencia_miembros WHERE team_id = ${teamId}) AS n,
+        (SELECT username FROM users WHERE id = ${userId}) AS usuario,
+        (SELECT email FROM users WHERE id = ${userId}) AS correo,
+        (SELECT e.nombre FROM competencia_miembros m JOIN competencia_equipos e ON e.team_id = m.team_id
+          WHERE m.cid = ${cid} AND m.user_id = ${userId}) AS otro
+    `,
+  ]);
+  if (!v.equipo) return no(ctx, 404, 'equipo', 'Equipo no encontrado.');
   if (fijo) return fijo;
-  const [{ n }] = await ctx.sql<{ n: number }[]>`
-    SELECT count(*)::int AS n FROM competencia_miembros WHERE team_id = ${teamId}
-  `;
-  if (n >= MAX_INTEGRANTES) return no(ctx, 409, 'lleno', `El equipo ya tiene ${MAX_INTEGRANTES} integrantes.`);
-  const [u] = await ctx.sql`SELECT 1 FROM users WHERE id = ${userId}`;
-  if (!u) return no(ctx, 404, 'usuario', 'Estudiante no encontrado.');
-  const [otro] = await ctx.sql<{ nombre: string }[]>`
-    SELECT e.nombre FROM competencia_miembros m JOIN competencia_equipos e ON e.team_id = m.team_id
-    WHERE m.cid = ${cid} AND m.user_id = ${userId}
-  `;
-  if (otro) return no(ctx, 409, 'otro-equipo', `Ya esta en el equipo ${otro.nombre} de esta competencia.`);
+  if (v.n >= MAX_INTEGRANTES) return no(ctx, 409, 'lleno', `El equipo ya tiene ${MAX_INTEGRANTES} integrantes.`);
+  if (!v.correo) return no(ctx, 404, 'usuario', 'Estudiante no encontrado.');
+  if (v.otro) return no(ctx, 409, 'otro-equipo', `Ya esta en el equipo ${v.otro} de esta competencia.`);
   await ctx.sql`
     INSERT INTO competencia_miembros (team_id, cid, user_id) VALUES (${teamId}, ${cid}, ${userId})
   `;
   await auditar(ctx, docenteId, 'competencia_equipos', `${cid} agregar ${userId} a ${teamId}`);
-  return ok(ctx, { teamId, userId }, 201);
+  return ok(ctx, { teamId, miembro: { userId, usuario: v.usuario, correo: v.correo } }, 201);
 };
 
 const quitarMiembro = async (ctx: Contexto, docenteId: string, cid: string, teamId: string, userId: string) => {
@@ -352,13 +375,13 @@ const buscarBanco = async (ctx: Contexto) => {
 
 const LETRA = /^[A-Z]$/;
 
-/** Enlaza un problema subido a DOMjudge con su letra (el import lo deja con su id de etiqueta). */
+/** Enlaza un problema subido a DOMjudge con su letra y el color de su globo. */
 const enlazarConLetra = async (ctx: Contexto, cid: string, djId: string, letra: string) => {
   await pedirDJ(ctx.config, `/contests/${cid}/problems/${encodeURIComponent(djId)}`, { metodo: 'DELETE' });
   await escribirDJ(ctx.config, `/contests/${cid}/problems/${encodeURIComponent(djId)}`, {
     metodo: 'PUT',
     tipo: 'application/json',
-    cuerpo: JSON.stringify({ label: letra }),
+    cuerpo: JSON.stringify({ label: letra, color: colorDeGlobo(letra) }),
   });
 };
 
@@ -456,7 +479,7 @@ const quitarProblema = async (ctx: Contexto, docenteId: string, cid: string, djI
 };
 
 const liberar = async (ctx: Contexto, docenteId: string, cid: string) => {
-  if (estadoDe(await concursoDJ(ctx, cid)) !== 'terminado') {
+  if (estadoDe(await concursoDJ(ctx, cid, true)) !== 'terminado') {
     return no(ctx, 409, 'en-curso', 'Los problemas se liberan cuando la competencia termina.');
   }
   const liberados = await ctx.sql.begin(async (tx) => {
@@ -563,14 +586,19 @@ const aclaracionesJurado = async (ctx: Contexto, docenteId: string, cid: string)
 
 /** Globos: solo los generan los envios aceptados; el texto del equipo es "tNN: nombre". */
 const globos = async (ctx: Contexto, cid: string) => {
-  const lista = await jsonDJ<{ balloonid: number; time: string; problem: string; team: string; done: boolean }[]>(
-    ctx.config,
-    `/contests/${cid}/balloons`,
-  );
+  const [lista, problemas] = await Promise.all([
+    jsonDJ<{ balloonid: number; time: string; problem: string; team: string; done: boolean }[]>(
+      ctx.config,
+      `/contests/${cid}/balloons`,
+    ),
+    jsonDJ<ProblemaDJ[]>(ctx.config, `/contests/${cid}/problems`),
+  ]);
+  const color = new Map(problemas.map((p) => [p.label, p.rgb ?? null]));
   return ok(ctx, {
     globos: lista.map((b) => ({
       id: b.balloonid,
       problema: b.problem,
+      color: color.get(b.problem) ?? null,
       equipo: b.team.replace(/^t\d+:\s*/, ''),
       tiempo: b.time,
       hecho: b.done,
@@ -605,7 +633,7 @@ const marcadorJurado = async (ctx: Contexto, cid: string) => {
 };
 
 const descongelar = async (ctx: Contexto, docenteId: string, cid: string) => {
-  if (estadoDe(await concursoDJ(ctx, cid)) !== 'terminado') {
+  if (estadoDe(await concursoDJ(ctx, cid, true)) !== 'terminado') {
     return no(ctx, 409, 'en-curso', 'El marcador se descongela cuando la competencia termina.');
   }
   await escribirDJ(ctx.config, `/contests/${cid}`, {
@@ -629,7 +657,7 @@ export const jurado = async (ctx: Contexto, s: string[]): Promise<Response> => {
   const m = ctx.req.method;
   const [recurso, cid, sub, id, sub2, id2] = s;
   try {
-    const docenteId = await idDeUsuario(ctx.sql, ctx.identidad);
+    const docenteId = await docenteDe(ctx);
     if (recurso === 'estudiantes' && m === 'GET' && !cid) return await buscarEstudiantes(ctx);
     if (recurso === 'banco' && m === 'GET' && !cid) return await buscarBanco(ctx);
     if (recurso !== 'competencias') return no(ctx, 404, 'ruta', 'Ruta no encontrada.');

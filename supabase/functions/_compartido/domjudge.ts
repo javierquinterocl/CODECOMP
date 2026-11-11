@@ -186,6 +186,16 @@ export const idEquipo = (cid: string, nombre: string): string => `t-${huellaDe(c
 /** Id del problema en DOMjudge: unico aunque el mismo problema del banco este en varios concursos. */
 export const idProblemaDJ = (slug: string, cid: string): string => `${slugDe(slug, 22)}-${huellaDe(cid)}`;
 
+// Colores de globo por letra, los que se consiguen en cualquier tienda. DOMjudge descarta de su
+// lista de globos los problemas sin color.
+const COLORES_GLOBO = [
+  '#E10E15', '#0736FE', '#0AB05D', '#FFD400', '#FF7A00', '#5410F9', '#FF6FA5', '#FFFFFF',
+  '#000000', '#8B4513', '#39C5FF', '#808080',
+];
+
+export const colorDeGlobo = (letra: string): string =>
+  COLORES_GLOBO[Math.max(0, letra.toUpperCase().charCodeAt(0) - 65) % COLORES_GLOBO.length];
+
 /** Minutos -> "H:MM:SS.000", el formato de duracion de DOMjudge. */
 export const duracionDJ = (minutos: number): string => {
   const m = Math.max(0, Math.round(minutos));
