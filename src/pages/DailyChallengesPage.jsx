@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import {
   addDoc,
   collection,
@@ -204,7 +205,7 @@ const ChallengeForm = ({ mode, challenge, isSubmitting, onCancel, onSubmit }) =>
   );
 };
 
-const DailyChallengesPage = () => {
+const RetosDiarios = () => {
   const { user, isAdmin, displayName } = useAuth();
   const firstName = displayName.split(' ')[0];
 
@@ -463,6 +464,12 @@ const DailyChallengesPage = () => {
       </div>
     </div>
   );
+};
+
+/** Retos Diarios aún no funciona: solo lo ve el docente; el estudiante vuelve al inicio. */
+const DailyChallengesPage = () => {
+  const { isAdmin } = useAuth();
+  return isAdmin ? <RetosDiarios /> : <Navigate to="/dashboard" replace />;
 };
 
 export default DailyChallengesPage;

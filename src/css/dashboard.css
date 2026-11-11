@@ -558,7 +558,8 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-comp-texto-enunciado { display: flex; flex-direction: column; gap: 12px; }
 
 /* Panel del jurado (prefijo nb-comp-, mismo sistema que la vista docente). */
-.nb-comp-jurado { align-self: flex-start; text-decoration: none; }
+.nb-comp-boton { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; text-align: center; text-decoration: none; }
+.nb-comp-jurado { align-self: flex-start; }
 .nb-comp-form { display: flex; flex-direction: column; gap: 14px; }
 .nb-comp-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .nb-comp-campos { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr); gap: 12px 16px; align-items: end; }
@@ -607,6 +608,7 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
   .nb-comp-reloj { flex-basis: 100%; align-items: flex-start; box-shadow: 3px 3px 0px var(--nb-blue); }
   .nb-comp-respaldo { margin-left: 0; flex-basis: 100%; }
   .nb-comp-equipo, .nb-comp-credencial { box-shadow: 3px 3px 0px #000; }
+  .nb-comp-head > .nb-comp-boton { flex-basis: 100%; }
 }
 @media (max-width: 760px) {
   .nb-comp-campos { grid-template-columns: minmax(0, 1fr); }

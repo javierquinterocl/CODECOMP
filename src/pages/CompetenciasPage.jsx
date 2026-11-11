@@ -382,20 +382,29 @@ const CompetenciasPage = () => {
     );
   }
   const panelJurado = isAdmin && (
-    <Link className="nb-dash-btn-claro nb-comp-jurado" to="/dashboard/competencias/jurado">Panel del jurado</Link>
+    <Link className="nb-dash-btn-claro nb-comp-boton nb-comp-jurado" to="/dashboard/competencias/jurado">Panel del jurado</Link>
   );
 
   if (!datos) return <div className="nb-dash-inner is-wide nb-comp"><p className="nb-doc-vacio">Cargando competencia…</p></div>;
   if (!datos.concurso) {
     return (
       <div className="nb-dash-inner is-wide nb-comp">
-        <div className="nb-pb-empty">
-          <div className="nb-pb-empty-title">{isAdmin ? 'Organiza una competencia' : 'No estás inscrito en ninguna competencia'}</div>
-          <p>{isAdmin
-            ? 'Desde el panel del jurado creas la competencia, armas los equipos y eliges los problemas.'
-            : 'Cuando tu docente te agregue a un equipo, la competencia aparecerá aquí.'}</p>
-          {panelJurado}
-        </div>
+        {isAdmin ? (
+          <div className="nb-dash-card nb-comp-head">
+            <span className="nb-comp-icono" aria-hidden="true"><FlagIcon /></span>
+            <div className="nb-comp-texto">
+              <div className="nb-dash-kicker">Jurado</div>
+              <h1 className="nb-comp-titulo">Organiza una competencia</h1>
+              <p className="nb-comp-sub">Desde el panel del jurado creas la competencia, armas los equipos y eliges los problemas. DOMjudge juzga por debajo.</p>
+            </div>
+            <Link className="nb-ex-send nb-comp-boton" to="/dashboard/competencias/jurado">Abrir panel del jurado</Link>
+          </div>
+        ) : (
+          <div className="nb-pb-empty">
+            <div className="nb-pb-empty-title">No estás inscrito en ninguna competencia</div>
+            <p>Cuando tu docente te agregue a un equipo, la competencia aparecerá aquí.</p>
+          </div>
+        )}
       </div>
     );
   }

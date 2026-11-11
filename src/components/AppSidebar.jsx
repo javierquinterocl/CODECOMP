@@ -66,8 +66,9 @@ const AppSidebar = () => {
         <NavItem label="Inicio" to="/dashboard" icono={<HomeIcon />} end />
         <NavItem label="Fundamentos" to="/dashboard/fundamentos" icono={<BookIcon />} />
         <NavItem label="Problemas" to="/dashboard/problemas" icono={<CpuIcon />} />
-        <NavItem label="Retos Diarios" to="/dashboard/retos" icono={<TargetIcon />} />
         <NavItem label="Competencias" to="/dashboard/competencias" icono={<FlagIcon />} />
+        {/* Retos Diarios aún no hace nada: solo lo ve el docente, por si se implementa. */}
+        {isAdmin && <NavItem label="Retos Diarios" to="/dashboard/retos" icono={<TargetIcon />} />}
         {/* Mi progreso es del estudiante; el docente tiene su vista en Estudiantes. */}
         {!isAdmin && <NavItem label="Mi progreso" to="/dashboard/progreso" icono={<ChartIcon />} />}
         <NavItemSoon label="Rankings" icono={<TrophyIcon />} />
