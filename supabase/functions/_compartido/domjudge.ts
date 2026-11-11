@@ -161,17 +161,30 @@ export const slugDe = (texto: string, largo = 24): string =>
   texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, largo).replace(/-+$/, '') || 'x';
 
-/** Id del concurso: nombre y fecha de inicio (en Bogota), p. ej. "maraton-interna-20261120". */
-export const idConcurso = (nombre: string, inicio: Date): string => {
-  const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(inicio);
-  return `${slugDe(nombre)}-${fecha.replaceAll('-', '')}`;
+// DOMjudge exige ids en formato CLICS: [a-zA-Z0-9_.-], de 1 a 36 caracteres.
+export const ID_CLICS = /^[a-zA-Z0-9_.-]{1,36}$/;
+
+/** Huella de 6 caracteres (FNV-1a en base 36) para distinguir ids de concursos distintos. */
+export const huellaDe = (texto: string): string => {
+  let h = 0x811c9dc5;
+  for (const c of new TextEncoder().encode(texto)) h = Math.imul(h ^ c, 0x01000193) >>> 0;
+  return h.toString(36).padStart(6, '0').slice(-6);
 };
 
-/** Id del equipo dentro de su concurso; tambien es el usuario de su cuenta de respaldo. */
-export const idEquipo = (cid: string, nombre: string): string => `${cid}-${slugDe(nombre, 20)}`;
+/**
+ * Id del concurso: inicio del nombre, fecha de inicio (en Bogota) y huella del nombre completo,
+ * para que dos nombres que empiezan igual el mismo dia no choquen. Hasta 30 caracteres.
+ */
+export const idConcurso = (nombre: string, inicio: Date): string => {
+  const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(inicio);
+  return `${slugDe(nombre, 14)}-${fecha.replaceAll('-', '')}-${huellaDe(nombre.trim().toLowerCase())}`;
+};
+
+/** Id del equipo (y usuario de su cuenta de respaldo): huella del concurso y nombre, hasta 33 caracteres. */
+export const idEquipo = (cid: string, nombre: string): string => `t-${huellaDe(cid)}-${slugDe(nombre, 24)}`;
 
 /** Id del problema en DOMjudge: unico aunque el mismo problema del banco este en varios concursos. */
-export const idProblemaDJ = (slug: string, cid: string): string => `${slugDe(slug, 40)}-${cid}`;
+export const idProblemaDJ = (slug: string, cid: string): string => `${slugDe(slug, 22)}-${huellaDe(cid)}`;
 
 /** Minutos -> "H:MM:SS.000", el formato de duracion de DOMjudge. */
 export const duracionDJ = (minutos: number): string => {

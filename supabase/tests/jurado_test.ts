@@ -8,6 +8,8 @@ import {
   equipoJson,
   filasMarcador,
   htmlDeEnunciado,
+  huellaDe,
+  ID_CLICS,
   idConcurso,
   idEquipo,
   idProblemaDJ,
@@ -24,13 +26,31 @@ Deno.test('slugDe quita tildes y simbolos', () => {
 
 Deno.test('idConcurso usa la fecha de Bogota, no la UTC', () => {
   // 2026-11-21 02:00 UTC = 2026-11-20 21:00 en Bogota.
-  assertEquals(idConcurso('Maratón interna', new Date('2026-11-21T02:00:00Z')), 'maraton-interna-20261120');
+  const cid = idConcurso('Maratón interna', new Date('2026-11-21T02:00:00Z'));
+  assert(cid.startsWith('maraton-intern-20261120-'), cid);
+});
+
+Deno.test('idConcurso no choca con nombres que empiezan igual el mismo dia', () => {
+  const dia = new Date('2026-11-20T19:00:00Z');
+  assert(idConcurso('Recorrido del jurado uno', dia) !== idConcurso('Recorrido del jurado dos', dia));
+  assertEquals(idConcurso('Maratón interna', dia), idConcurso('  maratón interna ', dia));
 });
 
 Deno.test('ids de equipo y de problema dependen del concurso', () => {
-  assertEquals(idEquipo('feria-20261109', 'Los Compiladores'), 'feria-20261109-los-compiladores');
-  assertEquals(idProblemaDJ('ufps-2021-d', 'feria-20261109'), 'ufps-2021-d-feria-20261109');
+  const h = huellaDe('feria-20261109');
+  assertEquals(h.length, 6);
+  assertEquals(idEquipo('feria-20261109', 'Los Compiladores'), `t-${h}-los-compiladores`);
+  assertEquals(idProblemaDJ('ufps-2021-d', 'feria-20261109'), `ufps-2021-d-${h}`);
   assert(idProblemaDJ('ufps-2021-d', 'a') !== idProblemaDJ('ufps-2021-d', 'b'));
+  assert(idEquipo('a', 'Bit') !== idEquipo('b', 'Bit'));
+});
+
+Deno.test('los ids nunca pasan el formato CLICS de DOMjudge (36 caracteres)', () => {
+  const nombreLargo = 'Gran maratón interuniversitaria de programación competitiva del nororiente';
+  const cid = idConcurso(nombreLargo, new Date('2026-11-21T02:00:00Z'));
+  for (const id of [cid, idEquipo(cid, nombreLargo), idProblemaDJ('icpc-latinoamerica-2024-problema-muy-largo', cid)]) {
+    assert(ID_CLICS.test(id), `${id} (${id.length})`);
+  }
 });
 
 Deno.test('duracionDJ e isoBogota con el formato de DOMjudge', () => {

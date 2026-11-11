@@ -263,11 +263,25 @@ const nuevaClave = async (ctx: Contexto, docenteId: string, cid: string, teamId:
   return ok(ctx, { usuario: teamId, clave });
 };
 
+const MAX_INTEGRANTES = 3;
+
+/** Como en la ICPC, el equipo queda fijo cuando empieza la competencia. */
+const integrantesFijos = async (ctx: Contexto, cid: string) =>
+  estadoDe(await concursoDJ(ctx, cid)) !== 'antes'
+    ? no(ctx, 409, 'empezo', 'Los integrantes quedan fijos cuando empieza la competencia.')
+    : null;
+
 const agregarMiembro = async (ctx: Contexto, docenteId: string, cid: string, teamId: string) => {
   const userId = String((await cuerpoJson(ctx)).userId ?? '');
   if (!UUID.test(userId)) return no(ctx, 400, 'usuario', 'Estudiante no valido.');
   const [eq] = await ctx.sql`SELECT 1 FROM competencia_equipos WHERE team_id = ${teamId} AND cid = ${cid}`;
   if (!eq) return no(ctx, 404, 'equipo', 'Equipo no encontrado.');
+  const fijo = await integrantesFijos(ctx, cid);
+  if (fijo) return fijo;
+  const [{ n }] = await ctx.sql<{ n: number }[]>`
+    SELECT count(*)::int AS n FROM competencia_miembros WHERE team_id = ${teamId}
+  `;
+  if (n >= MAX_INTEGRANTES) return no(ctx, 409, 'lleno', `El equipo ya tiene ${MAX_INTEGRANTES} integrantes.`);
   const [u] = await ctx.sql`SELECT 1 FROM users WHERE id = ${userId}`;
   if (!u) return no(ctx, 404, 'usuario', 'Estudiante no encontrado.');
   const [otro] = await ctx.sql<{ nombre: string }[]>`
@@ -284,6 +298,8 @@ const agregarMiembro = async (ctx: Contexto, docenteId: string, cid: string, tea
 
 const quitarMiembro = async (ctx: Contexto, docenteId: string, cid: string, teamId: string, userId: string) => {
   if (!UUID.test(userId)) return no(ctx, 400, 'usuario', 'Estudiante no valido.');
+  const fijo = await integrantesFijos(ctx, cid);
+  if (fijo) return fijo;
   await ctx.sql`
     DELETE FROM competencia_miembros WHERE team_id = ${teamId} AND cid = ${cid} AND user_id = ${userId}
   `;

@@ -161,7 +161,7 @@ const BuscarEstudiante = ({ user, onElegir, ocupado }) => {
   );
 };
 
-const EquipoTarjeta = ({ user, cid, equipo, recargar, onCredencial }) => {
+const EquipoTarjeta = ({ user, cid, equipo, editable, recargar, onCredencial }) => {
   const { ocupado, error, ejecutar } = useAccion();
   const [nombre, setNombre] = useState(equipo.nombre);
   const [agregando, setAgregando] = useState(false);
@@ -194,20 +194,25 @@ const EquipoTarjeta = ({ user, cid, equipo, recargar, onCredencial }) => {
         <button type="submit" className="nb-dash-btn-claro" disabled={ocupado || nombre.trim() === equipo.nombre}>Renombrar</button>
       </form>
       {equipo.retirado && <span className="nb-doc-alerta">Retirado</span>}
+      {!equipo.retirado && !equipo.miembros.length && (
+        <span className="nb-doc-alerta">Sin integrantes: nadie podrá competir</span>
+      )}
       <ul className="nb-comp-miembros">
         {equipo.miembros.map((m) => (
           <li key={m.userId}>
             <span>{m.correo}</span>
-            <button type="button" className="nb-dash-aviso-mas" onClick={() => quitar(m)} disabled={ocupado}>Quitar</button>
+            {editable && (
+              <button type="button" className="nb-dash-aviso-mas" onClick={() => quitar(m)} disabled={ocupado}>Quitar</button>
+            )}
           </li>
         ))}
         {!equipo.miembros.length && <li className="nb-doc-vacio">Sin integrantes todavía.</li>}
       </ul>
-      {agregando
+      {editable && (agregando
         ? <BuscarEstudiante user={user} onElegir={agregar} ocupado={ocupado} />
         : equipo.miembros.length < 3 && (
           <button type="button" className="nb-doc-filtro" onClick={() => setAgregando(true)}>Agregar integrante</button>
-        )}
+        ))}
       <div className="nb-comp-acciones">
         <button type="button" className="nb-dash-aviso-mas" onClick={clave} disabled={ocupado}>Nueva clave de respaldo</button>
         <button type="button" className="nb-dash-aviso-mas" onClick={retirar} disabled={ocupado}>{equipo.retirado ? 'Volver a inscribir' : 'Retirar equipo'}</button>
@@ -217,7 +222,7 @@ const EquipoTarjeta = ({ user, cid, equipo, recargar, onCredencial }) => {
   );
 };
 
-const Equipos = ({ user, cid, equipos, recargar }) => {
+const Equipos = ({ user, cid, equipos, editable, recargar }) => {
   const [nombre, setNombre] = useState('');
   const [credencial, setCredencial] = useState(null);
   const { ocupado, error, ejecutar } = useAccion();
@@ -236,11 +241,15 @@ const Equipos = ({ user, cid, equipos, recargar }) => {
       </form>
       {error && <p className="nb-comp-aviso is-fail" role="alert">{error}</p>}
       {credencial && <Credencial datos={credencial} onCerrar={() => setCredencial(null)} />}
-      <p className="nb-comp-sub">Equipos de hasta 3 integrantes con cuenta en CODECOMP. Cada estudiante puede estar en un solo equipo por competencia.</p>
+      <p className="nb-comp-sub">
+        {editable
+          ? 'Equipos de 1 a 3 integrantes con cuenta en CODECOMP. Cada estudiante puede estar en un solo equipo por competencia. Los integrantes quedan fijos cuando empieza.'
+          : 'La competencia ya empezó: los integrantes quedan fijos. Si hace falta, retira al equipo.'}
+      </p>
       {equipos.length ? (
         <ul className="nb-comp-equipos">
           {equipos.map((eq) => (
-            <EquipoTarjeta key={eq.teamId} user={user} cid={cid} equipo={eq} recargar={recargar} onCredencial={setCredencial} />
+            <EquipoTarjeta key={eq.teamId} user={user} cid={cid} equipo={eq} editable={editable} recargar={recargar} onCredencial={setCredencial} />
           ))}
         </ul>
       ) : <p className="nb-doc-vacio">Aún no hay equipos.</p>}
@@ -493,7 +502,9 @@ const JuradoCompetenciaPage = () => {
 
       {error && <p className="nb-comp-aviso is-fail" role="alert">{error}</p>}
       {pestana === 'datos' && <Datos key={comp.inicio} user={user} comp={comp} recargar={cargar} />}
-      {pestana === 'equipos' && <Equipos user={user} cid={cid} equipos={datos.equipos} recargar={cargar} />}
+      {pestana === 'equipos' && (
+        <Equipos user={user} cid={cid} equipos={datos.equipos} editable={comp.estado === 'antes'} recargar={cargar} />
+      )}
       {pestana === 'problemas' && <Problemas user={user} cid={cid} problemas={datos.problemas} recargar={cargar} />}
       {pestana === 'envios' && <EnviosJurado user={user} cid={cid} />}
       {pestana === 'aclaraciones' && <AclaracionesJurado user={user} cid={cid} equipos={datos.equipos} />}
