@@ -7,6 +7,8 @@ import { alertasDe, parecido, UMBRAL_PARECIDO } from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
+import { dia } from '../config.ts';
+import { fundamentosResueltos, mapaDeActividad, tiempoPorEjercicio } from '../actividad.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
@@ -203,10 +205,28 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     }
   }
 
-  const escalon = await escalonDelUsuario(sql, estudianteId);
+  const [escalon, mapa, ejercicios, fundamentosHechos] = await Promise.all([
+    escalonDelUsuario(sql, estudianteId),
+    mapaDeActividad(sql, estudianteId, ctx.config.zonaHoraria, dia(ctx.config.zonaHoraria)),
+    tiempoPorEjercicio(sql, estudianteId),
+    fundamentosResueltos(sql, estudianteId),
+  ]);
   return responder({
     status: 200,
-    cuerpo: { clase, usuario, escalon, evolucion, envios, pistas, actividad, fundamentos, temas, parecidos },
+    cuerpo: {
+      clase,
+      usuario: { ...usuario, fundamentos_resueltos: fundamentosHechos },
+      escalon,
+      evolucion,
+      envios,
+      pistas,
+      actividad,
+      mapa,
+      ejercicios,
+      fundamentos,
+      temas,
+      parecidos,
+    },
   }, cors);
 };
 

@@ -10,6 +10,8 @@ import {
   normalizarCodigo,
   normalizarNombreClase,
   nuevoCodigoClase,
+  type Resumen,
+  tocaPurgar,
   validarResumen,
 } from '../registro.ts';
 import { idDeUsuario } from '../usuarios.ts';
@@ -55,6 +57,7 @@ export const datos = async (ctx: Contexto): Promise<Response> => {
       `;
       if (!acepta) {
         await tx`DELETE FROM actividad_diaria WHERE user_id = ${userId}`;
+        await tx`DELETE FROM actividad_ejercicio WHERE user_id = ${userId}`;
         await tx`DELETE FROM aperturas_problema WHERE user_id = ${userId}`;
       }
     });
@@ -62,6 +65,51 @@ export const datos = async (ctx: Contexto): Promise<Response> => {
   } catch (error) {
     console.error('Datos error:', error);
     return responder(rechazo(500, 'datos', 'No se pudo guardar tu respuesta.'), cors);
+  }
+};
+
+let ultimaPurga: string | null = null;
+
+/**
+ * Suma el tiempo de cada ejercicio del resumen en dos sentencias (Problemas y Fundamentos).
+ * Lo que no exista en el catalogo se descarta en el JOIN.
+ */
+const guardarTiempoPorEjercicio = async (
+  sql: Contexto['sql'],
+  userId: string,
+  hoy: string,
+  resumen: Resumen,
+) => {
+  const problemas = resumen.ejercicios.filter((e) => e.tipo === 'problema');
+  const fundamentos = resumen.ejercicios.filter((e) => e.tipo === 'fundamentos');
+  if (problemas.length) {
+    await sql`
+      INSERT INTO actividad_ejercicio (user_id, dia, problem_id, segundos)
+      SELECT ${userId}::uuid, ${hoy}::date, p.id, sum(t.segundos)::int
+      FROM unnest(${problemas.map((e) => e.numero)}::int[], ${problemas.map((e) => e.segundos)}::int[])
+        AS t(numero, segundos)
+      JOIN problems p ON p.problem_number = t.numero
+      GROUP BY p.id
+      ON CONFLICT (user_id, dia, problem_id) WHERE problem_id IS NOT NULL DO UPDATE SET
+        segundos = LEAST(actividad_ejercicio.segundos + EXCLUDED.segundos, 86400),
+        actualizado_en = now()
+    `;
+  }
+  if (fundamentos.length) {
+    await sql`
+      INSERT INTO actividad_ejercicio (user_id, dia, ejercicio_id, segundos)
+      SELECT ${userId}::uuid, ${hoy}::date, f.id, sum(t.segundos)::int
+      FROM unnest(
+        ${fundamentos.map((e) => (e as { nivel: string }).nivel)}::text[],
+        ${fundamentos.map((e) => e.numero)}::int[],
+        ${fundamentos.map((e) => e.segundos)}::int[]
+      ) AS t(nivel, numero, segundos)
+      JOIN fundamentos_ejercicios f ON f.nivel = t.nivel AND f.numero = t.numero
+      GROUP BY f.id
+      ON CONFLICT (user_id, dia, ejercicio_id) WHERE ejercicio_id IS NOT NULL DO UPDATE SET
+        segundos = LEAST(actividad_ejercicio.segundos + EXCLUDED.segundos, 86400),
+        actualizado_en = now()
+    `;
   }
 };
 
@@ -112,11 +160,14 @@ export const actividad = async (ctx: Contexto, recurso: string | undefined): Pro
         caracteres_pegados = actividad_diaria.caracteres_pegados + EXCLUDED.caracteres_pegados,
         actualizado_en = now()
     `;
-    // La actividad se conserva 12 meses, como dice el aviso de datos.
-    await sql`
-      DELETE FROM actividad_diaria
-      WHERE user_id = ${userId} AND dia < (now() - INTERVAL '12 months')::date
-    `;
+    await guardarTiempoPorEjercicio(sql, userId, dia(config.zonaHoraria), resumen);
+    // La actividad se conserva 12 meses, como dice el aviso de datos: una vez al dia, para todos.
+    const hoy = dia(config.zonaHoraria);
+    if (tocaPurgar(ultimaPurga, hoy)) {
+      ultimaPurga = hoy;
+      await sql`DELETE FROM actividad_diaria WHERE dia < (now() - INTERVAL '12 months')::date`;
+      await sql`DELETE FROM actividad_ejercicio WHERE dia < (now() - INTERVAL '12 months')::date`;
+    }
     return responder({ status: 200, cuerpo: { registrado: true } }, cors);
   } catch (error) {
     console.error('Actividad error:', error);
@@ -165,6 +216,8 @@ export const clases = async (ctx: Contexto, recurso: string | undefined): Promis
       const companeros = filas.length
         ? await sql`
           SELECT u.id = ${userId} AS yo, u.username, u.nivel, u.solved_count AS resueltos,
+            (SELECT count(DISTINCT f.ejercicio_id)::int FROM fundamentos_envios f
+              WHERE f.user_id = u.id AND f.veredicto = 'ACEPTADO') AS fundamentos_resueltos,
             (SELECT count(*)::int FROM submissions s WHERE s.user_id = u.id
               AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS envios, m.unido_en
           FROM clase_miembros m JOIN users u ON u.id = m.user_id

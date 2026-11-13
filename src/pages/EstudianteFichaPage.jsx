@@ -5,10 +5,12 @@ import { cambiarEscalon, getFichaEstudiante } from '../scripts/docenteApi';
 import { NIVELES } from '../scripts/problemsData';
 import NbSelect from '../components/NbSelect';
 import {
-  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, veredictoEs,
+  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs,
 } from '../scripts/docenteData';
 import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
+import MapaActividad from '../components/MapaActividad';
+import TiempoEjercicios from '../components/TiempoEjercicios';
 
 const Seccion = ({ titulo, sub, children }) => (
   <section className="nb-dash-card nb-dash-pad">
@@ -74,10 +76,14 @@ const EstudianteFichaPage = () => {
   useEffect(() => {
     if (!user || !isAdmin) return undefined;
     let vigente = true;
-    getFichaEstudiante(user, id)
-      .then((data) => { if (vigente) setFicha(data); })
+    const cargar = () => getFichaEstudiante(user, id)
+      .then((data) => { if (vigente) { setFicha(data); setError(''); } })
       .catch((e) => { if (vigente) setError(e.message); });
-    return () => { vigente = false; };
+    cargar();
+    // Al volver a la pestaña se recarga: la actividad del estudiante llega cada minuto.
+    const alVolver = () => { if (document.visibilityState === 'visible') cargar(); };
+    document.addEventListener('visibilitychange', alVolver);
+    return () => { vigente = false; document.removeEventListener('visibilitychange', alVolver); };
   }, [user, isAdmin, id]);
 
   const temas = useMemo(() => temasPorCategoria(ficha?.temas || []), [ficha]);
@@ -93,9 +99,12 @@ const EstudianteFichaPage = () => {
   }
   if (!ficha) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando la ficha…</p></div>;
 
-  const { usuario, clase, evolucion, envios, pistas, actividad, fundamentos, parecidos } = ficha;
+  const { usuario, clase, evolucion, envios, pistas, actividad, mapa, ejercicios, fundamentos, parecidos } = ficha;
+  const autorizado = usuario.datos_autorizados === true;
   const segundos30 = actividad.reduce((t, d) => t + d.segundos, 0);
   const pegados30 = actividad.reduce((t, d) => t + d.pegados, 0);
+  const semana = ultimosDias(mapa, 7);
+  const fundamentosHechos = usuario.fundamentos_resueltos ?? 0;
 
   return (
     <div className="nb-dash-inner">
@@ -111,8 +120,21 @@ const EstudianteFichaPage = () => {
         </div>
         <div className="nb-pb-hero-stats">
           <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Nivel</div><div className="nb-pb-hstat-value">{Math.round(Number(usuario.nivel))}</div></div>
-          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Resueltos</div><div className="nb-pb-hstat-value">{usuario.solved_count}</div></div>
-          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">30 días</div><div className="nb-pb-hstat-value">{duracion(segundos30)}</div></div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">Resueltos</div>
+            <div className="nb-pb-hstat-value">{usuario.solved_count + fundamentosHechos}</div>
+            <div className="nb-pb-hstat-sub">{usuario.solved_count} problemas · {fundamentosHechos} Fundamentos</div>
+          </div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">En ejercicios</div>
+            <div className="nb-pb-hstat-value">{autorizado ? duracion(semana.segundosEjercicios) : '—'}</div>
+            <div className="nb-pb-hstat-sub">últimos 7 días</div>
+          </div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">En la plataforma</div>
+            <div className="nb-pb-hstat-value">{autorizado ? duracion(segundos30) : '—'}</div>
+            <div className="nb-pb-hstat-sub">últimos 30 días</div>
+          </div>
         </div>
       </div>
 
@@ -141,6 +163,16 @@ const EstudianteFichaPage = () => {
               </ul>
             </>
           ) : <p className="nb-doc-vacio">Todavía no ha cerrado ningún problema: el nivel cambia al resolverlo o al cerrarlo sin resolver.</p>}
+        </Seccion>
+
+        <Seccion titulo="Actividad" sub={autorizado ? 'Últimos 12 meses · pasa el cursor por un día para ver el detalle' : 'Últimos 12 meses · solo envíos (no autorizó el registro de tiempo)'}>
+          <MapaActividad mapa={mapa} conTiempo={autorizado} />
+        </Seccion>
+
+        <Seccion titulo="Tiempo por ejercicio" sub="Cuánto tarda de verdad en cada ejercicio · últimos 12 meses">
+          {autorizado
+            ? <TiempoEjercicios ejercicios={ejercicios} totales={mapa.totales} limite={20} />
+            : <p className="nb-doc-vacio">No autorizó el registro de actividad: no se mide su tiempo.</p>}
         </Seccion>
 
         <div className="nb-dash-row">

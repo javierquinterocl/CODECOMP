@@ -150,7 +150,10 @@ const UserHistoryPage = () => {
                         <Alertas lista={e.alertas} />
                       </span>
                       <span className="nb-doc-dato"><small>Nivel</small><strong>{Math.round(e.nivel)}</strong></span>
-                      <span className="nb-doc-dato"><small>Resueltos</small><strong>{e.resueltos}</strong></span>
+                      <span className="nb-doc-dato" title={`${e.resueltos} problemas · ${e.fundamentosResueltos} Fundamentos`}>
+                        <small>Resueltos</small><strong>{e.resueltos + e.fundamentosResueltos}</strong>
+                      </span>
+                      <span className="nb-doc-dato"><small>Problemas</small><strong>{e.resueltos}</strong></span>
                       <span className="nb-doc-dato"><small>Fundamentos</small><strong>{e.fundamentosResueltos}</strong></span>
                       <span className="nb-doc-dato"><small>Envíos</small><strong>{e.envios}</strong></span>
                       <span className="nb-doc-dato"><small>Esta semana</small><strong>{duracion(e.segundosSemana)}</strong></span>

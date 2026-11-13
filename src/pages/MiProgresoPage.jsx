@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { getMiProgreso } from '../scripts/registroApi';
+import { EVENTO_ACTIVIDAD_ENVIADA, EVENTO_VACIAR_ACTIVIDAD, getMiProgreso } from '../scripts/registroApi';
 import { buscarNivel } from '../scripts/fundamentosData';
-import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria } from '../scripts/docenteData';
+import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias } from '../scripts/docenteData';
 import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
+import MapaActividad from '../components/MapaActividad';
+import TiempoEjercicios from '../components/TiempoEjercicios';
 
 const RESUELTOS_PARA_SUBIR = 5;
 
@@ -43,13 +45,24 @@ const MiProgresoPage = () => {
   const [datos, setDatos] = useState(null);
   const [error, setError] = useState('');
 
+  // Al abrir se envía la actividad acumulada; cada envío que llega y cada vuelta a la pestaña
+  // vuelven a cargar, así los tiempos se ven al día sin recargar la página.
   useEffect(() => {
     if (!user || isAdmin) return undefined;
     let vigente = true;
-    getMiProgreso(user)
-      .then((data) => { if (vigente) setDatos(data); })
+    const cargar = () => getMiProgreso(user)
+      .then((data) => { if (vigente) { setDatos(data); setError(''); } })
       .catch((e) => { if (vigente) setError(e.message); });
-    return () => { vigente = false; };
+    cargar();
+    window.dispatchEvent(new Event(EVENTO_VACIAR_ACTIVIDAD));
+    const alVolver = () => { if (document.visibilityState === 'visible') cargar(); };
+    window.addEventListener(EVENTO_ACTIVIDAD_ENVIADA, cargar);
+    document.addEventListener('visibilitychange', alVolver);
+    return () => {
+      vigente = false;
+      window.removeEventListener(EVENTO_ACTIVIDAD_ENVIADA, cargar);
+      document.removeEventListener('visibilitychange', alVolver);
+    };
   }, [user, isAdmin]);
 
   // Del tema más débil al más fuerte; los que nunca practicó van primero.
@@ -62,17 +75,17 @@ const MiProgresoPage = () => {
 
   // Solo para estudiantes (decisión del equipo): el docente va a su vista.
   if (isAdmin) return <Navigate to="/historial-usuarios" replace />;
-  if (error) return <div className="nb-dash-inner"><div className="nb-pb-empty"><p className="nb-pb-empty-title">{error}</p></div></div>;
+  if (error && !datos) return <div className="nb-dash-inner"><div className="nb-pb-empty"><p className="nb-pb-empty-title">{error}</p></div></div>;
   if (!datos) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando tu progreso…</p></div>;
 
-  const { usuario, evolucion, pendientes, actividad } = datos;
-  const semana = actividad.slice(-7).reduce((t, d) => t + d.segundos, 0);
-  const maxSegundos = Math.max(1, ...actividad.map((d) => d.segundos));
+  const { usuario, evolucion, pendientes, mapa, ejercicios } = datos;
+  const autorizado = usuario.datos_autorizados === true;
+  const semana = ultimosDias(mapa, 7);
   const abiertos = pendientes.filter((p) => !p.cerrado);
   const cerrados = pendientes.filter((p) => p.cerrado);
 
   const fundamentos = datos.fundamentos || [];
-  const fundamentosHechos = fundamentos.reduce((t, f) => t + f.resueltos, 0);
+  const fundamentosHechos = usuario.fundamentos_resueltos ?? fundamentos.reduce((t, f) => t + f.resueltos, 0);
 
   return (
     <div className="nb-dash-inner">
@@ -84,9 +97,21 @@ const MiProgresoPage = () => {
         </div>
         <div className="nb-pb-hero-stats">
           <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Nivel</div><div className="nb-pb-hstat-value">{Math.round(usuario.nivel)}</div></div>
-          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Resueltos</div><div className="nb-pb-hstat-value">{usuario.resueltos}</div></div>
-          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Fundamentos</div><div className="nb-pb-hstat-value">{fundamentosHechos}</div></div>
-          <div className="nb-pb-hstat"><div className="nb-pb-hstat-label">Esta semana</div><div className="nb-pb-hstat-value">{duracion(semana)}</div></div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">Resueltos</div>
+            <div className="nb-pb-hstat-value">{usuario.resueltos + fundamentosHechos}</div>
+            <div className="nb-pb-hstat-sub">{usuario.resueltos} problemas · {fundamentosHechos} Fundamentos</div>
+          </div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">En ejercicios</div>
+            <div className="nb-pb-hstat-value">{autorizado ? duracion(semana.segundosEjercicios) : '—'}</div>
+            <div className="nb-pb-hstat-sub">últimos 7 días</div>
+          </div>
+          <div className="nb-pb-hstat">
+            <div className="nb-pb-hstat-label">En la plataforma</div>
+            <div className="nb-pb-hstat-value">{autorizado ? duracion(semana.segundos) : '—'}</div>
+            <div className="nb-pb-hstat-sub">últimos 7 días</div>
+          </div>
         </div>
       </div>
 
@@ -100,6 +125,7 @@ const MiProgresoPage = () => {
                   ? `Para subir a «${NIVELES[datos.escalon.actual + 1]}»: llega a nivel ${datos.escalon.nivelParaSubir} o resuelve ${RESUELTOS_PARA_SUBIR} problemas de este escalón (llevas ${Math.min(datos.escalon.resueltosEnActual, RESUELTOS_PARA_SUBIR)}).`
                   : 'Estás en el escalón más alto.'}
                 {' '}Puedes intentar problemas más difíciles: se marcan como «Fuera de tu escalón» y no se recomiendan.
+                {' '}Tu nivel y tu escalón salen de Problemas, que tienen dificultad medida; Fundamentos cuenta en tus resueltos.
               </p>
             </div>
             <Link className="nb-doc-filtro" to="/dashboard/problemas">Ver problemas</Link>
@@ -146,20 +172,18 @@ const MiProgresoPage = () => {
           </Seccion>
         </div>
 
+        <Seccion titulo="Tu actividad" sub={autorizado ? 'Últimos 12 meses · pasa el cursor por un día para ver el detalle' : 'Últimos 12 meses · tus envíos por día'}>
+          {!autorizado && (
+            <p className="nb-doc-nota nb-doc-nota-top">No registramos tu tiempo porque no lo has autorizado; aquí solo ves tus envíos. Puedes cambiarlo en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>
+          )}
+          <MapaActividad mapa={mapa} conTiempo={autorizado} />
+        </Seccion>
+
         <div className="nb-dash-row">
-          <Seccion titulo="Tu actividad" sub="Tiempo activo por día · últimos 14 días" className="nb-dash-col is-7">
-            {usuario.datos_autorizados !== true ? (
-              <p className="nb-doc-vacio">No registramos tu actividad porque no la has autorizado. Puedes cambiarlo en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>
-            ) : actividad.length ? (
-              <div className="nb-doc-barras" role="img" aria-label="Tu tiempo activo por día">
-                {actividad.map((d) => (
-                  <div key={d.dia} className="nb-doc-barra" title={`${d.dia}: ${duracion(d.segundos)}`}>
-                    <span style={{ '--alto': `${Math.max(4, (d.segundos / maxSegundos) * 100)}%` }} />
-                    <small>{d.dia.slice(8)}</small>
-                  </div>
-                ))}
-              </div>
-            ) : <p className="nb-doc-vacio">Aún no hay actividad registrada.</p>}
+          <Seccion titulo="Tiempo por ejercicio" sub="Dónde se te va el tiempo de verdad · últimos 12 meses" className="nb-dash-col is-7">
+            {autorizado
+              ? <TiempoEjercicios ejercicios={ejercicios} totales={mapa.totales} />
+              : <p className="nb-doc-vacio">Para medir cuánto tardas en cada ejercicio necesitamos tu autorización en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>}
           </Seccion>
 
           <Seccion titulo="Fundamentos (PSeInt)" sub="Ejercicios resueltos por nivel" className="nb-dash-col is-5">

@@ -19,6 +19,7 @@
 .nb-pb-hstat { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(8px,0.6vw,14px) clamp(12px,1vw,20px); min-width: clamp(92px, 7vw, 140px); }
 .nb-pb-hstat-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--nb-blue); }
 .nb-pb-hstat-value { font-family: 'Press Start 2P', monospace; font-size: clamp(14px, 0.5vw + 11px, 24px); line-height: 1; margin-top: 9px; }
+.nb-pb-hstat-sub { margin-top: 8px; font-size: var(--fs-xs); color: var(--nb-ink-soft); }
 
 /* ---------- Barra de búsqueda ---------- */
 .nb-pb-bar { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--sp-gap); margin-bottom: var(--sp-gap); }

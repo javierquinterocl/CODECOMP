@@ -148,6 +148,9 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
   }
 
   const ultimos = envios.filter((e) => e.problema === problema?.letra).slice(0, 3);
+  // Como en la ICPC se puede reenviar un problema resuelto; solo se avisa que ya no suma.
+  const resueltas = new Set(envios.filter((e) => e.veredicto === 'AC').map((e) => e.problema));
+  const yaResuelto = resueltas.has(problema?.letra);
   const puedeEnviar = Boolean(datos.equipo) && !datos.equipo.retirado && tiempo?.fase === 'en-curso';
   const pdfActual = pdf.id === elegido ? pdf : { url: null, banco: null, error: '' };
   const textoBanco = pdfActual.banco && (pdfActual.banco.textos.es || pdfActual.banco.textos.en);
@@ -162,9 +165,10 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
               type="button"
               role="tab"
               aria-selected={p.id === elegido}
-              className={`nb-comp-letra${p.id === elegido ? ' is-active' : ''}`}
+              className={`nb-comp-letra${p.id === elegido ? ' is-active' : ''}${resueltas.has(p.letra) ? ' is-resuelto' : ''}`}
               onClick={() => setElegido(p.id)}
-              title={p.nombre}
+              title={resueltas.has(p.letra) ? `${p.nombre} · resuelto` : p.nombre}
+              aria-label={resueltas.has(p.letra) ? `Problema ${p.letra}, resuelto` : `Problema ${p.letra}`}
             >
               {p.letra}
             </button>
@@ -177,6 +181,7 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
               <div className="nb-dash-kicker">Problema {problema.letra}</div>
               <h2 className="nb-comp-problema">{problema.nombre}</h2>
             </div>
+            {yaResuelto && <span className="nb-comp-veredicto is-ok">Resuelto</span>}
             {problema.limiteSegundos && <span className="nb-pb-tag">{problema.limiteSegundos} s</span>}
           </div>
           {textoBanco ? (
@@ -215,6 +220,9 @@ const Problemas = ({ user, datos, tiempo, onEnviado, envios }) => {
             {enviando ? 'Enviando…' : `Enviar ${problema.letra}`}
           </button>
         </div>
+        {yaResuelto && puedeEnviar && (
+          <p className="nb-comp-aviso" role="status">Tu equipo ya resolvió este problema: otro envío no cambia el marcador.</p>
+        )}
 
         <Editor
           codigo={codigo}
