@@ -21,16 +21,24 @@ const sql = conexion(cargarConfig().databaseUrl);
 const comparar = async (): Promise<{ iguales: number; distintos: number; faltan: number }> => {
   const enBase = await sql`
     SELECT nivel, numero, tema, dificultad, titulo, resumen, descripcion, entrada, salida,
-      ejemplos, pista_concepto
+      ejemplos, pista_concepto, jsonb_array_length(casos_ocultos) AS ocultos
     FROM fundamentos_ejercicios WHERE is_active
   `;
   const porClave = new Map(enBase.map((f) => [`${f.nivel}:${f.numero}`, f]));
   const cuenta = { iguales: 0, distintos: 0, faltan: 0 };
   for (const fila of filas) {
     const base = porClave.get(`${fila.nivel}:${fila.numero}`);
-    if (!base) cuenta.faltan++;
-    else if (diferencias(fila, base).length) cuenta.distintos++;
+    if (!base) {
+      cuenta.faltan++;
+      continue;
+    }
+    const cambios = diferencias(fila, base);
+    if (cambios.length) cuenta.distintos++;
     else cuenta.iguales++;
+    // Los ocultos se calcularon con el enunciado anterior: hay que volver a generarlos.
+    if (base.ocultos && cambios.some((c) => ['ejemplos', 'entrada', 'salida'].includes(c))) {
+      console.warn(`  Aviso: ${fila.nivel}:${fila.numero} cambia ${cambios.join(', ')} y tiene ocultos.`);
+    }
   }
   return cuenta;
 };

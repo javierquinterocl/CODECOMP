@@ -168,9 +168,15 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     ORDER BY dia
   `;
   const fundamentos = await sql`
-    SELECT f.creado_en, f.veredicto, f.ejemplo_fallido, f.codigo, e.nivel, e.numero, e.titulo
+    SELECT f.creado_en, f.veredicto, f.ejemplo_fallido, f.oculto, f.codigo, e.nivel, e.numero,
+      e.titulo
     FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
     WHERE f.user_id = ${estudianteId} ORDER BY f.creado_en DESC LIMIT 30
+  `;
+  const pistasFundamentos = await sql`
+    SELECT x.creado_en, x.veredicto, x.pista, e.nivel, e.numero, e.titulo
+    FROM fundamentos_pistas x JOIN fundamentos_ejercicios e ON e.id = x.ejercicio_id
+    WHERE x.user_id = ${estudianteId} ORDER BY x.creado_en DESC LIMIT 30
   `;
   const temas = await sql`
     SELECT t.name AS tag, m.attempts AS intentos, m.successes AS aciertos
@@ -220,6 +226,7 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
       evolucion,
       envios,
       pistas,
+      pistas_fundamentos: pistasFundamentos,
       actividad,
       mapa,
       ejercicios,

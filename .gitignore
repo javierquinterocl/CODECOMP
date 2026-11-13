@@ -41,3 +41,6 @@ functions/.secret.local
 
 # Archivos de trabajo del banco local de problemas
 /banco/
+
+# Soluciones de referencia y casos ocultos de Fundamentos (el repo es publico)
+/fundamentos-ocultos/

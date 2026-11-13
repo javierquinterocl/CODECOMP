@@ -82,24 +82,43 @@ export const normalizar = (texto: string): string =>
   texto.replace(/\r\n?/g, '\n').split('\n').map((l) => l.replace(/[ \t]+$/, '')).join('\n')
     .replace(/\n+$/, '');
 
-export const juzgar = (ejemplos: Ejemplo[], ejecuciones: Ejecucion[]): Veredicto => {
+// Fallo en un caso oculto: solo lo que habla del codigo del estudiante, nada del caso.
+export type FalloOculto =
+  | { veredicto: 'INCORRECTO' | 'NO_TERMINA' | 'DEMASIADA_SALIDA' | 'FALLO'; oculto: true; ejemplo: number }
+  | { veredicto: 'ERROR'; oculto: true; ejemplo: number; linea: number; numero: number | null }
+  | { veredicto: 'SIN_DATOS'; oculto: true; ejemplo: number; linea: number };
+
+// Los casos desde `visibles` son ocultos: su fallo no lleva entrada, salidas ni mensaje.
+export const juzgar = (
+  ejemplos: Ejemplo[],
+  ejecuciones: Ejecucion[],
+  visibles = ejemplos.length,
+): Veredicto | FalloOculto => {
   for (const [i, ejemplo] of ejemplos.entries()) {
     const n = i + 1;
     const ejecucion = ejecuciones[i];
-    if (!ejecucion) return { veredicto: 'FALLO', ejemplo: n };
-    if (ejecucion.estado === 'tiempo') return { veredicto: 'NO_TERMINA', ejemplo: n };
-    if (ejecucion.estado === 'salida') return { veredicto: 'DEMASIADA_SALIDA', ejemplo: n };
-    if (ejecucion.estado !== 'ok') return { veredicto: 'FALLO', ejemplo: n };
+    const oculto = i >= visibles;
+    const corte = (veredicto: 'NO_TERMINA' | 'DEMASIADA_SALIDA' | 'FALLO') =>
+      oculto ? { veredicto, oculto, ejemplo: n } as const : { veredicto, ejemplo: n };
+    if (!ejecucion) return corte('FALLO');
+    if (ejecucion.estado === 'tiempo') return corte('NO_TERMINA');
+    if (ejecucion.estado === 'salida') return corte('DEMASIADA_SALIDA');
+    if (ejecucion.estado !== 'ok') return corte('FALLO');
 
     const lectura = interpretarSalida(ejecucion.salida, ejemplo.entrada);
     if (lectura.tipo === 'error') {
       const { linea, numero, mensaje } = lectura;
-      return { veredicto: 'ERROR', ejemplo: n, linea, numero, mensaje };
+      return oculto
+        ? { veredicto: 'ERROR', oculto, ejemplo: n, linea, numero }
+        : { veredicto: 'ERROR', ejemplo: n, linea, numero, mensaje };
     }
     if (lectura.tipo === 'sin-datos') {
-      return { veredicto: 'SIN_DATOS', ejemplo: n, linea: lectura.linea };
+      return oculto
+        ? { veredicto: 'SIN_DATOS', oculto, ejemplo: n, linea: lectura.linea }
+        : { veredicto: 'SIN_DATOS', ejemplo: n, linea: lectura.linea };
     }
     if (normalizar(lectura.salida) !== normalizar(ejemplo.salida)) {
+      if (oculto) return { veredicto: 'INCORRECTO', oculto, ejemplo: n };
       return {
         veredicto: 'INCORRECTO',
         ejemplo: n,
@@ -110,6 +129,22 @@ export const juzgar = (ejemplos: Ejemplo[], ejecuciones: Ejecucion[]): Veredicto
     }
   }
   return { veredicto: 'ACEPTADO', ejemplos: ejemplos.length };
+};
+
+// Lo que ve el estudiante: el numero de un caso oculto se queda en la base.
+export const paraNavegador = (r: Veredicto | FalloOculto) => {
+  if (!('oculto' in r)) return r;
+  const { ejemplo: _ejemplo, ...resto } = r;
+  return resto;
+};
+
+const TOPE_DETALLE = 2000;
+// Contexto para la pista de IA. Nunca hay detalle de un caso oculto.
+export const detalleDe = (r: Veredicto | FalloOculto): string | null => {
+  if ('oculto' in r) return null;
+  if (r.veredicto === 'INCORRECTO') return r.obtenida.slice(0, TOPE_DETALLE);
+  if (r.veredicto === 'ERROR') return `linea ${r.linea}: ${r.mensaje}`.slice(0, TOPE_DETALLE);
+  return null;
 };
 
 export type Invocador = (codigo: string, entradas: string[]) => Promise<Ejecucion[]>;

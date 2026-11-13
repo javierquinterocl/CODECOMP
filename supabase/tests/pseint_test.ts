@@ -2,12 +2,14 @@ import { assertEquals } from '@std/assert';
 import type { Contexto } from '../functions/_compartido/contexto.ts';
 import type { Config } from '../functions/_compartido/config.ts';
 import {
+  detalleDe,
   type Ejecucion,
   interpretarSalida,
   invocadorLambda,
   juzgar,
   normalizar,
   ocultarCredenciales,
+  paraNavegador,
 } from '../functions/_compartido/pseint.ts';
 import { envio } from '../functions/_compartido/rutas/fundamentos.ts';
 
@@ -141,26 +143,82 @@ Deno.test('invocadorLambda no reintenta otros errores: podrian haber ejecutado e
   assertEquals(llamadas, 1);
 });
 
+/* ── Casos ocultos ─────────────────────────────────────────────────────── */
+
+// Dos visibles y uno oculto: el oculto pide 7 y espera 14.
+const CON_OCULTO = [...EJEMPLOS, { entrada: '7', salida: 'Edad: > 14' }];
+const eco = (dato: string, sale: string) =>
+  `${E}[zp2:1;Edad: ${E}[zp3:1;> ${dato}\n${E}[zp4:1;> ${E}[zp4:1;${sale}\n`;
+const BIEN = [ok(eco('21', '42')), ok(eco('1', '2'))];
+
+Deno.test('juzgar sin ocultos se comporta igual que antes', () => {
+  assertEquals(juzgar(EJEMPLOS, BIEN, 2), juzgar(EJEMPLOS, BIEN));
+});
+
+Deno.test('juzgar con ocultos acepta si pasan todos los casos', () => {
+  assertEquals(juzgar(CON_OCULTO, [...BIEN, ok(eco('7', '14'))], 2), {
+    veredicto: 'ACEPTADO',
+    ejemplos: 3,
+  });
+});
+
+Deno.test('un fallo en un ejemplo visible sigue mostrando la comparacion', () => {
+  const r = juzgar(CON_OCULTO, [ok(eco('21', '42')), ok(eco('1', '3'))], 2);
+  assertEquals(r.veredicto === 'INCORRECTO' && 'esperada' in r && r.esperada, 'Edad: > 2');
+  assertEquals('oculto' in r, false);
+});
+
+Deno.test('un fallo en un caso oculto no lleva entrada, salidas ni mensaje', () => {
+  const incorrecto = juzgar(CON_OCULTO, [...BIEN, ok(eco('7', '15'))], 2);
+  assertEquals(incorrecto, { veredicto: 'INCORRECTO', oculto: true, ejemplo: 3 });
+  assertEquals(paraNavegador(incorrecto), { veredicto: 'INCORRECTO', oculto: true });
+  assertEquals(detalleDe(incorrecto), null);
+
+  // El mensaje de PSeInt lleva numeros que pueden venir de la entrada oculta.
+  const error = juzgar(CON_OCULTO, [...BIEN, ok(CRUDO.ejecucion)], 2);
+  assertEquals(error, { veredicto: 'ERROR', oculto: true, ejemplo: 3, linea: 3, numero: 303 });
+  assertEquals(JSON.stringify(paraNavegador(error)).includes('rango'), false);
+
+  assertEquals(paraNavegador(juzgar(CON_OCULTO, [...BIEN, { salida: '', estado: 'tiempo' }], 2)), {
+    veredicto: 'NO_TERMINA',
+    oculto: true,
+  });
+  assertEquals(paraNavegador(juzgar(CON_OCULTO, [...BIEN, ok(CRUDO.sinDatos)], 2)), {
+    veredicto: 'SIN_DATOS',
+    oculto: true,
+    linea: 3,
+  });
+});
+
+Deno.test('detalleDe guarda la salida o el error de un ejemplo visible', () => {
+  assertEquals(detalleDe(juzgar(EJEMPLOS, [ok(CRUDO.leer), ok(CRUDO.leer)])), 'Edad: > 21\n> 42\n');
+  assertEquals(
+    detalleDe(juzgar(EJEMPLOS, [ok(CRUDO.ejecucion)])),
+    'linea 3: Subindice (0) fuera de rango (1...3).',
+  );
+  assertEquals(detalleDe(juzgar(EJEMPLOS, BIEN)), null);
+});
+
 /* ── Ruta POST /fundamentos/envio ──────────────────────────────────────── */
 
 interface Escenario {
   abiertoHaceSeg?: number | null;
+  ocultos?: { entrada: string; salida: string }[];
   limite?: Record<string, unknown>;
   limiteFalla?: boolean;
   sinPresupuesto?: boolean;
   invocacion?: () => Promise<Ejecucion[]>;
 }
 
-// Base de mentira: responde segun la consulta y anota cada una.
-const contexto = (esc: Escenario, consultas: string[]): Contexto => {
-  const ahora = new Date('2026-10-17T12:00:00Z');
+// Base de mentira: responde segun la consulta y anota cada una con sus valores.
+const contexto = (esc: Escenario, consultas: string[], valores: unknown[][] = []): Contexto => {
   const filas = (texto: string): unknown[] => {
     if (texto.includes('FROM users')) return [{ id: 'usuario-1', email: 'estudiante@ejemplo.co' }];
     if (texto.includes('FROM fundamentos_ejercicios e')) {
       const abierto = esc.abiertoHaceSeg === null
         ? null
-        : new Date(ahora.getTime() - (esc.abiertoHaceSeg ?? 300) * 1000);
-      return [{ ejemplos: EJEMPLOS, abierto_en: abierto, ahora }];
+        : new Date(Date.now() - (esc.abiertoHaceSeg ?? 300) * 1000);
+      return [{ id: 7, ejemplos: EJEMPLOS, casos_ocultos: esc.ocultos ?? [], abierto_en: abierto }];
     }
     if (texto.includes('registrar_envio_pseint')) return [esc.limite ?? { permitido: true }];
     if (texto.includes('consumir_presupuesto')) {
@@ -168,11 +226,13 @@ const contexto = (esc: Escenario, consultas: string[]): Contexto => {
         ? [{ permitido: false, codigo: 'presupuesto-diario' }]
         : [{ permitido: true, usado_dia: 1, usado_mes: 1 }];
     }
+    if (texto.includes('INSERT INTO fundamentos_envios')) return [{ id: 'envio-1' }];
     return [];
   };
-  const sql = (partes: TemplateStringsArray) => {
+  const sql = (partes: TemplateStringsArray, ...args: unknown[]) => {
     const texto = partes.join('?');
     consultas.push(texto);
+    valores.push(args);
     if (esc.limiteFalla && texto.includes('registrar_envio_pseint')) {
       return Promise.reject(new Error('sin funcion'));
     }
@@ -200,39 +260,64 @@ const contexto = (esc: Escenario, consultas: string[]): Contexto => {
 
 const enviar = async (esc: Escenario) => {
   const consultas: string[] = [];
+  const valores: unknown[][] = [];
+  let pedidas: string[] = [];
   const invocar = (_codigo: string, entradas: string[]) => {
-    assertEquals(entradas, ['21', '1']);
+    pedidas = entradas;
     return esc.invocacion ? esc.invocacion() : Promise.resolve([ok(CRUDO.leer), ok(CRUDO.leer)]);
   };
-  const res = await envio(contexto(esc, consultas), invocar);
+  const res = await envio(contexto(esc, consultas, valores), invocar);
+  const i = consultas.findIndex((c) => c.includes('INSERT INTO fundamentos_envios'));
   return {
     status: res.status,
     espera: res.headers.get('Retry-After'),
     cuerpo: await res.json(),
     consultas,
+    pedidas,
+    guardado: i >= 0 ? valores[i] : null,
   };
 };
 
-Deno.test('envio juzga con los ejemplos de la base y hace dos escrituras', async () => {
-  const { status, cuerpo, consultas } = await enviar({});
+Deno.test('envio juzga con los ejemplos de la base, hace dos escrituras y devuelve el id', async () => {
+  const { status, cuerpo, consultas, pedidas } = await enviar({});
   assertEquals(status, 200);
+  assertEquals(pedidas, ['21', '1']);
   assertEquals(cuerpo.veredicto, 'INCORRECTO');
+  assertEquals(cuerpo.envio_id, 'envio-1');
   assertEquals(
     consultas.filter((c) => /registrar_envio_pseint|consumir_presupuesto/.test(c)).length,
     2,
   );
 });
 
-Deno.test('envio respeta el candado de 2 minutos con el reloj de la base', async () => {
-  assertEquals((await enviar({ abiertoHaceSeg: 30 })).status, 403);
-  // Si la apertura no se guardo, el envio la registra para que el candado se abra a los 2 minutos.
+Deno.test('envio ya no tiene candado: se puede enviar recien abierto', async () => {
+  assertEquals((await enviar({ abiertoHaceSeg: 1, invocacion: () => Promise.resolve(BIEN) })).status, 200);
+  // Si la apertura no se guardo, el envio la registra igual (la usan el registro y el docente).
   const sinApertura = await enviar({ abiertoHaceSeg: null });
-  assertEquals(sinApertura.status, 403);
+  assertEquals(sinApertura.status, 200);
   assertEquals(
     sinApertura.consultas.some((c) => c.includes('INSERT INTO fundamentos_progreso')),
     true,
   );
 });
+
+Deno.test('envio manda tambien los casos ocultos y no revela el que fallo', async () => {
+  const r = await enviar({
+    ocultos: [{ entrada: '7', salida: 'Edad: > 14' }],
+    invocacion: () => Promise.resolve([...BIEN, ok(eco('7', '99'))]),
+  });
+  assertEquals(r.pedidas, ['21', '1', '7']);
+  assertEquals(r.cuerpo, { veredicto: 'INCORRECTO', oculto: true, envio_id: 'envio-1' });
+  // Se guarda el numero y la marca para el docente, pero nada de la salida.
+  const guardado = r.guardado!;
+  assertEquals(guardado.slice(3), ['INCORRECTO', 3, true, null]);
+});
+
+Deno.test('envio guarda el detalle de un fallo visible', async () => {
+  const { guardado } = await enviar({});
+  assertEquals(guardado!.slice(3), ['INCORRECTO', 2, false, 'Edad: > 21\n> 42\n']);
+});
+
 
 Deno.test('envio devuelve 429 con la espera del estudiante', async () => {
   const { status, espera } = await enviar({

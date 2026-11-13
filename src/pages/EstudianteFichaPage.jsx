@@ -100,6 +100,7 @@ const EstudianteFichaPage = () => {
   if (!ficha) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando la ficha…</p></div>;
 
   const { usuario, clase, evolucion, envios, pistas, actividad, mapa, ejercicios, fundamentos, parecidos } = ficha;
+  const pistasFundamentos = ficha.pistas_fundamentos ?? [];
   const autorizado = usuario.datos_autorizados === true;
   const segundos30 = actividad.reduce((t, d) => t + d.segundos, 0);
   const pegados30 = actividad.reduce((t, d) => t + d.pegados, 0);
@@ -241,6 +242,22 @@ const EstudianteFichaPage = () => {
           ) : <p className="nb-doc-vacio">No ha pedido pistas.</p>}
         </Seccion>
 
+        <Seccion titulo="Pistas en Fundamentos" sub="Lo que el tutor le respondió en los ejercicios de PSeInt">
+          {pistasFundamentos.length ? (
+            <ul className="nb-doc-tabla">
+              {pistasFundamentos.map((p) => (
+                <li key={`${p.nivel}-${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
+                  <div className="nb-doc-fila-top">
+                    <span className="nb-doc-estado">{p.veredicto}</span>
+                    <span className="nb-doc-celda is-grande"><strong>{p.titulo}</strong><small>{p.nivel} #{p.numero} · {fecha(p.creado_en)}</small></span>
+                  </div>
+                  <p className="nb-doc-pista">{p.pista}</p>
+                </li>
+              ))}
+            </ul>
+          ) : <p className="nb-doc-vacio">No ha pedido pistas en Fundamentos.</p>}
+        </Seccion>
+
         <Seccion titulo="Fundamentos (PSeInt)" sub="Últimos envíos">
           {fundamentos.length ? (
             <ul className="nb-doc-tabla">
@@ -248,7 +265,7 @@ const EstudianteFichaPage = () => {
                 <li key={`${f.nivel}-${f.numero}-${f.creado_en}`} className="nb-doc-fila is-col">
                   <div className="nb-doc-fila-top">
                     <span className={`nb-doc-estado${f.veredicto === 'ACEPTADO' ? ' is-on' : ''}`}>{f.veredicto}</span>
-                    <span className="nb-doc-celda is-grande"><strong>{f.titulo}</strong><small>{f.nivel} #{f.numero} · {fecha(f.creado_en)}{f.ejemplo_fallido ? ` · falló en el ejemplo ${f.ejemplo_fallido}` : ''}</small></span>
+                    <span className="nb-doc-celda is-grande"><strong>{f.titulo}</strong><small>{f.nivel} #{f.numero} · {fecha(f.creado_en)}{f.ejemplo_fallido ? ` · falló en ${f.oculto ? 'un caso oculto' : 'el ejemplo'} ${f.ejemplo_fallido}` : ''}</small></span>
                   </div>
                   <details className="nb-doc-codigo"><summary>Ver código</summary><pre>{f.codigo}</pre></details>
                 </li>
