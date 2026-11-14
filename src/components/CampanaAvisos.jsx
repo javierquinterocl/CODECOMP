@@ -1,27 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BellIcon } from './AppIcons';
-import { avisoDeEscalon, getAvisos, leidosDe, marcarLeidos, textoDeAviso, verEscalon } from '../scripts/avisos';
+import { getAvisos, marcarLeidas, textoDeAviso } from '../scripts/avisos';
 
 const CADA_MS = 5 * 60_000;
 
-/** Campana de la cabecera: avisos del estudiante o del docente, con contador de no leídos. */
+/** Campana de la cabecera: avisos guardados en la cuenta, con contador de no leídos. */
 const CampanaAvisos = ({ user }) => {
-  const [avisos, setAvisos] = useState([]);
-  // Los leídos viven en localStorage; aquí se guarda la última lectura junto con su usuario.
-  const [marcados, setMarcados] = useState({ uid: null, ids: new Set() });
-  const leidos = !user ? new Set() : marcados.uid === user.uid ? marcados.ids : leidosDe(user.uid);
+  const [estado, setEstado] = useState({ notificaciones: [], sin_leer: 0 });
   const [abierto, setAbierto] = useState(false);
   const cajaRef = useRef(null);
 
   const cargar = useCallback(() => {
-    if (!user) return;
-    getAvisos(user)
-      .then(({ notificaciones, escalon }) => {
-        const deEscalon = avisoDeEscalon(user.uid, escalon);
-        setAvisos(deEscalon ? [deEscalon, ...notificaciones] : notificaciones);
-      })
-      .catch(() => {});
+    // Con la pestaña oculta no se pide nada: se recarga al volver.
+    if (!user || document.hidden) return;
+    getAvisos(user).then(setEstado).catch(() => {});
   }, [user]);
 
   useEffect(() => {
@@ -30,7 +23,12 @@ const CampanaAvisos = ({ user }) => {
     const intervalo = setInterval(cargar, CADA_MS);
     // Tras un envío (racha, escalón o un problema resuelto) se vuelve a pedir.
     window.addEventListener('codecomp:progreso', cargar);
-    return () => { clearInterval(intervalo); window.removeEventListener('codecomp:progreso', cargar); };
+    document.addEventListener('visibilitychange', cargar);
+    return () => {
+      clearInterval(intervalo);
+      window.removeEventListener('codecomp:progreso', cargar);
+      document.removeEventListener('visibilitychange', cargar);
+    };
   }, [user, cargar]);
 
   // Clic fuera o Escape: cerrar.
@@ -45,14 +43,17 @@ const CampanaAvisos = ({ user }) => {
 
   if (!user) return null;
 
-  const visibles = avisos.map((a) => ({ ...a, ...textoDeAviso(a) })).filter((a) => a.titulo);
-  const sinLeer = visibles.filter((a) => !leidos.has(a.id));
+  const visibles = estado.notificaciones.map((a) => ({ ...a, ...textoDeAviso(a) })).filter((a) => a.titulo);
+  const sinLeer = estado.sin_leer;
 
-  const leer = (lista) => {
-    marcarLeidos(user.uid, lista.map((a) => a.id));
-    const escalon = lista.find((a) => a.tipo === 'escalon');
-    if (escalon) verEscalon(user.uid, escalon.datos.escalon);
-    setMarcados({ uid: user.uid, ids: leidosDe(user.uid) });
+  // Se marca al instante en pantalla; el servidor confirma con la lista actualizada.
+  const leer = (ids) => {
+    const marcar = ids === 'todas' ? () => true : (a) => ids.includes(a.id);
+    setEstado((e) => ({
+      notificaciones: e.notificaciones.map((a) => (marcar(a) ? { ...a, leida: true } : a)),
+      sin_leer: ids === 'todas' ? 0 : Math.max(0, e.sin_leer - e.notificaciones.filter((a) => !a.leida && marcar(a)).length),
+    }));
+    marcarLeidas(user, ids).then(setEstado).catch(() => {});
   };
 
   return (
@@ -62,28 +63,28 @@ const CampanaAvisos = ({ user }) => {
         className={`nb-dash-notif-btn${abierto ? ' is-open' : ''}`}
         onClick={() => setAbierto((v) => !v)}
         aria-expanded={abierto}
-        aria-label={sinLeer.length ? `Avisos: ${sinLeer.length} sin leer` : 'Avisos'}
+        aria-label={sinLeer ? `Avisos: ${sinLeer} sin leer` : 'Avisos'}
         title="Avisos"
       >
         <BellIcon />
-        {sinLeer.length > 0 && <span className="nb-dash-notif-cuenta">{sinLeer.length > 9 ? '9+' : sinLeer.length}</span>}
+        {sinLeer > 0 && <span className="nb-dash-notif-cuenta">{sinLeer > 9 ? '9+' : sinLeer}</span>}
       </button>
 
       {abierto && (
         <div className="nb-dash-notif-panel" role="dialog" aria-label="Avisos">
           <div className="nb-dash-notif-head">
             <span className="nb-dash-kicker is-ink">Avisos</span>
-            {sinLeer.length > 0 && (
-              <button type="button" className="nb-dash-aviso-mas" onClick={() => leer(sinLeer)}>Marcar todo como leído</button>
+            {sinLeer > 0 && (
+              <button type="button" className="nb-dash-aviso-mas" onClick={() => leer('todas')}>Marcar todo como leído</button>
             )}
           </div>
           {visibles.length ? (
             <ul className="nb-dash-notif-lista">
               {visibles.map((a) => (
-                <li key={a.id} className={leidos.has(a.id) ? '' : 'is-nuevo'}>
-                  <Link to={a.enlace} onClick={() => { leer([a]); setAbierto(false); }}>
+                <li key={a.id} className={a.leida ? '' : 'is-nuevo'}>
+                  <Link to={a.enlace} onClick={() => { if (!a.leida) leer([a.id]); setAbierto(false); }}>
                     <strong>{a.titulo}</strong>
-                    <small>{a.texto}</small>
+                    {a.texto && <small>{a.texto}</small>}
                   </Link>
                 </li>
               ))}

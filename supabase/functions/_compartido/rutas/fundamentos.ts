@@ -7,6 +7,7 @@ import { rechazo, responder } from '../http.ts';
 import { consultar, type Mensaje, recortarA } from '../ia.ts';
 import { revisarPista, revisarPresupuesto, revisarUsuarioPseint } from '../limites.ts';
 import { SISTEMA_FUNDAMENTOS } from './tutor.ts';
+import { notificarSinFallar } from '../notificaciones.ts';
 import {
   detalleDe,
   type Ejemplo,
@@ -259,6 +260,15 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
       console.error('No se pudo guardar el envio de Fundamentos:', error);
       return [];
     });
+    // La clave hace que solo el primer aceptado de cada ejercicio cree el aviso.
+    if (resultado.veredicto === 'ACEPTADO') {
+      await notificarSinFallar(sql, [{
+        userId,
+        tipo: 'resuelto',
+        clave: `resuelto-f-${nivel}-${numero}`,
+        datos: { numero, nivel, modulo: 'fundamentos' },
+      }]);
+    }
     return responder(
       { status: 200, cuerpo: { ...paraNavegador(resultado), envio_id: guardado?.id ?? null } },
       cors,

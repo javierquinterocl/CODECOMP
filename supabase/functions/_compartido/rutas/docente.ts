@@ -1,4 +1,5 @@
-// Vista docente: GET /docente/clase/:id (panel del grupo) y GET /docente/estudiante/:id (ficha).
+// Vista docente: GET /docente/clase/:id (panel del grupo), GET /docente/estudiante/:id (ficha),
+// POST /docente/clase/:id/aviso (aviso a la clase) y POST /docente/estudiante/:id/escalon.
 // Solo docentes, solo sus clases y los estudiantes que estan en ellas. Cada consulta se audita.
 
 import type { Contexto } from '../contexto.ts';
@@ -9,6 +10,7 @@ import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
 import { dia } from '../config.ts';
 import { fundamentosResueltos, mapaDeActividad, tiempoPorEjercicio } from '../actividad.ts';
+import { huellaCorta, notificar, notificarSinFallar } from '../notificaciones.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
@@ -16,7 +18,7 @@ const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
 const auditar = (
   sql: Contexto['sql'],
   docenteId: string,
-  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon',
+  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon' | 'avisar_clase',
   claseId: string | null,
   estudianteId: string | null,
 ) =>
@@ -252,9 +254,71 @@ const cambiarEscalon = async (ctx: Contexto, docenteId: string, estudianteId: st
   if (!clase) {
     return responder(rechazo(404, 'estudiante', 'Ese estudiante no esta en tus clases.'), cors);
   }
+  const antes = (await escalonDelUsuario(sql, estudianteId)).actual;
   await sql`UPDATE users SET escalon_minimo = ${minimo} WHERE id = ${estudianteId}`;
   await auditar(sql, docenteId, 'cambiar_escalon', clase.id as string, estudianteId);
-  return responder({ status: 200, cuerpo: { escalon: await escalonDelUsuario(sql, estudianteId) } }, cors);
+  const escalon = await escalonDelUsuario(sql, estudianteId);
+  if (escalon.actual > antes) {
+    await notificarSinFallar(sql, [{
+      userId: estudianteId,
+      tipo: 'escalon',
+      clave: `escalon-${escalon.actual}`,
+      datos: { escalon: escalon.actual },
+    }]);
+  }
+  return responder({ status: 200, cuerpo: { escalon } }, cors);
+};
+
+export const AVISOS_DOCENTE_DIA = 3;
+// Quita caracteres de control (salvo el salto de linea del texto) y espacios de los extremos.
+const limpio = (valor: unknown, saltos: boolean): string =>
+  typeof valor === 'string'
+    ? valor.replace(saltos ? /[\u0000-\u0009\u000b-\u001f\u007f]/g : /[\u0000-\u001f\u007f]/g, '').trim()
+    : '';
+
+/** Valida el aviso del docente: titulo de 1 a 80 caracteres y texto de 1 a 500. */
+export const validarAviso = (cuerpo: unknown) => {
+  const c = (cuerpo ?? {}) as Record<string, unknown>;
+  const titulo = limpio(c.titulo, false);
+  const texto = limpio(c.texto, true);
+  if (!titulo || titulo.length > 80 || !texto || texto.length > 500) return null;
+  return { titulo, texto };
+};
+
+// POST /docente/clase/:id/aviso { titulo, texto }: aviso a todos los estudiantes de la clase.
+const avisarClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
+  const { req, sql, config, cors } = ctx;
+  const aviso = validarAviso(await req.json().catch(() => null));
+  if (!aviso) {
+    return responder(rechazo(400, 'datos', 'Escribe un titulo (hasta 80) y un texto (hasta 500).'), cors);
+  }
+  const [clase] = await sql`SELECT id, nombre FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}`;
+  if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
+
+  const zona = config.zonaHoraria;
+  const [{ hoy }] = await sql`
+    SELECT count(*)::int AS hoy FROM auditoria_docente
+    WHERE docente_id = ${docenteId} AND accion = 'avisar_clase'
+      AND (creado_en AT TIME ZONE ${zona})::date = (now() AT TIME ZONE ${zona})::date
+  `;
+  if (hoy >= AVISOS_DOCENTE_DIA) {
+    return responder(rechazo(429, 'avisos-dia', `Puedes enviar hasta ${AVISOS_DOCENTE_DIA} avisos al dia.`), cors);
+  }
+
+  const miembros = await sql`SELECT user_id FROM clase_miembros WHERE clase_id = ${claseId}`;
+  // La misma clase, texto y dia dan la misma clave: un doble clic no duplica el aviso.
+  const huella = await huellaCorta(`${aviso.titulo}\n${aviso.texto}\n${dia(zona)}`);
+  const creados = await notificar(sql, miembros.map((m) => ({
+    userId: m.user_id as string,
+    tipo: 'docente',
+    clave: `docente-${claseId}-${huella}`,
+    datos: { ...aviso, clase: clase.nombre },
+  })));
+  if (creados) await auditar(sql, docenteId, 'avisar_clase', claseId, null);
+  return responder({
+    status: 201,
+    cuerpo: { destinatarios: miembros.length, restantes: AVISOS_DOCENTE_DIA - hoy - (creados ? 1 : 0) },
+  }, cors);
 };
 
 export const docente = async (
@@ -265,7 +329,9 @@ export const docente = async (
 ): Promise<Response> => {
   const { req, sql, config, cors, identidad } = ctx;
   const cambio = recurso === 'estudiante' && accion === 'escalon';
-  if (req.method !== (cambio ? 'POST' : 'GET') || (accion && !cambio)) {
+  const aviso = recurso === 'clase' && accion === 'aviso';
+  const escritura = cambio || aviso;
+  if (req.method !== (escritura ? 'POST' : 'GET') || (accion && !escritura)) {
     return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
   }
   if (!identidad) {
@@ -280,6 +346,7 @@ export const docente = async (
   try {
     const docenteId = await idDeUsuario(sql, identidad);
     if (cambio) return await cambiarEscalon(ctx, docenteId, id);
+    if (aviso) return await avisarClase(ctx, docenteId, id);
     return recurso === 'clase'
       ? await panelDeClase(ctx, docenteId, id)
       : await fichaDeEstudiante(ctx, docenteId, id);

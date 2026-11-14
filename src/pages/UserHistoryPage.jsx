@@ -8,6 +8,7 @@ import {
 } from '../scripts/docenteData';
 import NbSelect from '../components/NbSelect';
 import HistorialSesiones from '../components/HistorialSesiones';
+import AvisarClase from '../components/AvisarClase';
 import { Plegable } from '../components/ExerciseBits';
 import { SearchIcon } from '../components/AppIcons';
 
@@ -129,6 +130,7 @@ const UserHistoryPage = () => {
 
           {datos && estudiantes.length > 0 && (
             <>
+              <AvisarClase user={user} clase={datos.clase} estudiantes={estudiantes.length} />
               <section className="nb-dash-card nb-dash-pad">
                 <div className="nb-dash-sechead">
                   <div>

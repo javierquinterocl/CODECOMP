@@ -6,6 +6,7 @@ import { esDocente } from '../auth.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { equiposDelConcurso, liberarProblema, reservarProblema } from '../competencias.ts';
+import { notificarSinFallar, retirarRecordatorios } from '../notificaciones.ts';
 import {
   type AclaracionDJ,
   colorDeGlobo,
@@ -105,6 +106,18 @@ const listar = async (ctx: Contexto) => {
   `;
   const concursos = await jsonDJ<ConcursoDJ[]>(ctx.config, '/contests');
   const porId = new Map(concursos.map((c) => [c.id, c]));
+  // DOMjudge manda sobre la hora: asi se llenan los concursos viejos y los cambios hechos alla.
+  const horas = filas.flatMap((f) => {
+    const inicio = porId.get(f.cid)?.start_time;
+    return inicio && !isNaN(Date.parse(inicio)) ? [{ cid: f.cid, inicio: new Date(inicio).toISOString() }] : [];
+  });
+  if (horas.length) {
+    await ctx.sql`
+      UPDATE competencias c SET inicio = t.inicio::timestamptz
+      FROM unnest(${horas.map((h) => h.cid)}::text[], ${horas.map((h) => h.inicio)}::text[]) AS t(cid, inicio)
+      WHERE c.cid = t.cid AND c.inicio IS DISTINCT FROM t.inicio::timestamptz
+    `.catch((e) => console.error('No se pudo sincronizar la hora de inicio:', e));
+  }
   const equipos = await ctx.sql<{ cid: string; n: number }[]>`
     SELECT cid, count(*)::int AS n FROM competencia_equipos WHERE NOT retirado GROUP BY cid
   `;
@@ -148,7 +161,8 @@ const crear = async (ctx: Contexto, docenteId: string) => {
     cuerpo: formularioConArchivo('json', 'contest.json', json, 'application/json'),
   });
   await ctx.sql`
-    INSERT INTO competencias (cid, nombre, creada_por) VALUES (${cid}, ${nombre}, ${docenteId})
+    INSERT INTO competencias (cid, nombre, creada_por, inicio)
+    VALUES (${cid}, ${nombre}, ${docenteId}, ${inicio})
   `;
   await auditar(ctx, docenteId, 'competencia_crear', cid);
   return ok(ctx, { cid }, 201);
@@ -215,6 +229,8 @@ const cambiarInicio = async (ctx: Contexto, docenteId: string, cid: string) => {
     cuerpo: JSON.stringify({ id: cid, start_time: isoBogota(inicio) }),
   });
   concursos.delete(cid);
+  await ctx.sql`UPDATE competencias SET inicio = ${inicio} WHERE cid = ${cid}`;
+  await retirarRecordatorios(ctx.sql, cid, inicio).catch((e) => console.error('Recordatorios:', e));
   await auditar(ctx, docenteId, 'competencia_editar', `${cid} inicio ${inicio.toISOString()}`);
   return ok(ctx, { cid });
 };
@@ -553,7 +569,7 @@ const aclaracionesJurado = async (ctx: Contexto, docenteId: string, cid: string)
     const equipo = typeof d.equipo === 'string' && d.equipo ? d.equipo : null;
     if (equipo && !equipos.has(equipo)) return no(ctx, 404, 'equipo', 'Equipo no encontrado.');
     const responderA = typeof d.responderA === 'string' && /^\d+$/.test(d.responderA) ? d.responderA : null;
-    await escribirDJ(ctx.config, `/contests/${cid}/clarifications`, {
+    const creada = await escribirDJ<{ id?: string } | null>(ctx.config, `/contests/${cid}/clarifications`, {
       tipo: 'application/json',
       cuerpo: JSON.stringify({
         text: texto,
@@ -562,6 +578,21 @@ const aclaracionesJurado = async (ctx: Contexto, docenteId: string, cid: string)
       }),
     });
     await auditar(ctx, docenteId, 'competencia_dirigir', `${cid} aclaracion ${equipo ?? 'todos'}`);
+    // Solo campana: los equipos ya ven las aclaraciones dentro de la competencia.
+    if (creada?.id) {
+      const destinatarios = await ctx.sql`
+        SELECT m.user_id FROM competencia_miembros m
+        JOIN competencia_equipos e ON e.team_id = m.team_id AND e.cid = m.cid
+        WHERE m.cid = ${cid} AND NOT e.retirado ${equipo ? ctx.sql`AND m.team_id = ${equipo}` : ctx.sql``}
+      `.catch(() => []);
+      const [comp] = await ctx.sql`SELECT nombre FROM competencias WHERE cid = ${cid}`.catch(() => []);
+      await notificarSinFallar(ctx.sql, destinatarios.map((d) => ({
+        userId: d.user_id as string,
+        tipo: 'jurado',
+        clave: `jurado-${cid}-${creada.id}`,
+        datos: { cid, competencia: comp?.nombre ?? cid, general: !equipo },
+      })));
+    }
     return ok(ctx, { ok: true }, 201);
   }
   const [lista, letras] = await Promise.all([

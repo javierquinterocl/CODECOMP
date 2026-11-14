@@ -62,6 +62,15 @@ export interface Config {
   domjudgeUsuario: string;
   domjudgeClave: string;
   domjudgeTimeoutMs: number;
+
+  resendApiKey: string;
+  correoRemitente: string;
+  correoMaxDiario: number;
+  correoMaxMensual: number;
+  correoFirmaClave: string;
+  cronClave: string;
+  appUrl: string;
+  apiUrl: string;
 }
 
 export const cargarConfig = (): Config => ({
@@ -142,6 +151,19 @@ export const cargarConfig = (): Config => ({
   domjudgeUsuario: env('DOMJUDGE_USUARIO') ?? '',
   domjudgeClave: env('DOMJUDGE_CLAVE') ?? '',
   domjudgeTimeoutMs: num(env('DOMJUDGE_TIMEOUT_MS'), 10000),
+
+  // Correo de avisos (Resend). Sin llave, los avisos solo van a la campana.
+  resendApiKey: env('RESEND_API_KEY') ?? '',
+  correoRemitente: env('CORREO_REMITENTE') ?? 'CODECOMP <avisos@codecomp.online>',
+  // Por debajo de los 100 al dia y 3.000 al mes del plan gratuito de Resend.
+  correoMaxDiario: num(env('CORREO_MAX_DIARIO'), 90),
+  correoMaxMensual: num(env('CORREO_MAX_MENSUAL'), 2900),
+  // Firma de los enlaces de baja; vacia = sin enlace y sin correos.
+  correoFirmaClave: env('CORREO_FIRMA_CLAVE') ?? '',
+  // Clave que manda el Worker de Cloudflare en cada pasada del cron; vacia = cron apagado.
+  cronClave: env('CRON_CLAVE') ?? '',
+  appUrl: (env('APP_URL') ?? 'https://codecomp.online').replace(/\/+$/, ''),
+  apiUrl: (env('API_URL') ?? 'https://api.codecomp.online').replace(/\/+$/, ''),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.
