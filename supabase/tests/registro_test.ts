@@ -25,10 +25,10 @@ Deno.test('esDocente exige correo de la lista y verificado, sin importar mayuscu
 });
 
 Deno.test('validarResumen acepta enteros en rango y rechaza lo demas', () => {
-  assertEquals(validarResumen({ segundos: 300 }), { segundos: 300, pegados: 0, caracteres: 0 });
+  assertEquals(validarResumen({ segundos: 300 }), { segundos: 300, pegados: 0, caracteres: 0, ejercicios: [] });
   assertEquals(
     validarResumen({ segundos: 0, pegados: 2, caracteres_pegados: 140 }),
-    { segundos: 0, pegados: 2, caracteres: 140 },
+    { segundos: 0, pegados: 2, caracteres: 140, ejercicios: [] },
   );
   assertEquals(validarResumen({ segundos: MAX_SEGUNDOS_POR_RESUMEN + 1 }), null);
   assertEquals(validarResumen({ segundos: -1 }), null);

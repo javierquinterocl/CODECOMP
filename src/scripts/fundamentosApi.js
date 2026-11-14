@@ -4,6 +4,7 @@ const URL_EJERCICIOS = rutaApi('fundamentos/ejercicios');
 const URL_PROGRESO = rutaApi('fundamentos/progreso');
 const URL_BORRADOR = rutaApi('fundamentos/borrador');
 const URL_ENVIO = rutaApi('fundamentos/envio');
+const URL_PISTA = rutaApi('fundamentos/pista');
 
 // La base llama `dificultad` a lo que las páginas llaman `nivel` (1 a 5), como en Problemas.
 const mapEjercicio = (fila) => ({
@@ -74,15 +75,11 @@ export const getAvance = async (user) => {
   return { visitas, resueltos };
 };
 
-/** Registra la apertura. Devuelve los milisegundos desde la primera vez y el borrador guardado. */
+/** Registra la apertura y devuelve el borrador guardado. */
 export const abrirEjercicio = async (user, nivel, numero) => {
   const response = await enviar(user, URL_PROGRESO, { nivel, numero: Number(numero) });
   const data = await leer(response, 'No se pudo registrar la apertura.');
-  return {
-    // Las dos horas son del servidor: el reloj del navegador no cuenta.
-    transcurrido: Math.max(0, new Date(data.ahora) - new Date(data.abierto_en)),
-    codigo: data.codigo,
-  };
+  return { codigo: data.codigo };
 };
 
 export const guardarBorrador = async (user, nivel, numero, codigo, { alSalir = false } = {}) => {
@@ -98,4 +95,19 @@ export const enviarSolucion = async (user, nivel, numero, codigo) => {
     throw Object.assign(new Error(data.message || 'No se pudo evaluar tu solución.'), { codigo: data.codigo });
   }
   return data;
+};
+
+/**
+ * Pide al tutor de IA una pista sobre un envío ya evaluado. Si hay que esperar, el error
+ * lleva `reintentarEn` en segundos (la espera es la misma que la de Problemas).
+ */
+export const pedirPistaFundamentos = async (user, envioId) => {
+  const response = await enviar(user, URL_PISTA, { envio_id: envioId });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw Object.assign(new Error(data.message || 'No se pudo pedir la pista.'), {
+      reintentarEn: Number(response.headers.get('Retry-After')) || 0,
+    });
+  }
+  return data.hint || '';
 };

@@ -7,6 +7,8 @@ import { alertasDe, parecido, UMBRAL_PARECIDO } from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
+import { dia } from '../config.ts';
+import { fundamentosResueltos, mapaDeActividad, tiempoPorEjercicio } from '../actividad.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
@@ -166,9 +168,15 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     ORDER BY dia
   `;
   const fundamentos = await sql`
-    SELECT f.creado_en, f.veredicto, f.ejemplo_fallido, f.codigo, e.nivel, e.numero, e.titulo
+    SELECT f.creado_en, f.veredicto, f.ejemplo_fallido, f.oculto, f.codigo, e.nivel, e.numero,
+      e.titulo
     FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
     WHERE f.user_id = ${estudianteId} ORDER BY f.creado_en DESC LIMIT 30
+  `;
+  const pistasFundamentos = await sql`
+    SELECT x.creado_en, x.veredicto, x.pista, e.nivel, e.numero, e.titulo
+    FROM fundamentos_pistas x JOIN fundamentos_ejercicios e ON e.id = x.ejercicio_id
+    WHERE x.user_id = ${estudianteId} ORDER BY x.creado_en DESC LIMIT 30
   `;
   const temas = await sql`
     SELECT t.name AS tag, m.attempts AS intentos, m.successes AS aciertos
@@ -203,10 +211,29 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     }
   }
 
-  const escalon = await escalonDelUsuario(sql, estudianteId);
+  const [escalon, mapa, ejercicios, fundamentosHechos] = await Promise.all([
+    escalonDelUsuario(sql, estudianteId),
+    mapaDeActividad(sql, estudianteId, ctx.config.zonaHoraria, dia(ctx.config.zonaHoraria)),
+    tiempoPorEjercicio(sql, estudianteId),
+    fundamentosResueltos(sql, estudianteId),
+  ]);
   return responder({
     status: 200,
-    cuerpo: { clase, usuario, escalon, evolucion, envios, pistas, actividad, fundamentos, temas, parecidos },
+    cuerpo: {
+      clase,
+      usuario: { ...usuario, fundamentos_resueltos: fundamentosHechos },
+      escalon,
+      evolucion,
+      envios,
+      pistas,
+      pistas_fundamentos: pistasFundamentos,
+      actividad,
+      mapa,
+      ejercicios,
+      fundamentos,
+      temas,
+      parecidos,
+    },
   }, cors);
 };
 

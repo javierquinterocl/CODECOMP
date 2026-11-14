@@ -45,6 +45,16 @@ export const nivelDeCelda = (dato) => {
 
 export const porcentaje = (dato) => (dato?.intentos ? Math.round((dato.aciertos / dato.intentos) * 100) : null);
 
+/** Suma de los últimos `n` días del mapa de actividad (el último día con datos es hoy). */
+export const ultimosDias = (mapa, n) => {
+  const dias = (mapa?.semanas || []).flat().filter(Boolean).slice(-n);
+  return {
+    segundos: dias.reduce((t, d) => t + d.segundos, 0),
+    segundosEjercicios: dias.reduce((t, d) => t + d.segundosEjercicios, 0),
+    envios: dias.reduce((t, d) => t + d.envios, 0),
+  };
+};
+
 export const duracion = (segundos) => {
   const minutos = Math.round((segundos || 0) / 60);
   if (minutos < 60) return `${minutos} min`;

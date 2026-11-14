@@ -213,7 +213,10 @@ const DashboardPage = () => {
                 </div>
                 <div className="nb-dash-metric">
                   <span className="nb-dash-metric-label">Resueltos</span>
-                  <span className="nb-dash-metric-value">{progress?.user?.solved_count ?? 0}</span>
+                  <span className="nb-dash-metric-value">{(progress?.user?.solved_count ?? 0) + (progress?.user?.fundamentos_resueltos ?? 0)}</span>
+                  <span className="nb-dash-metric-sub">
+                    {progress?.user?.solved_count ?? 0} problemas · {progress?.user?.fundamentos_resueltos ?? 0} Fundamentos
+                  </span>
                 </div>
               </div>
             </div>
@@ -386,7 +389,7 @@ const DashboardPage = () => {
               <div className="nb-dash-stats">
                 {[
                   ['Integrantes', companeros.length],
-                  ['Resueltos', companeros.reduce((t, m) => t + m.resueltos, 0)],
+                  ['Resueltos', companeros.reduce((t, m) => t + m.resueltos + (m.fundamentos_resueltos ?? 0), 0)],
                   ['Envíos totales', companeros.reduce((t, m) => t + m.envios, 0)],
                 ].map(([label, value]) => (
                   <div key={label} className="nb-dash-stat">
@@ -406,7 +409,7 @@ const DashboardPage = () => {
                     pos={String(i + 1).padStart(2, '0')}
                     nombre={nombreVisible(m.username)}
                     desde={new Date(m.unido_en).toLocaleDateString('es-CO', { day: 'numeric', month: 'short' })}
-                    resueltos={m.resueltos}
+                    resueltos={m.resueltos + (m.fundamentos_resueltos ?? 0)}
                     envios={m.envios}
                     nivel={Math.round(Number(m.nivel))}
                   />

@@ -128,7 +128,7 @@ const ProblemsPage = () => {
             <div className="nb-pb-hstat-value">{categorias.length}</div>
           </div>
           <div className="nb-pb-hstat">
-            <div className="nb-pb-hstat-label">Resueltos</div>
+            <div className="nb-pb-hstat-label">Problemas resueltos</div>
             <div className="nb-pb-hstat-value">{resueltos}</div>
           </div>
         </div>

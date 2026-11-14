@@ -3,6 +3,13 @@
 import { EJERCICIOS } from './ejercicios_fundamentos.js';
 import { EJERCICIOS_PRACTICA } from './ejercicios_practica.js';
 import { TEMAS } from '../../src/scripts/fundamentosData.js';
+import {
+  type Ejecucion,
+  type Ejemplo,
+  interpretarSalida,
+  juzgar,
+  normalizar,
+} from '../../supabase/functions/_compartido/pseint.ts';
 
 export interface Fila {
   nivel: string;
@@ -76,6 +83,57 @@ export const validar = (filas: Fila[]): string[] => {
     if (!ejemplosBien) errores.push(`${clave}: ejemplos invalidos`);
   }
   return errores;
+};
+
+export const MIN_OCULTOS = 3;
+export const MAX_OCULTOS = 4;
+const TOPE_SALIDA_OCULTA = 2000;
+
+/** Un ejercicio sin entrada (Hola Mundo) tiene salida fija: no admite casos ocultos. */
+export const sinEntrada = (fila: Fila): boolean => fila.ejemplos.every((e) => !e.entrada.trim());
+
+/**
+ * Valida los casos ocultos de un ejercicio con lo que devolvio el PSeInt oficial al correr la
+ * solucion de referencia sobre los visibles y luego las entradas nuevas, en ese orden.
+ */
+export const validarOcultos = (
+  fila: Fila,
+  entradas: string[],
+  ejecuciones: Ejecucion[],
+): { casos: Ejemplo[]; errores: string[] } => {
+  const clave = `${fila.nivel}:${fila.numero}`;
+  const visibles = fila.ejemplos.length;
+  if (sinEntrada(fila)) {
+    return { casos: [], errores: entradas.length ? [`${clave}: no tiene entrada`] : [] };
+  }
+  const errores: string[] = [];
+  const cupo = Math.min(MAX_OCULTOS, MAX_EJEMPLOS - visibles);
+  if (entradas.length < Math.min(MIN_OCULTOS, cupo) || entradas.length > cupo) {
+    errores.push(`${clave}: ${entradas.length} ocultos, caben entre ${Math.min(MIN_OCULTOS, cupo)} y ${cupo}`);
+  }
+  const vistas = new Set(fila.ejemplos.map((e) => normalizar(e.entrada)));
+  for (const entrada of entradas) {
+    if (vistas.has(normalizar(entrada))) errores.push(`${clave}: entrada repetida "${entrada}"`);
+    vistas.add(normalizar(entrada));
+  }
+  const juicio = juzgar(fila.ejemplos, ejecuciones.slice(0, visibles));
+  if (juicio.veredicto !== 'ACEPTADO') {
+    errores.push(`${clave}: la solucion no pasa los visibles (${juicio.veredicto})`);
+  }
+  const casos: Ejemplo[] = [];
+  entradas.forEach((entrada, i) => {
+    const ejecucion = ejecuciones[visibles + i];
+    const lectura = ejecucion?.estado === 'ok' ? interpretarSalida(ejecucion.salida, entrada) : null;
+    const salida = lectura?.tipo === 'ok' ? normalizar(lectura.salida) : '';
+    if (!lectura || lectura.tipo !== 'ok') {
+      errores.push(`${clave}: el oculto ${i + 1} no termina bien (${ejecucion?.estado ?? 'sin ejecutar'})`);
+    } else if (!salida.trim() || salida.length > TOPE_SALIDA_OCULTA) {
+      errores.push(`${clave}: el oculto ${i + 1} da una salida vacia o demasiado larga`);
+    } else {
+      casos.push({ entrada, salida });
+    }
+  });
+  return { casos: errores.length ? [] : casos, errores };
 };
 
 // jsonb no conserva el orden de las claves: se comparan ordenadas.

@@ -6,6 +6,7 @@ import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
 import { rachaDelUsuario } from '../racha.ts';
+import { fundamentosResueltos } from '../actividad.ts';
 
 export const recomendaciones = async (ctx: Contexto): Promise<Response> => {
   const { req, url, sql, cors, identidad } = ctx;
@@ -56,9 +57,16 @@ export const progreso = async (ctx: Contexto): Promise<Response> => {
       ORDER BY utm.mastery_score ASC, t.name
       LIMIT 10
     `;
-    const escalon = await escalonDelUsuario(sql, userId);
-    const { racha } = await rachaDelUsuario(sql, userId, ctx.config.zonaHoraria);
-    return responder({ status: 200, cuerpo: { user: usuario, mastery: dominio, escalon, racha } }, cors);
+    const [escalon, { racha }, fundamentosHechos] = await Promise.all([
+      escalonDelUsuario(sql, userId),
+      rachaDelUsuario(sql, userId, ctx.config.zonaHoraria),
+      fundamentosResueltos(sql, userId),
+    ]);
+    // solved_count sigue siendo solo de Problemas (nivel y escalones); Fundamentos va aparte.
+    return responder({
+      status: 200,
+      cuerpo: { user: { ...usuario, fundamentos_resueltos: fundamentosHechos }, mastery: dominio, escalon, racha },
+    }, cors);
   } catch (error) {
     console.error('Progress error:', error);
     return responder(rechazo(500, 'consulta', 'No se pudo consultar tu progreso.'), cors);

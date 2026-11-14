@@ -155,10 +155,6 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-lenguaje { flex: 1 1 190px; min-width: 0; }
 .nb-fd-lenguaje-valor { display: block; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(9px,0.7vw,14px) clamp(11px,0.9vw,18px); font-weight: 700; font-size: var(--fs-sm); }
 
-/* Enviar con candado: se ve apagado y no responde al cursor. */
-.nb-ex-send.is-locked { display: flex; align-items: center; justify-content: center; gap: 9px; background: #fff; color: #000; cursor: not-allowed; font-variant-numeric: tabular-nums; }
-.nb-ex-send.is-locked:hover { transform: none; box-shadow: 4px 4px 0px #000; }
-.nb-ex-send.is-locked svg { flex: 0 0 auto; display: block; width: 1.35em; height: 1.35em; }
 .nb-ex-send.is-busy { opacity: 0.6; cursor: wait; }
 .nb-ex-send.is-busy:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 

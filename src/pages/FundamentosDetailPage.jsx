@@ -1,14 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  ESPERA_ENVIO,
   PLANTILLA_PSEINT,
   buscarNivel,
   buscarTema,
   minutosTemporizador,
 } from '../scripts/fundamentosData';
 import { temporizadorActivo } from '../scripts/fundamentosProgreso';
-import { abrirEjercicio, enviarSolucion, guardarBorrador } from '../scripts/fundamentosApi';
+import {
+  abrirEjercicio,
+  enviarSolucion,
+  guardarBorrador,
+  pedirPistaFundamentos,
+} from '../scripts/fundamentosApi';
 import { explicarError } from '../scripts/pseintErrores';
 import { useFundamentos } from '../scripts/useFundamentos';
 import { useAuth } from '../context/AuthContext';
@@ -17,14 +21,51 @@ import FundamentosCarga from '../components/FundamentosCarga';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
-import { LockIcon, CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
+import { CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
 
 // Mientras se teclea, el borrador va a la base como mucho una vez cada tanto (y al salir).
 const ESPERA_BORRADOR = 15000;
+// Espera entre pistas, la misma de Problemas. El backend la impone de verdad.
+const ESPERA_PISTA = 60;
 
 const reloj = (segundos) => `${Math.floor(segundos / 60)}:${String(segundos % 60).padStart(2, '0')}`;
 
-const ESPERAS = new Set(['limite-espera', 'limite-diario', 'candado']);
+const ESPERAS = new Set(['limite-espera', 'limite-diario']);
+
+// Fallo en un caso que no se muestra: el juez no dice cuál fue ni qué esperaba.
+const describirOculto = (r) => {
+  const base = { clase: ' is-fail', oculto: true };
+  switch (r.veredicto) {
+    case 'INCORRECTO':
+      return {
+        ...base,
+        titulo: 'Falla en un caso oculto',
+        texto: 'Pasas los ejemplos, pero tu programa falla en un caso que no se muestra. Piensa qué entradas no estás contemplando.',
+      };
+    case 'ERROR':
+      return { ...base, titulo: `Error en la línea ${r.linea}`, texto: `Pasó en un caso oculto. ${explicarError(r.numero)}` };
+    case 'SIN_DATOS':
+      return {
+        ...base,
+        titulo: `Error en la línea ${r.linea}`,
+        texto: 'En un caso oculto, Leer pidió un dato más de los que había. Revisa cuántos datos lees.',
+      };
+    case 'NO_TERMINA':
+      return {
+        ...base,
+        titulo: 'Tu algoritmo no termina',
+        texto: 'Con un caso oculto tardó demasiado y se detuvo. Revisa que la condición de tus ciclos llegue a cumplirse.',
+      };
+    case 'DEMASIADA_SALIDA':
+      return {
+        ...base,
+        titulo: 'Tu algoritmo escribió demasiado',
+        texto: 'Con un caso oculto escribió sin parar. Revisa que ningún Escribir esté dentro de un ciclo que no termina.',
+      };
+    default:
+      return null;
+  }
+};
 
 // Clase, título y textos de la caja del gato según lo que respondió el juez.
 const describir = (r) => {
@@ -32,12 +73,14 @@ const describir = (r) => {
     const espera = ESPERAS.has(r.codigo);
     return { clase: espera ? '' : ' is-fail', titulo: espera ? 'Espera un momento' : 'No se pudo evaluar', texto: r.falla };
   }
+  const oculto = r.oculto && describirOculto(r);
+  if (oculto) return oculto;
   switch (r.veredicto) {
     case 'ACEPTADO':
       return {
         clase: ' is-ok',
         titulo: '¡Aceptado!',
-        texto: `Tu algoritmo pasó ${r.ejemplos === 1 ? 'el ejemplo' : `los ${r.ejemplos} ejemplos`} del enunciado.`,
+        texto: 'Tu algoritmo pasó todas las pruebas del juez.',
       };
     case 'INCORRECTO':
       return {
@@ -154,20 +197,22 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const [lineaError, setLineaError] = useState(null);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);
-  // Mientras la base no diga cuándo se abrió por primera vez, el candado cuenta desde ahora.
-  const [desbloqueoEn, setDesbloqueoEn] = useState(() => Date.now() + ESPERA_ENVIO * 1000);
   const [ahora, setAhora] = useState(() => Date.now());
+  // Pista del tutor de IA: como en Problemas, solo la quita un envío nuevo.
+  const [pista, setPista] = useState('');
+  const [pidiendoPista, setPidiendoPista] = useState(false);
+  const [errorPista, setErrorPista] = useState('');
+  const [pistaHasta, setPistaHasta] = useState(0);
 
   // Temporizador de práctica: se enciende desde la tarjeta del nivel y corre
   // desde que se abre el ejercicio. Al acabarse solo avisa; no bloquea nada.
   const [conReloj] = useState(temporizadorActivo);
   const [finRelojEn] = useState(() => Date.now() + minutosTemporizador(ejercicio.nivel) * 60 * 1000);
 
-  const restante = Math.max(0, Math.ceil((desbloqueoEn - ahora) / 1000));
-  const bloqueado = restante > 0;
   const quedan = Math.max(0, Math.ceil((finRelojEn - ahora) / 1000));
   const tiempoAgotado = conReloj && quedan === 0;
-  const corriendo = bloqueado || (conReloj && !tiempoAgotado);
+  const esperaPista = Math.max(0, Math.ceil((pistaHasta - ahora) / 1000));
+  const corriendo = (conReloj && !tiempoAgotado) || esperaPista > 0;
 
   // Borrador por guardar, y si el estudiante ya tecleó (para no pisarle lo escrito).
   const pendiente = useRef(null);
@@ -200,15 +245,14 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     espera.current ??= setTimeout(guardarPendiente, ESPERA_BORRADOR);
   };
 
-  // Registra la apertura: fija el candado con la hora de la base y trae el borrador.
+  // Registra la apertura y trae el borrador.
   useEffect(() => {
     if (!authReady || !user) return undefined;
     let vigente = true;
     abrirEjercicio(user, nivel.slug, ejercicio.numero)
-      .then(({ transcurrido, codigo: enBase }) => {
+      .then(({ codigo: enBase }) => {
         if (!vigente) return;
         abierto.current = true;
-        setDesbloqueoEn(Date.now() + ESPERA_ENVIO * 1000 - transcurrido);
         guardado.current = enBase ?? PLANTILLA_PSEINT;
         if (typeof enBase === 'string' && !tocado.current) setCodigo(enBase);
       })
@@ -240,6 +284,8 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     try {
       const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
       setResultado(respuesta);
+      setPista('');
+      setErrorPista('');
       olvidarEscalon(); // el envío cuenta para la racha de la cabecera
       setLineaError(respuesta.veredicto === 'ERROR' || respuesta.veredicto === 'SIN_DATOS' ? respuesta.linea : null);
     } catch (error) {
@@ -250,7 +296,29 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     }
   };
 
+  // La pista se pide aparte del envío: no todos la quieren y cada una gasta presupuesto de IA.
+  const solicitarPista = async () => {
+    if (!user || !resultado?.envio_id || pidiendoPista) return;
+    setPidiendoPista(true);
+    setErrorPista('');
+    try {
+      setPista(await pedirPistaFundamentos(user, resultado.envio_id));
+      setAhora(Date.now());
+      setPistaHasta(Date.now() + ESPERA_PISTA * 1000);
+    } catch (error) {
+      setErrorPista(error.message);
+      // La espera puede venir de una pista pedida en Problemas: la dice el servidor.
+      if (error.reintentarEn) {
+        setAhora(Date.now());
+        setPistaHasta(Date.now() + error.reintentarEn * 1000);
+      }
+    } finally {
+      setPidiendoPista(false);
+    }
+  };
+
   const veredicto = resultado && describir(resultado);
+  const conPista = Boolean(resultado?.envio_id) && !['ACEPTADO', 'FALLO'].includes(resultado.veredicto);
 
   return (
     <div className="nb-fd-vista">
@@ -322,14 +390,11 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
 
             <button
               type="button"
-              className={`nb-ex-send${bloqueado ? ' is-locked' : ''}${evaluando ? ' is-busy' : ''}`}
+              className={`nb-ex-send${evaluando ? ' is-busy' : ''}`}
               onClick={evaluar}
-              disabled={bloqueado || evaluando}
-              title={bloqueado ? 'Lee el enunciado y piensa tu solución: el envío se abre en un momento' : undefined}
+              disabled={evaluando}
             >
-              {bloqueado
-                ? <><LockIcon /> Enviar en {reloj(restante)}</>
-                : evaluando ? 'Evaluando…' : 'Enviar'}
+              {evaluando ? 'Evaluando…' : 'Enviar'}
             </button>
           </div>
 
@@ -375,13 +440,39 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
                       <Salida etiqueta="Tu salida" texto={resultado.obtenida} vacio="(sin salida)" />
                     </>
                   )}
+
+                  {/* El tutor solo entra cuando hay algo que orientar. */}
+                  {conPista && (
+                    <div className="nb-ex-tutor">
+                      {!pista && (
+                        <button
+                          type="button"
+                          className="nb-ex-tutor-btn"
+                          onClick={solicitarPista}
+                          disabled={pidiendoPista || esperaPista > 0}
+                          title={esperaPista > 0 ? 'Intenta algo más antes de pedir otra pista' : undefined}
+                        >
+                          {pidiendoPista
+                            ? 'Pensando…'
+                            : esperaPista > 0
+                              ? `Espera ${esperaPista} s`
+                              : 'Pedir retroalimentación'}
+                        </button>
+                      )}
+                      {errorPista && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorPista}</p>}
+                      {pista && (
+                        <div className="nb-ex-tutor-pista">
+                          <span className="nb-ex-feedback-label">Retroalimentación</span>
+                          <p className="nb-ex-feedback-text">{pista}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="nb-ex-feedback-text">
                   {tiempoAgotado
                     ? 'Tranquilo, esto es solo práctica: puedes seguir editando y enviar cuando quieras.'
-                    : bloqueado
-                    ? 'Tómate este tiempo para leer el enunciado y pensar los pasos. El envío se desbloquea cuando termine la cuenta.'
                     : 'Escribe tu solución y envíala. Aquí aparecerá el veredicto del juez.'}
                 </p>
               )}

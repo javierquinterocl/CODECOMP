@@ -70,26 +70,35 @@ export const cerrarSesionCookie = () => {
   fetch(URL_SESION, { method: 'DELETE', credentials: 'include', keepalive: true }).catch(() => {});
 };
 
+/** Se emite cuando un resumen llegó a la API: Mi progreso vuelve a cargar con los datos al día. */
+export const EVENTO_ACTIVIDAD_ENVIADA = 'codecomp:actividad-enviada';
+/** Pide a useActividad que envíe ya lo acumulado (al abrir Mi progreso). */
+export const EVENTO_VACIAR_ACTIVIDAD = 'codecomp:vaciar-actividad';
+
 /**
- * Resumen de actividad. Con cookie va por sendBeacon (sobrevive al cierre de la pestaña);
- * sin ella, con el `token` ya pedido y keepalive.
+ * Resumen de actividad. Al cerrar la pestaña (`alCerrar`) va por sendBeacon con la cookie, que
+ * sobrevive al cierre; el resto del tiempo por fetch con keepalive, para saber cuándo llegó.
  */
-export const enviarResumen = (resumen, token) => {
+export const enviarResumen = async (resumen, token, { alCerrar = false } = {}) => {
   const cuerpo = JSON.stringify({
     segundos: resumen.segundos,
     pegados: resumen.pegados,
     caracteres_pegados: resumen.caracteres,
+    ejercicios: resumen.ejercicios,
   });
-  if (USA_COOKIE && navigator.sendBeacon?.(URL_RESUMEN, new Blob([cuerpo], { type: 'text/plain' }))) {
-    return;
+  if (alCerrar && USA_COOKIE && navigator.sendBeacon?.(URL_RESUMEN, new Blob([cuerpo], { type: 'text/plain' }))) {
+    return true;
   }
-  if (!token) return;
-  fetch(URL_RESUMEN, {
+  if (!token && !USA_COOKIE) return false;
+  const response = await fetch(URL_RESUMEN, {
     method: 'POST',
     keepalive: true,
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    credentials: USA_COOKIE ? 'include' : 'same-origin',
+    headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}), 'Content-Type': 'application/json' },
     body: cuerpo,
-  }).catch(() => {});
+  }).catch(() => null);
+  if (response?.ok) window.dispatchEvent(new Event(EVENTO_ACTIVIDAD_ENVIADA));
+  return Boolean(response?.ok);
 };
 
 /** `{ docente, clases }`: las del docente con su código, o a las que pertenece el estudiante. */
