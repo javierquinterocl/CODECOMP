@@ -1,5 +1,5 @@
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, where, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, where, updateDoc, deleteDoc } from 'firebase/firestore';
 import { auth, db, hasFirebaseConfig } from './firebaseConfig';
 
 const USERS_COLLECTION = 'usuarios_registrados';
@@ -200,6 +200,23 @@ export const actualizarCodigoPerfil = async (uid, codigo) => {
   if (!hasFirebaseConfig || !db) throw new Error('La configuracion del proyecto no es valida.');
   await updateDoc(doc(db, USERS_COLLECTION, uid), { codigo: normalizeString(codigo) });
   await updateActiveSessionsCodigo(uid, normalizeString(codigo));
+};
+
+/** Nombre y apellido del perfil (Firestore). La cabecera usa el displayName de Firebase. */
+export const actualizarNombrePerfil = async (uid, nombre, apellido) => {
+  if (!hasFirebaseConfig || !db) throw new Error('La configuracion del proyecto no es valida.');
+  await updateDoc(doc(db, USERS_COLLECTION, uid), {
+    nombre: normalizeString(nombre),
+    apellido: normalizeString(apellido),
+  });
+};
+
+/** Borra el perfil y el historial de sesiones de un usuario (solo administradores, por las reglas). */
+export const borrarPerfilFirestore = async (uid) => {
+  if (!hasFirebaseConfig || !db) throw new Error('La configuracion del proyecto no es valida.');
+  const sesiones = await getDocs(query(collection(db, SESSIONS_COLLECTION), where('uid', '==', uid)));
+  await Promise.all(sesiones.docs.map((d) => deleteDoc(d.ref)));
+  await deleteDoc(doc(db, USERS_COLLECTION, uid));
 };
 
 export const updateActiveSessionsCodigo = async (uid, codigo) => {

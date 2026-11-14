@@ -36,7 +36,7 @@ const BrandCat = () => (
 );
 
 const AppNavbar = () => {
-  const { user, isAdmin, codigoEstudiante, storedPhotoURL, displayName, isLoggingOut, handleLogout } = useAuth();
+  const { user, isAdmin, codigoEstudiante, storedPhotoURL, fotoPropia, displayName, isLoggingOut, handleLogout } = useAuth();
   // Días seguidos con algún envío (Problemas o Fundamentos); null mientras carga.
   const racha = useResumenProgreso(user)?.racha;
 
@@ -58,7 +58,7 @@ const AppNavbar = () => {
         </div>
 
         <Link to="/dashboard/cuenta" className="nb-dash-user" title="Mi cuenta">
-          <DashAvatar user={user} photoURL={storedPhotoURL} />
+          <DashAvatar key={fotoPropia || 'sin-foto'} user={user} photoURL={fotoPropia || storedPhotoURL} />
           <div className="nb-dash-usertext">
             <span className="nb-dash-username">{displayName}</span>
             <span className="nb-dash-userrole">
