@@ -20,11 +20,26 @@ import { docente } from '../_compartido/rutas/docente.ts';
 import { miProgreso } from '../_compartido/rutas/miProgreso.ts';
 import { competencias } from '../_compartido/rutas/competencias.ts';
 import { jurado } from '../_compartido/rutas/jurado.ts';
+import { correoBaja, cronAvisos } from '../_compartido/rutas/cron.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
   const url = new URL(req.url);
   const origen = req.headers.get('origin');
+
+  // El cron (Worker de Cloudflare) y la baja del correo no los llama la app: van sin CORS.
+  const primero = segmentosDe(url.pathname)[0];
+  if (primero === 'cron' || primero === 'correo') {
+    try {
+      const sqlDirecto = conexion(config.databaseUrl);
+      return primero === 'cron'
+        ? await cronAvisos(req, sqlDirecto, config)
+        : await correoBaja(req, url, sqlDirecto, config);
+    } catch (error) {
+      console.error('Error en cron o baja:', error);
+      return new Response(JSON.stringify({ codigo: 'interno' }), { status: 500 });
+    }
+  }
 
   const cors = cabecerasCors(origen, config.origenesPermitidos);
   if (!cors) {
@@ -97,7 +112,7 @@ Deno.serve(async (req: Request) => {
       case 'sesion':
         return await sesion(ctx);
       case 'notificaciones':
-        return await notificaciones(ctx);
+        return await notificaciones(ctx, segmentos[1]);
       case 'competencias':
         return await competencias(ctx, segmentos[1], segmentos[2]);
       case 'jurado':

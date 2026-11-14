@@ -1,7 +1,12 @@
 # Proxy de la API en api.codecomp.online (fase S7). DESTINO (URL de la funcion) no va en el repo:
 #   npx wrangler deploy --config cloudflare/api-proxy/wrangler.toml --var DESTINO:<url de la funcion>
+# Cron de avisos: cada despliegue lleva el trigger. La clave es un secreto del Worker (igual a
+# CRON_CLAVE de Supabase): npx wrangler secret put CRON_CLAVE --config cloudflare/api-proxy/wrangler.toml
 name = "codecomp-api"
 main = "worker.js"
 compatibility_date = "2026-10-01"
 
 routes = [{ pattern = "api.codecomp.online", custom_domain = true }]
+
+[triggers]
+crons = ["*/5 * * * *"]

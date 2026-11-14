@@ -38,15 +38,30 @@ export const datos = async (ctx: Contexto): Promise<Response> => {
     const userId = await idDeUsuario(sql, identidad);
     if (req.method === 'GET') {
       const [fila] = await sql`
-        SELECT datos_autorizados, datos_respondido_en FROM users WHERE id = ${userId}
+        SELECT datos_autorizados, datos_respondido_en, avisos_correo, correo_verificado
+        FROM users WHERE id = ${userId}
       `;
       return responder({
         status: 200,
-        cuerpo: { autorizado: fila.datos_autorizados, respondidoEn: fila.datos_respondido_en },
+        cuerpo: {
+          autorizado: fila.datos_autorizados,
+          respondidoEn: fila.datos_respondido_en,
+          avisosCorreo: fila.avisos_correo,
+          correoVerificado: fila.correo_verificado,
+        },
       }, cors);
     }
     if (req.method !== 'POST') return metodo(ctx);
-    const acepta = (await leerCuerpo(req))?.acepta;
+    const cuerpo = await leerCuerpo(req);
+    // La preferencia de avisos por correo viaja sola, sin tocar la autorizacion de datos.
+    if (cuerpo && 'avisosCorreo' in cuerpo) {
+      if (typeof cuerpo.avisosCorreo !== 'boolean') {
+        return responder(rechazo(400, 'datos', 'avisosCorreo debe ser verdadero o falso.'), cors);
+      }
+      await sql`UPDATE users SET avisos_correo = ${cuerpo.avisosCorreo} WHERE id = ${userId}`;
+      return responder({ status: 200, cuerpo: { avisosCorreo: cuerpo.avisosCorreo } }, cors);
+    }
+    const acepta = cuerpo?.acepta;
     if (typeof acepta !== 'boolean') {
       return responder(rechazo(400, 'datos', 'acepta debe ser verdadero o falso.'), cors);
     }

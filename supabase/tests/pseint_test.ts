@@ -206,6 +206,7 @@ interface Escenario {
   ocultos?: { entrada: string; salida: string }[];
   limite?: Record<string, unknown>;
   limiteFalla?: boolean;
+  avisosFallan?: boolean;
   sinPresupuesto?: boolean;
   invocacion?: () => Promise<Ejecucion[]>;
 }
@@ -235,6 +236,9 @@ const contexto = (esc: Escenario, consultas: string[], valores: unknown[][] = []
     valores.push(args);
     if (esc.limiteFalla && texto.includes('registrar_envio_pseint')) {
       return Promise.reject(new Error('sin funcion'));
+    }
+    if (esc.avisosFallan && texto.includes('INSERT INTO notificaciones')) {
+      return Promise.reject(new Error('sin tabla'));
     }
     return Promise.resolve(filas(texto));
   };
@@ -311,6 +315,17 @@ Deno.test('envio manda tambien los casos ocultos y no revela el que fallo', asyn
   // Se guarda el numero y la marca para el docente, pero nada de la salida.
   const guardado = r.guardado!;
   assertEquals(guardado.slice(3), ['INCORRECTO', 3, true, null]);
+});
+
+Deno.test('un aceptado crea el aviso de resuelto, y si el aviso falla el envio sigue bien', async () => {
+  const bien = await enviar({ invocacion: () => Promise.resolve(BIEN) });
+  assertEquals(bien.cuerpo.veredicto, 'ACEPTADO');
+  assertEquals(bien.consultas.some((c) => c.includes('INSERT INTO notificaciones')), true);
+  const conFallo = await enviar({ avisosFallan: true, invocacion: () => Promise.resolve(BIEN) });
+  assertEquals(conFallo.status, 200);
+  assertEquals(conFallo.cuerpo.veredicto, 'ACEPTADO');
+  const fallido = await enviar({});
+  assertEquals(fallido.consultas.some((c) => c.includes('INSERT INTO notificaciones')), false);
 });
 
 Deno.test('envio guarda el detalle de un fallo visible', async () => {

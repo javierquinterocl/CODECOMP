@@ -35,6 +35,10 @@ export const responderDatos = async (user, acepta) => {
   return data;
 };
 
+/** Activa o apaga los avisos por correo (la campana sigue igual). */
+export const guardarAvisosCorreo = async (user, activo) =>
+  leer(await pedir(user, URL_DATOS, { cuerpo: { avisosCorreo: activo } }), 'No se pudo guardar tu preferencia.');
+
 /** Primera y última apertura de un problema. Si falla, el ejercicio sigue usable. */
 export const registrarApertura = (user, problemNumber) =>
   pedir(user, URL_ABRIR, { cuerpo: { problem_number: problemNumber } }).catch(() => {});

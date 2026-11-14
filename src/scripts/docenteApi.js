@@ -25,6 +25,16 @@ export const cambiarEscalon = async (user, estudianteId, minimo) => leer(
   'No se pudo cambiar el escalón.',
 );
 
+/** Aviso a todos los estudiantes de la clase (campana y correo). Devuelve destinatarios y restantes. */
+export const avisarClase = async (user, claseId, aviso) => leer(
+  await fetch(rutaApi(`docente/clase/${claseId}/aviso`), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(aviso),
+  }),
+  'No se pudo enviar el aviso.',
+);
+
 /** Ficha de un estudiante de una clase del docente. */
 export const getFichaEstudiante = (user, estudianteId) =>
   pedir(user, `docente/estudiante/${estudianteId}`, 'No se pudo cargar el estudiante.');

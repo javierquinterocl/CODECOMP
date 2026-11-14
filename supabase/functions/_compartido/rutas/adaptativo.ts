@@ -9,6 +9,8 @@ import { dia, mes } from '../config.ts';
 import { revisarPresupuesto, revisarUsuario } from '../limites.ts';
 import { ejecutar, veredictoDe } from '../judge0.ts';
 import { procesarResultado } from '../skillEngine.ts';
+import { escalonDelUsuario } from '../escalon.ts';
+import { type NuevaNotificacion, notificarSinFallar } from '../notificaciones.ts';
 import { idDeUsuario } from '../usuarios.ts';
 
 // No cuenta para el nivel ni como intento; si falla, el envio queda PENDING como antes.
@@ -172,8 +174,27 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
     if (casoFallido) {
       await sql`UPDATE submissions SET caso_fallido = ${casoFallido} WHERE id = ${submissionId}`;
     }
+    // El escalon solo puede subir con un aceptado: el "antes" se mide solo en ese caso.
+    const escalonAntes = veredicto === 'ACCEPTED'
+      ? await escalonDelUsuario(sql, userId).then((e) => e.actual, () => null)
+      : null;
     const procesado = await procesarResultado(sql, submissionId, veredicto);
     envioAbierto = null;
+    if (procesado.first_solve) {
+      const avisos: NuevaNotificacion[] = [{
+        userId,
+        tipo: 'resuelto',
+        clave: `resuelto-p-${problemaNumero}`,
+        datos: { numero: problemaNumero, modulo: 'problemas' },
+      }];
+      const despues = escalonAntes === null
+        ? null
+        : await escalonDelUsuario(sql, userId).then((e) => e.actual, () => null);
+      if (escalonAntes !== null && despues !== null && despues > escalonAntes) {
+        avisos.push({ userId, tipo: 'escalon', clave: `escalon-${despues}`, datos: { escalon: despues } });
+      }
+      await notificarSinFallar(sql, avisos);
+    }
 
     return responder(
       {

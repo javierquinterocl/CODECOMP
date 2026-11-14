@@ -1,4 +1,4 @@
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc, collection, getDocs, query, orderBy, where, updateDoc } from 'firebase/firestore';
 import { auth, db, hasFirebaseConfig } from './firebaseConfig';
 
@@ -47,6 +47,8 @@ export const registerUserInFirestore = async (formData) => {
   } catch (error) {
     throw new Error(mensajeDeAuth(error));
   }
+  // Sin correo verificado no llegan avisos por correo; si falla, se reenvía desde Mi cuenta.
+  sendEmailVerification(firebaseUser).catch(() => {});
 
   const payload = {
     uid: firebaseUser.uid,

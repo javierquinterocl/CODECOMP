@@ -2,9 +2,12 @@ import { rutaApi } from './apiBase';
 import { NIVELES } from './problemsData';
 
 // Avisos de la campana: el servidor manda tipo y datos; aquí se arma el texto.
-// Los leídos se recuerdan en este navegador (no hay tabla de notificaciones).
+// Los avisos y su estado de leído viven en la cuenta (tabla notificaciones).
 
 const plural = (n, uno, varios) => `${n} ${n === 1 ? uno : varios}`;
+
+const cuando = (iso) =>
+  new Date(iso).toLocaleString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' });
 
 // Textos borrador: los aprueba el equipo.
 const TEXTOS = {
@@ -14,14 +17,52 @@ const TEXTOS = {
     enlace: '/dashboard/problemas',
   }),
   cierre: ({ numero, titulo, quedan }) => ({
-    titulo: `Te ${quedan === 1 ? 'queda 1 día' : `quedan ${quedan} días`} para resolver #${numero}`,
+    titulo: `Te quedan ${quedan} días para resolver #${numero}`,
     texto: `${titulo}: si no lo resuelves, contará como no resuelto.`,
     enlace: `/dashboard/problemas/todos/${numero}`,
   }),
+  cierre_1d: ({ problemas = [] }) => ({
+    titulo: problemas.length === 1
+      ? `Mañana se cierra #${problemas[0].numero}`
+      : `Mañana se cierran ${problemas.length} problemas que intentaste`,
+    texto: problemas.map((p) => `#${p.numero} ${p.titulo}`).join(' · '),
+    enlace: problemas.length === 1 ? `/dashboard/problemas/todos/${problemas[0].numero}` : '/dashboard/problemas',
+  }),
+  resuelto: ({ numero, nivel, modulo }) => (modulo === 'fundamentos'
+    ? {
+      titulo: `Resolviste el ejercicio ${numero} de Fundamentos`,
+      texto: 'Sigue con el siguiente cuando quieras.',
+      enlace: `/dashboard/fundamentos/${nivel}`,
+    }
+    : {
+      titulo: `Resolviste el problema #${numero}`,
+      texto: 'Ya cuenta para tu nivel y tus resueltos.',
+      enlace: '/dashboard/progreso',
+    }),
   escalon: ({ escalon }) => ({
     titulo: `Subiste al escalón «${NIVELES[escalon]}»`,
     texto: 'Ya te recomendamos problemas de este nivel.',
     enlace: '/dashboard/progreso',
+  }),
+  jurado: ({ competencia, general }) => ({
+    titulo: `El jurado respondió en ${competencia}`,
+    texto: general ? 'Hay una aclaración para todos los equipos.' : 'Hay una aclaración para tu equipo.',
+    enlace: '/dashboard/competencias',
+  }),
+  docente: ({ titulo, texto, clase }) => ({
+    titulo: `${clase}: ${titulo}`,
+    texto,
+    enlace: '/dashboard',
+  }),
+  competencia_1d: ({ competencia, inicio }) => ({
+    titulo: `Mañana empieza ${competencia}`,
+    texto: `Empieza el ${cuando(inicio)}`,
+    enlace: '/dashboard/competencias',
+  }),
+  competencia_1h: ({ competencia, inicio }) => ({
+    titulo: `${competencia} empieza en menos de una hora`,
+    texto: `Empieza a las ${new Date(inicio).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}. Revisa tu equipo.`,
+    enlace: '/dashboard/competencias',
   }),
   alertas: ({ cantidad, clase }) => ({
     titulo: `${plural(cantidad, 'estudiante', 'estudiantes')} con alertas`,
@@ -33,44 +74,32 @@ const TEXTOS = {
     texto: `Entraron a ${clase} con el código de la clase.`,
     enlace: '/historial-usuarios',
   }),
+  resumen_semanal: ({ clases = [] }) => ({
+    titulo: 'Resumen semanal de tus clases',
+    texto: clases.map((c) => `${c.nombre}: ${c.activos} resolvieron algo, ${c.alertas} con alertas`).join(' · '),
+    enlace: '/historial-usuarios',
+  }),
 };
 
-export const textoDeAviso = (aviso) => TEXTOS[aviso.tipo]?.(aviso.datos) || null;
+export const textoDeAviso = (aviso) => TEXTOS[aviso.tipo]?.(aviso.datos || {}) || null;
 
-export const getAvisos = async (user) => {
-  const response = await fetch(rutaApi('notificaciones'), {
-    headers: { Authorization: `Bearer ${await user.getIdToken()}` },
-  });
+const conToken = async (user, extra = {}) => ({
+  ...extra,
+  headers: { ...extra.headers, Authorization: `Bearer ${await user.getIdToken()}` },
+});
+
+const leer = async (response) => {
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.message || 'No se pudieron cargar tus avisos.');
   return data;
 };
 
-// localStorage puede fallar (modo privado): sin él, los avisos simplemente no se recuerdan.
-const leer = (clave, porDefecto) => {
-  try { return JSON.parse(localStorage.getItem(clave)) ?? porDefecto; } catch { return porDefecto; }
-};
-const guardar = (clave, valor) => {
-  try { localStorage.setItem(clave, JSON.stringify(valor)); } catch { /* sin almacenamiento */ }
-};
+/** `{ notificaciones: [{ id, tipo, datos, creada_en, leida }], sin_leer }` */
+export const getAvisos = async (user) => leer(await fetch(rutaApi('notificaciones'), await conToken(user)));
 
-export const leidosDe = (uid) => new Set(leer(`codecomp:avisos-leidos:${uid}`, []));
-
-export const marcarLeidos = (uid, ids) => {
-  const todos = [...new Set([...leer(`codecomp:avisos-leidos:${uid}`, []), ...ids])].slice(-200);
-  guardar(`codecomp:avisos-leidos:${uid}`, todos);
-};
-
-/** Aviso local de "subiste de escalón": compara con el último escalón que vio. */
-export const avisoDeEscalon = (uid, escalon) => {
-  if (!escalon) return null;
-  const clave = `codecomp:escalon-visto:${uid}`;
-  const visto = leer(clave, null);
-  if (visto == null || escalon < visto) {
-    guardar(clave, escalon); // primera vez (o bajó por un ajuste): no se avisa
-    return null;
-  }
-  return escalon > visto ? { id: `escalon-${escalon}`, tipo: 'escalon', datos: { escalon } } : null;
-};
-
-export const verEscalon = (uid, escalon) => guardar(`codecomp:escalon-visto:${uid}`, escalon);
+/** Marca leídos en la cuenta: una lista de ids o todos. Devuelve la lista actualizada. */
+export const marcarLeidas = async (user, ids) => leer(await fetch(rutaApi('notificaciones/leidas'), await conToken(user, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(ids === 'todas' ? { todas: true } : { ids }),
+})));
