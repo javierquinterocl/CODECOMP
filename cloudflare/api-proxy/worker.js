@@ -23,7 +23,7 @@ export default {
     ctx.waitUntil(
       fetch(`${env.DESTINO.replace(/\/$/, '')}/cron/avisos`, {
         method: 'POST',
-        headers: { 'x-cron-clave': env.CRON_CLAVE, 'x-region': REGION },
+        headers: { 'x-cron-clave': env.CRON_CLAVE.trim(), 'x-region': REGION },
       }).then((r) => {
         if (!r.ok) console.error('Cron de avisos respondio', r.status);
       }),
