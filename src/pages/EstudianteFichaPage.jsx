@@ -11,6 +11,7 @@ import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
 import MapaActividad from '../components/MapaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
+import FotoPerfil from '../components/FotoPerfil';
 
 const Seccion = ({ titulo, sub, children }) => (
   <section className="nb-dash-card nb-dash-pad">
@@ -114,7 +115,12 @@ const EstudianteFichaPage = () => {
       <div className="nb-dash-hero nb-pb-hero">
         <div className="nb-pb-hero-main">
           <div className="nb-dash-hero-kicker">{clase.nombre}</div>
-          <h1 className="nb-dash-hero-title">{nombreVisible(usuario.username)}</h1>
+          <div className="nb-cuenta-titulo">
+            {usuario.foto_version != null && (
+              <FotoPerfil user={user} userId={usuario.id} version={usuario.foto_version} nombre={nombreVisible(usuario.username)} />
+            )}
+            <h1 className="nb-dash-hero-title">{nombreVisible(usuario.username)}</h1>
+          </div>
           <p className="nb-dash-hero-text">
             {usuario.email} · {usuario.datos_autorizados === true ? 'Autorizó el registro de actividad' : 'No ha autorizado el registro de actividad'}
           </p>

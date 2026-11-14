@@ -15,6 +15,7 @@ import {
 } from '../scripts/fundamentosApi';
 import { explicarError } from '../scripts/pseintErrores';
 import { useFundamentos } from '../scripts/useFundamentos';
+import { useTemaEditor } from '../scripts/useTemaEditor';
 import { useAuth } from '../context/AuthContext';
 import { olvidarEscalon } from '../scripts/useEscalon';
 import FundamentosCarga from '../components/FundamentosCarga';
@@ -189,7 +190,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const [codigo, setCodigo] = useState(PLANTILLA_PSEINT);
   const [expandido, setExpandido] = useState(false);
   // PSeInt es claro por defecto; aquí el editor arranca igual.
-  const [temaClaro, setTemaClaro] = useState(true);
+  const [temaClaro, setTemaClaro] = useTemaEditor('pseint');
   // Lo último que respondió el juez: solo un envío nuevo lo cambia.
   const [resultado, setResultado] = useState(null);
   const [evaluando, setEvaluando] = useState(false);

@@ -16,7 +16,7 @@ export const TIPOS_CON_CORREO = new Set(['docente', 'competencia_1d', 'cierre_1d
 // Los que el frontend sabe mostrar: el contador de no leidos solo cuenta estos.
 export const TIPOS_CONOCIDOS = [
   'racha', 'cierre', 'alertas', 'nuevos', 'resuelto', 'escalon', 'jurado', 'docente',
-  'competencia_1d', 'competencia_1h', 'cierre_1d', 'resumen_semanal',
+  'competencia_1d', 'competencia_1h', 'cierre_1d', 'resumen_semanal', 'borrado',
 ];
 
 /**

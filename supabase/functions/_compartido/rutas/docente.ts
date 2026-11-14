@@ -144,7 +144,8 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
 
   const [usuario] = await sql`
     SELECT id, firebase_uid, username, email, nivel, solved_count, attempted_count, created_at,
-      datos_autorizados
+      datos_autorizados,
+      (SELECT extract(epoch FROM actualizada_en) * 1000 FROM foto_usuario WHERE user_id = users.id)::bigint AS foto_version
     FROM users WHERE id = ${estudianteId}
   `;
   const evolucion = await sql`

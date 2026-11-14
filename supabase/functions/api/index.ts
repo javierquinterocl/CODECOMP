@@ -21,6 +21,8 @@ import { miProgreso } from '../_compartido/rutas/miProgreso.ts';
 import { competencias } from '../_compartido/rutas/competencias.ts';
 import { jurado } from '../_compartido/rutas/jurado.ts';
 import { correoBaja, cronAvisos } from '../_compartido/rutas/cron.ts';
+import { rechazoDeCuenta } from '../_compartido/cuenta.ts';
+import { cuenta } from '../_compartido/rutas/cuenta.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -77,6 +79,15 @@ Deno.serve(async (req: Request) => {
     const valor = cookieDe(req);
     if (llave && valor) identidad = await abrir(valor, llave);
   }
+  if (identidad) {
+    const motivo = await rechazoDeCuenta(sql, identidad);
+    if (motivo === 'cuenta-eliminada') {
+      return responder(rechazo(403, motivo, 'Esta cuenta fue eliminada a peticion tuya.'), cors);
+    }
+    if (motivo === 'sesion-cerrada') {
+      return responder(rechazo(401, motivo, 'Tu sesion se cerro en todos los dispositivos. Vuelve a entrar.'), cors);
+    }
+  }
   const ctx: Contexto = { req, url, sql, config, cors, identidad };
 
   try {
@@ -117,6 +128,8 @@ Deno.serve(async (req: Request) => {
         return await competencias(ctx, segmentos[1], segmentos[2]);
       case 'jurado':
         return await jurado(ctx, segmentos.slice(1));
+      case 'cuenta':
+        return await cuenta(ctx, segmentos.slice(1));
       default:
         return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
     }

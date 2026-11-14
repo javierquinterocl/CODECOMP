@@ -6,6 +6,7 @@ import { evaluarCodigo, evaluarCodigoAdaptativo, JUDGE0_LANGUAGE_IDS, VEREDICTOS
 import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra, IdiomaSwitch, Enunciado } from '../components/ProblemBits';
 import { useIdioma } from '../scripts/useIdioma';
+import { useTemaEditor } from '../scripts/useTemaEditor';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
@@ -29,7 +30,7 @@ const Detalle = () => {
   // Un borrador por lenguaje mientras dure la visita; sin borrador vale la plantilla.
   const [borradores, setBorradores] = useState({});
   const [expandido, setExpandido] = useState(false);
-  const [temaClaro, setTemaClaro] = useState(false);
+  const [temaClaro, setTemaClaro] = useTemaEditor('problemas');
   const [enviado, setEnviado] = useState(false);
   const [evaluando, setEvaluando] = useState(false);
   const [resultado, setResultado] = useState(null);

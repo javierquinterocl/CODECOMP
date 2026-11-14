@@ -74,6 +74,11 @@ const TEXTOS = {
     texto: `Entraron a ${clase} con el código de la clase.`,
     enlace: '/historial-usuarios',
   }),
+  borrado: () => ({
+    titulo: 'Nueva solicitud de borrado de datos',
+    texto: 'Un estudiante pidió borrar sus datos. Revísala en Mi cuenta.',
+    enlace: '/dashboard/cuenta',
+  }),
   resumen_semanal: ({ clases = [] }) => ({
     titulo: 'Resumen semanal de tus clases',
     texto: clases.map((c) => `${c.nombre}: ${c.activos} resolvieron algo, ${c.alertas} con alertas`).join(' · '),

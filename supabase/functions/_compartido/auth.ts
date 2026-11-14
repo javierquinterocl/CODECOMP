@@ -19,6 +19,8 @@ export interface Identidad {
   email: string | null;
   nombre: string | null;
   emailVerificado?: boolean;
+  // Segundos desde la epoca en que el usuario inicio sesion (auth_time; iat cambia cada hora).
+  authTime?: number;
 }
 
 // Nunca lanza: un token invalido es 401, no 500.
@@ -40,6 +42,7 @@ export const identidadDelToken = async (
       email: typeof payload.email === 'string' ? payload.email : null,
       nombre: typeof payload.name === 'string' ? payload.name : null,
       emailVerificado: payload.email_verified === true,
+      ...(typeof payload.auth_time === 'number' ? { authTime: payload.auth_time } : {}),
     };
   } catch {
     return null;

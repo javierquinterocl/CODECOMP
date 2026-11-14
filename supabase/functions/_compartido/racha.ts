@@ -20,7 +20,19 @@ export const rachaDe = (dias: string[], hoy: string): number => {
   return racha;
 };
 
-/** Racha del estudiante y si hoy ya envio algo. */
+/** La racha mas larga entre los dias dados (para los logros). */
+export const rachaMaxima = (dias: string[]): number => {
+  const ordenados = [...new Set(dias)].sort();
+  let mejor = 0;
+  let actual = 0;
+  ordenados.forEach((d, i) => {
+    actual = i > 0 && restarDia(d) === ordenados[i - 1] ? actual + 1 : 1;
+    mejor = Math.max(mejor, actual);
+  });
+  return mejor;
+};
+
+/** Racha del estudiante, la mas larga y si hoy ya envio algo. */
 export const rachaDelUsuario = async (sql: Sql, userId: string, zona: string) => {
   const filas = await sql`
     SELECT DISTINCT (created_at AT TIME ZONE ${zona})::date::text AS dia FROM submissions
@@ -32,5 +44,5 @@ export const rachaDelUsuario = async (sql: Sql, userId: string, zona: string) =>
   `;
   const dias = filas.map((f) => f.dia as string);
   const hoy = dia(zona);
-  return { racha: rachaDe(dias, hoy), envioHoy: dias.includes(hoy) };
+  return { racha: rachaDe(dias, hoy), maxima: rachaMaxima(dias), envioHoy: dias.includes(hoy) };
 };
