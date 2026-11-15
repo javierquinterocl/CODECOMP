@@ -915,3 +915,60 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 }
 @media (max-width: 640px) { .nb-repro, .nb-leccion-codigo-caja { box-shadow: 3px 3px 0px #000; } .nb-repro-velocidad { margin-left: 0; } }
 @media (prefers-reduced-motion: reduce) { .nb-vista-valor, .nb-vista-num, .nb-vista-nodo rect { transition: none; } }
+
+/* Lo básico de cada categoría: conceptos con su ejemplo interactivo */
+.nb-leccion-indice { display: flex; flex-wrap: wrap; gap: 8px; }
+.nb-leccion-indice a { border: 2px solid #000; padding: 6px 10px; font-weight: 700; font-size: var(--fs-sm); color: #000; text-decoration: none; background: #fff; box-shadow: 2px 2px 0px #000; transition: var(--nb-tr); }
+.nb-leccion-indice a:hover { background: var(--nb-blue); color: #fff; }
+.nb-leccion-concepto { display: flex; flex-direction: column; gap: 12px; border-top: 3px solid #000; padding-top: 18px; margin-top: 6px; scroll-margin-top: calc(var(--header-h) + 12px); min-width: 0; }
+.nb-leccion-h3 { display: flex; align-items: center; gap: 10px; margin: 0; font-size: var(--fs-lg); }
+.nb-leccion-h3 span { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); }
+.nb-leccion-campo.is-corto { flex: 0 1 150px; }
+.nb-leccion-campo.is-mini { flex: 0 1 78px; }
+.nb-leccion-campo.is-ancho { flex: 1 1 100%; }
+.nb-widget { display: flex; flex-direction: column; gap: 12px; border: 2px solid #000; box-shadow: 4px 4px 0px #000; background: #fff; padding: 16px; min-width: 0; }
+.nb-widget-fila { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; }
+.nb-widget-op { align-self: center; font-family: 'Press Start 2P', monospace; font-size: 14px; margin-top: 18px; }
+.nb-widget-area { resize: vertical; font-family: 'JetBrains Mono', monospace; }
+.nb-widget-nota { margin: 0; font-size: var(--fs-sm); color: var(--nb-ink-soft); line-height: 1.6; }
+.nb-widget-nota code, .nb-widget-resultado code { font-family: 'JetBrains Mono', monospace; background: var(--nb-hover); padding: 0 4px; }
+.nb-widget-resultado { display: flex; flex-direction: column; gap: 6px; border: 2px solid #000; background: var(--nb-hover); padding: 12px 14px; font-size: var(--fs-sm); line-height: 1.6; overflow-wrap: anywhere; }
+.nb-widget-resultado.is-fail { background: #B00A26; color: #fff; }
+.nb-widget-resultado.is-fail code { background: transparent; }
+.nb-widget-fichas { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.nb-widget-fichas li { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.nb-widget-fichas span { min-width: 40px; padding: 6px 8px; text-align: center; border: 2px solid #000; background: var(--nb-blue); color: #fff; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-widget-fichas li.is-sobra span { background: var(--nb-canvas); color: var(--nb-ink-mute); text-decoration: line-through; }
+.nb-widget-fichas small { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nb-blue); font-weight: 700; }
+.nb-widget-tabla { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.nb-widget-tabla th, .nb-widget-tabla td { border: 1px solid #000; padding: 6px 10px; text-align: left; }
+.nb-widget-tabla th { background: #000; color: #fff; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: 0.08em; }
+.nb-widget-tabla tr.is-ok td:last-child { font-weight: 700; }
+.nb-widget-tabla tr.is-fail td { color: var(--nb-ink-mute); }
+.nb-widget-tabla tr.is-fail td:last-child { color: #B00A26; font-weight: 700; }
+.nb-widget-barras { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.nb-widget-barras li { display: grid; grid-template-columns: minmax(60px, 140px) minmax(0, 1fr) 40px; align-items: center; gap: 10px; }
+.nb-widget-barras code { font-family: 'JetBrains Mono', monospace; font-weight: 700; overflow: hidden; text-overflow: ellipsis; }
+.nb-widget-barra { position: relative; height: 16px; border: 2px solid #000; background: #fff; }
+.nb-widget-barra::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--avance, 0%); background: var(--nb-blue); }
+.nb-widget-estructura { display: flex; gap: 6px; align-items: flex-end; min-height: 60px; padding: 10px; border: 2px dashed #000; overflow-x: auto; }
+.nb-widget-estructura span { min-width: 44px; height: 44px; display: grid; place-items: center; border: 2px solid #000; background: #fff; font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-widget-estructura span.is-sale { background: var(--nb-blue); color: #fff; }
+.nb-widget-estructura em { color: var(--nb-ink-mute); font-size: var(--fs-sm); }
+.nb-widget-dos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+.nb-widget-lista { list-style: none; margin: 8px 0 0; padding: 0; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); line-height: 1.8; }
+.nb-widget-matriz { border-collapse: collapse; margin-top: 8px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-sm); }
+.nb-widget-matriz th, .nb-widget-matriz td { width: 30px; height: 30px; text-align: center; border: 1px solid #000; }
+.nb-widget-matriz th { background: #000; color: #fff; }
+.nb-widget-matriz td.is-on { background: var(--nb-blue); color: #fff; font-weight: 700; }
+.nb-widget-plano { width: 100%; max-width: 320px; background: #fff; border: 2px solid #000; }
+.nb-widget-plano line { stroke: var(--nb-canvas); stroke-width: 1; }
+.nb-widget-plano line.is-eje { stroke: #000; stroke-width: 1.5; }
+.nb-widget-trazo { fill: none; stroke: var(--nb-blue); stroke-width: 2.5; }
+.nb-widget-plano rect { fill: #000; }
+.nb-widget-plano text { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 11px; fill: #000; }
+.nb-vista-tabla-caja { width: 100%; max-height: 320px; overflow: auto; }
+.nb-vista-tabla tr.is-compara td { background: var(--nb-blue); color: #fff; font-weight: 700; }
+.nb-vista-pila-caja { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+@media (max-width: 760px) { .nb-widget-dos { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .nb-widget { box-shadow: 3px 3px 0px #000; } }

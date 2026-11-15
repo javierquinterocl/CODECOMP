@@ -7,7 +7,9 @@ const TEXTO_ESTADO = {
 const LEYENDA = {
   arreglo: [['compara', 'Se compara'], ['bien', 'Coincide / encontrado'], ['error', 'Distinto'], ['descartada', 'Descartado']],
   cuadricula: [['compara', 'Primo actual'], ['bien', 'Primo'], ['error', 'Tachando'], ['tachado', 'Tachado']],
-  grafo: [['compara', 'Se procesa'], ['cola', 'En la cola'], ['bien', 'Terminado'], ['normal', 'Sin visitar']],
+  grafo: [['compara', 'Se procesa'], ['cola', 'En espera'], ['bien', 'Visitado'], ['normal', 'Sin visitar']],
+  tabla: [['compara', 'Fila nueva']],
+  pila: [['compara', 'Se lee'], ['bien', 'Empareja'], ['error', 'No empareja']],
 };
 
 export const Leyenda = ({ tipo }) => (
@@ -67,15 +69,39 @@ export const VistaGrafo = ({ paso }) => {
           <g key={n.id} className={`nb-vista-nodo is-${n.estado}`} transform={`translate(${pos[n.id].x} ${pos[n.id].y})`}>
             <rect x="-20" y="-20" width="40" height="40" />
             <text y="1">{n.id}</text>
-            <text y="36" className="nb-vista-dist">{n.dist === null ? '–' : `d=${n.dist}`}</text>
+            <text y="36" className="nb-vista-dist">{n.dist === null ? '–' : `${paso.prefijo ?? 'd='}${n.dist}`}</text>
           </g>
         ))}
       </svg>
       <div className="nb-vista-cola">
-        <span className="nb-vista-cola-label">Cola</span>
+        <span className="nb-vista-cola-label">{paso.etiquetaLista ?? 'Cola'}</span>
         {paso.cola.length ? paso.cola.map((id, k) => <span key={`${id}-${k}`} className="nb-vista-cola-item">{id}</span>) : <span className="nb-vista-cola-vacia">vacía</span>}
       </div>
     </div>
   );
 };
 
+/** Tabla de variables que crece fila por fila (trazas, simulaciones, MCD, monedas). */
+export const VistaTabla = ({ paso }) => (
+  <div className="nb-vista-tabla-caja">
+    <table className="nb-widget-tabla nb-vista-tabla">
+      <thead><tr>{paso.columnas.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
+      <tbody>
+        {paso.filas.length ? paso.filas.map((f, k) => (
+          <tr key={k} className={k === paso.actual ? 'is-compara' : ''}>{f.map((v, j) => <td key={j}>{v}</td>)}</tr>
+        )) : <tr><td colSpan={paso.columnas.length}>(todavía vacía)</td></tr>}
+      </tbody>
+    </table>
+  </div>
+);
+
+/** Símbolos en fila y la pila al lado, con el tope a la derecha. */
+export const VistaPila = ({ paso }) => (
+  <div className="nb-vista-pila-caja">
+    <VistaArreglo paso={paso} />
+    <div className="nb-vista-cola">
+      <span className="nb-vista-cola-label">Pila (tope a la derecha)</span>
+      {paso.pila.length ? paso.pila.map((c, k) => <span key={k} className="nb-vista-cola-item">{c}</span>) : <span className="nb-vista-cola-vacia">vacía</span>}
+    </div>
+  </div>
+);

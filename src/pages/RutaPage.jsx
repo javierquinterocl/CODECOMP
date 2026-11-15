@@ -75,7 +75,7 @@ const RutaPage = () => {
               </div>
               {LECCIONES[t.slug] ? (
                 <Link to={`/dashboard/ruta/${t.slug}`} className="nb-ex-send nb-ruta-leccion">
-                  Ver la lección: {LECCIONES[t.slug].tecnica} →
+                  Aprende {t.titulo}: lo básico y {LECCIONES[t.slug].tecnica.toLowerCase()} →
                 </Link>
               ) : (
                 <span className="nb-ruta-pronto">Lección interactiva en preparación</span>

@@ -36,13 +36,13 @@ const Reproductor = ({ pasos, pseudo, children }) => {
   };
 
   return (
-    <div className="nb-repro" tabIndex={0} onKeyDown={teclas} aria-label="Visualización paso a paso. Usa las flechas para avanzar o retroceder.">
+    <div className="nb-repro" role="group" tabIndex={0} onKeyDown={teclas} aria-label="Visualización paso a paso. Usa las flechas para avanzar o retroceder.">
       <div className="nb-repro-escena">{children(paso)}</div>
 
       <div className="nb-repro-panel">
         <ol className="nb-repro-pseudo" aria-label="Pseudocódigo">
           {pseudo.map((linea, k) => (
-            <li key={linea} className={k === paso.linea ? 'is-active' : ''} aria-current={k === paso.linea ? 'step' : undefined}>
+            <li key={k} className={k === paso.linea ? 'is-active' : ''} aria-current={k === paso.linea ? 'step' : undefined}>
               <code>{linea}</code>
             </li>
           ))}

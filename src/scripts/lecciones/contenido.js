@@ -6,8 +6,10 @@ import {
   pasosBfs, pasosBinaria, pasosCriba, pasosPalindromo,
   validarBfs, validarBinaria, validarCriba, validarPalindromo,
 } from './pasos.js';
+import { NUEVAS } from './nuevas.js';
+import { CONCEPTOS } from './conceptos.js';
 
-export const LECCIONES = {
+const TECNICAS = {
   cadenas: {
     tecnica: 'Dos punteros',
     resumen: 'Recorrer un texto desde los dos extremos a la vez para compararlo en una sola pasada.',
@@ -388,3 +390,8 @@ print(*dist[1:])`,
     ],
   },
 };
+
+// Las 8 lecciones: lo básico de la categoría (conceptos) y su técnica clave.
+export const LECCIONES = Object.fromEntries(
+  Object.entries({ ...TECNICAS, ...NUEVAS }).map(([slug, l]) => [slug, { ...l, conceptos: CONCEPTOS[slug] ?? [] }]),
+);
