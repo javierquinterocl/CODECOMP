@@ -9,6 +9,8 @@ import UserHistoryPage from './pages/UserHistoryPage';
 import EstudianteFichaPage from './pages/EstudianteFichaPage';
 import MiProgresoPage from './pages/MiProgresoPage';
 import MiCuentaPage from './pages/MiCuentaPage';
+import GuiaPage from './pages/GuiaPage';
+import PrivacidadPage from './pages/PrivacidadPage';
 import RecoverPage from './pages/RecoverPage';
 import ResetPage from './pages/ResetPage';
 import CompleteProfilePage from './pages/CompleteProfilePage';
@@ -97,6 +99,9 @@ function App() {
         <Route path="/login"    element={<Navigate to="/" replace state={{ openLogin: true }} />} />
         <Route path="/register" element={<PublicOnlyRoute element={<RegisterPage />} />} />
         <Route path="/recover"  element={<PublicOnlyRoute element={<RecoverPage />} />} />
+        {/* Públicas para todos, con o sin sesión: la política se consulta antes de registrarse. */}
+        <Route path="/guia"       element={<GuiaPage />} />
+        <Route path="/privacidad" element={<PrivacidadPage />} />
 
         {/* Rutas protegidas con layout compartido */}
         <Route element={<ProtectedRoute element={<DashboardLayout />} />}>

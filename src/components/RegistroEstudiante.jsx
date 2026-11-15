@@ -9,10 +9,12 @@ const CORTO = 'Usamos cookies para mantener tu sesión y, si aceptas, registrar 
 const DETALLE = 'Registramos el tiempo que pasas activo y en cada ejercicio, cuándo abres cada problema y cuántas veces pegas código (solo el tamaño, nunca el contenido). Tus envíos y las pistas del tutor se guardan siempre porque son parte del servicio. Los avisos por correo se envían con Resend (servidores en EE. UU.) y puedes apagarlos en Mi cuenta. Los datos se usan solo con fines académicos en la UFPS Ocaña (Ley 1581 de 2012) y la actividad se guarda 12 meses. Puedes cambiar tu decisión cuando quieras en Mi cuenta.';
 
 /** Aviso de cookies la primera vez y, si el estudiante acepta, registro de la actividad. */
-const RegistroEstudiante = () => {
+const RegistroEstudiante = ({ alSaber }) => {
   const { user } = useAuth();
   // undefined: cargando o sin sesión; null: aún no responde.
   const [autorizado, setAutorizado] = useState(undefined);
+  // Le cuenta a la pila de avisos si ya respondió (para ofrecer el recorrido después).
+  useEffect(() => { alSaber?.(autorizado); }, [autorizado, alSaber]);
   const [guardando, setGuardando] = useState(false);
   const [detalle, setDetalle] = useState(false);
 

@@ -57,6 +57,8 @@ export const registerUserInFirestore = async (formData) => {
     codigo: normalizeString(formData.codigo),
     email,
     createdAt: serverTimestamp(),
+    // Autorizacion de tratamiento de datos (Ley 1581): la casilla es obligatoria antes de guardar.
+    autorizaDatosEn: serverTimestamp(),
   };
 
   try {
@@ -107,6 +109,8 @@ export const saveGoogleUserToFirestore = async ({ uid, email, nombre, apellido, 
     email,
     photoURL: photoURL || null,
     createdAt: serverTimestamp(),
+    // Autorizacion de tratamiento de datos (Ley 1581): la casilla es obligatoria antes de guardar.
+    autorizaDatosEn: serverTimestamp(),
   };
 
   try {

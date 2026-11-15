@@ -9,7 +9,9 @@ export const codigoVigente = (codigo) => FORMATO.test(String(codigo ?? '').trim(
 /** Mensaje de error para el formulario, o null si el código es válido. */
 export const errorDeCodigo = (codigo) => {
   const valor = String(codigo ?? '').trim();
-  if (!valor) return 'El código es obligatorio.';
-  if (!FORMATO.test(valor)) return `El código debe tener exactamente ${LARGO_CODIGO} dígitos.`;
+  if (!valor) return `Escribe tu código estudiantil de ${LARGO_CODIGO} dígitos, por ejemplo 1191000.`;
+  if (!FORMATO.test(valor)) {
+    return `Tu código debe tener exactamente ${LARGO_CODIGO} dígitos, solo números (llevas ${valor.length}).`;
+  }
   return null;
 };

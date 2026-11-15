@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import logoUfps from '../assets/logo-ufps-blanco.png';
 
 const AppFooter = () => (
@@ -6,6 +7,11 @@ const AppFooter = () => (
       <div>
         <div className="nb-dash-footer-brand">CODECOMP</div>
         <div className="nb-dash-footer-note">Prototipo · 2026</div>
+        <div className="nb-dash-footer-note">
+          <Link className="nb-footer-link" to="/guia">Guía de uso</Link>
+          {' · '}
+          <Link className="nb-footer-link" to="/privacidad">Política de datos</Link>
+        </div>
       </div>
       <div className="nb-dash-footer-ufps">
       <img className="nb-footer-ufps" src={logoUfps} alt="UFPS Ocaña" width="500" height="500" loading="lazy" />

@@ -400,6 +400,8 @@ const HomePage = () => {
               {NAV_LINKS.map(({ label, id }) => (
                 <button key={id} type="button" className="nb-footer-link nb-footer-btn" onClick={() => scrollToSection(id)}>{label}</button>
               ))}
+              <Link to="/guia" className="nb-footer-link nb-footer-btn">Guía de uso</Link>
+              <Link to="/privacidad" className="nb-footer-link nb-footer-btn">Política de datos</Link>
             </div>
           </div>
           <div className="nb-foot-bottom">
