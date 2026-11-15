@@ -14,6 +14,9 @@ import { pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
 import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
 import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
+import useConfirmar from '../scripts/useConfirmar';
+import useReinicios from '../scripts/useReinicios';
+import ConfirmarDialogo from '../components/ConfirmarDialogo';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -65,6 +68,17 @@ const Detalle = () => {
 
   const esperaPista = pistaHasta ? Math.max(0, Math.ceil((pistaHasta - ahora) / 1000)) : 0;
 
+  const codigo = borradores[lenguaje.id] ?? lenguaje.plantilla;
+  const { pedido, confirmar, responder } = useConfirmar();
+  // Reinicios por lenguaje: no tocan veredicto ni pista (solo los quita un envío nuevo).
+  const reinicios = useReinicios({
+    clave: lenguaje.id,
+    codigo,
+    plantilla: lenguaje.plantilla,
+    poner: (texto) => setBorradores((previos) => ({ ...previos, [lenguaje.id]: texto })),
+    confirmar,
+  });
+
   const problema = problemaReal || ejercicio;
   const temaDelProblema = problema
     ? buscarCategoria(categoriaDeProblema({ tags: problema.tags || [], dificultadRating: problema.dificultadRating }))
@@ -85,7 +99,6 @@ const Detalle = () => {
   // El destino de "volver" es el listado por el que se entró, que puede ser "todos".
   const volverA = slug === 'todos' ? 'todos los problemas' : (categoria?.titulo || 'problemas');
   const marcado = esFavorito(problema.numero);
-  const codigo = borradores[lenguaje.id] ?? lenguaje.plantilla;
 
   // Sin traducción solo existe el inglés y el conmutador no se muestra.
   const hayTraduccion = Boolean(problema.textos?.es);
@@ -105,13 +118,7 @@ const Detalle = () => {
 
   // Veredicto y pista siguen a la vista al teclear, reiniciar o cambiar de lenguaje:
   // solo los quita un envío nuevo.
-  const reiniciar = () => {
-    setBorradores((previos) => {
-      const resto = { ...previos };
-      delete resto[lenguaje.id];
-      return resto;
-    });
-  };
+  const { reiniciar } = reinicios;
 
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
      cuesta, asi que sale solo cuando el estudiante la pulsa. */
@@ -274,9 +281,14 @@ const Detalle = () => {
             claro={temaClaro}
             onTema={() => setTemaClaro((v) => !v)}
             onReiniciar={reiniciar}
+            onRetroceder={reinicios.retroceder}
+            onAdelantar={reinicios.adelantar}
+            puedeRetroceder={reinicios.puedeRetroceder}
+            puedeAdelantar={reinicios.puedeAdelantar}
             tabulador
             archivo={nombreDeArchivo(lenguaje.id, problema.numero, codigo)}
           />
+          <ConfirmarDialogo pedido={pedido} onRespuesta={responder} />
 
           <div className={`nb-ex-feedback${errorEnvio ? ' is-fail' : enviado && resultado?.verdict ? (resultado.verdict === 'ACCEPTED' ? ' is-ok' : ' is-fail') : ''}`}>
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
