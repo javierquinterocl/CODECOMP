@@ -395,6 +395,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
 
             <button
               type="button"
+              className={`nb-ex-send${evaluando ? ' is-busy' : ''}`}
               data-tour="enviar"
               onClick={evaluar}
               disabled={evaluando}
