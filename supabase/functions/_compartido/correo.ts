@@ -33,7 +33,8 @@ const PRIORIDAD = ['docente', 'competencia_1d', 'cierre_1d', 'resumen_semanal'];
 const b64url = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 
-const firma = async (clave: string, texto: string): Promise<string> => {
+/** HMAC-SHA256 en base64url (enlaces de baja y huellas de correo para los limites). */
+export const firma = async (clave: string, texto: string): Promise<string> => {
   const llave = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(clave),
@@ -142,6 +143,42 @@ ${c.parrafos.map((x) => `<p style="font-size:15px;line-height:1.5;white-space:pr
       'List-Unsubscribe': `<${baja}>`,
       'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
     },
+  };
+};
+
+/* ── Correos de cuenta: recuperar contrasena y verificar correo (transaccionales, sin baja) ── */
+
+export const mensajeDeAcceso = (
+  tipo: 'PASSWORD_RESET' | 'VERIFY_EMAIL',
+  email: string,
+  enlace: string,
+): Omit<Mensaje, 'headers'> => {
+  const recuperar = tipo === 'PASSWORD_RESET';
+  const asunto = recuperar ? 'Cambia tu contraseña de CODECOMP' : 'Confirma tu correo en CODECOMP';
+  const parrafos = recuperar
+    ? [
+      'Pediste cambiar la contraseña de tu cuenta de CODECOMP.',
+      'El enlace sirve una sola vez y vence en una hora.',
+    ]
+    : [
+      'Confirma que este es tu correo para recibir los avisos de CODECOMP.',
+      'El enlace sirve una sola vez.',
+    ];
+  const boton = recuperar ? 'Cambiar mi contraseña' : 'Confirmar mi correo';
+  const pie = recuperar
+    ? 'Si no lo pediste tú, ignora este correo: tu contraseña no cambia.'
+    : 'Si no creaste una cuenta en CODECOMP, ignora este correo.';
+  return {
+    to: email,
+    subject: asunto,
+    text: [...parrafos, '', `${boton}: ${enlace}`, '', pie].join('\n'),
+    html: `<div style="font-family:Arial,sans-serif;max-width:560px;border:2px solid #000;padding:20px">
+<p style="font-weight:700;color:#0736FE;letter-spacing:.1em;font-size:12px">CODECOMP</p>
+${parrafos.map((x) => `<p style="font-size:15px;line-height:1.5">${escaparHtml(x)}</p>`).join('\n')}
+<p><a href="${escaparHtml(enlace)}" style="display:inline-block;background:#0736FE;color:#fff;padding:10px 16px;border:2px solid #000;text-decoration:none;font-weight:700">${boton}</a></p>
+<p style="font-size:12px;color:#5A6070">Si el botón no abre, copia este enlace: ${escaparHtml(enlace)}</p>
+<p style="font-size:12px;color:#5A6070">${escaparHtml(pie)}</p>
+</div>`,
   };
 };
 
