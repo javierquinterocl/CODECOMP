@@ -23,6 +23,7 @@ import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
+import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
 
 // Mientras se teclea, el borrador va a la base como mucho una vez cada tanto (y al salir).
 const ESPERA_BORRADOR = 15000;
@@ -407,6 +408,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
           <Editor
             codigo={codigo}
             lenguajeId="pseint"
+            archivo={`fundamentos-${nivel.slug}-${ejercicio.numero}.psc`}
             onChange={escribir}
             expandido={expandido}
             onExpandir={() => setExpandido((v) => !v)}
@@ -441,6 +443,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
                   <p className="nb-ex-feedback-text">{veredicto.texto}</p>
                   {veredicto.comparar && (
                     <>
+                      <p className="nb-ex-feedback-text nb-ex-diferencia">{textoDeDiferencia(primeraDiferencia(resultado.esperada, resultado.obtenida))}</p>
                       <Salida etiqueta="Entrada" texto={resultado.entrada} vacio="(sin entrada)" />
                       <Salida etiqueta="Salida esperada" texto={resultado.esperada} vacio="(sin salida)" />
                       <Salida etiqueta="Tu salida" texto={resultado.obtenida} vacio="(sin salida)" />

@@ -27,6 +27,7 @@ import ProblemDetailPage from './pages/ProblemDetailPage';
 import FundamentosPage from './pages/FundamentosPage';
 import FundamentosListPage from './pages/FundamentosListPage';
 import FundamentosDetailPage from './pages/FundamentosDetailPage';
+import NotFoundPage from './pages/NotFoundPage';
 import DashboardLayout from './components/DashboardLayout';
 
 
@@ -128,6 +129,9 @@ function App() {
         <Route path="/reset" element={<ProtectedRoute element={<ResetPage />} />} />
 
         <Route path="/complete-profile" element={<CompleteProfileRoute element={<CompleteProfilePage />} />} />
+
+        {/* Cualquier otra URL: fuera de las guardas, para que también la vea quien no tiene sesión */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Router>
   );

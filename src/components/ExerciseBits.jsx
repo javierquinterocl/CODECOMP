@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { resaltar } from '../scripts/syntaxHighlight';
-import { ReloadIcon } from './AppIcons';
+import { DownloadIcon, ReloadIcon } from './AppIcons';
 
 /* Piezas de la vista del ejercicio, compartidas entre Problemas y Fundamentos. */
 
@@ -49,9 +49,19 @@ const tabular = (texto, inicio, fin, quitar) => {
 /* ── Editor ──
    El resaltado no cabe en un <textarea>: se pinta en un <pre> detrás y el
    textarea queda encima con el texto invisible. */
+/** Descarga el código como archivo de texto. */
+const descargarCodigo = (codigo, archivo) => {
+  const url = URL.createObjectURL(new Blob([codigo], { type: 'text/plain;charset=utf-8' }));
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = archivo;
+  enlace.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+};
+
 export const Editor = ({
   codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar,
-  bloquearPegado = false, tabulador = false, extra = null, lineaError = null,
+  bloquearPegado = false, tabulador = false, extra = null, lineaError = null, archivo = null,
 }) => {
   const regletaRef = useRef(null);
   const resaltadoRef = useRef(null);
@@ -114,6 +124,18 @@ export const Editor = ({
         </span>
         <div className="nb-ex-editor-tools">
           {extra}
+          {archivo && (
+            <button
+              type="button"
+              className="nb-ex-icon-btn is-square"
+              onClick={() => descargarCodigo(codigo, archivo)}
+              disabled={!codigo.trim()}
+              title={`Descargar como ${archivo}`}
+              aria-label={`Descargar el código como ${archivo}`}
+            >
+              <DownloadIcon />
+            </button>
+          )}
           <button
             type="button"
             className="nb-ex-icon-btn is-square"

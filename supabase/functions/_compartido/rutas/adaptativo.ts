@@ -13,6 +13,9 @@ import { escalonDelUsuario } from '../escalon.ts';
 import { type NuevaNotificacion, notificarSinFallar } from '../notificaciones.ts';
 import { idDeUsuario } from '../usuarios.ts';
 
+// Tope de la entrada y la salida esperada de un ejemplo que se devuelven al navegador.
+const MAX_EJEMPLO = 2000;
+
 // No cuenta para el nivel ni como intento; si falla, el envio queda PENDING como antes.
 const marcarErrorJuez = (sql: Contexto['sql'], id: string) =>
   sql`
@@ -84,7 +87,7 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
       if (!problema) return { error: 'no-importado' as const };
 
       const casos = await tx`
-        SELECT input, expected_output FROM test_cases
+        SELECT input, expected_output, is_hidden FROM test_cases
         WHERE problem_id = ${problema.id} ORDER BY id
         LIMIT ${config.maxCasosPorEnvio}
       `;
@@ -110,6 +113,8 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
     let ultimo: Record<string, unknown> | null = null;
     let veredicto = 'RUNTIME_ERROR';
     let casoFallido: number | null = null;
+    // Solo un ejemplo visible devuelve su entrada y su salida esperada (NULL cuenta como oculto).
+    let ejemploFallido: { entrada: string; esperada: string } | null = null;
 
     for (const [indice, caso] of casos.entries()) {
       if (Date.now() > limite) {
@@ -167,6 +172,12 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
       ultimo = resultado.data;
       if (veredicto !== 'ACCEPTED') {
         casoFallido = indice + 1;
+        if (veredicto === 'WRONG_ANSWER' && caso.is_hidden === false) {
+          ejemploFallido = {
+            entrada: String(caso.input ?? '').slice(0, MAX_EJEMPLO),
+            esperada: String(caso.expected_output ?? '').slice(0, MAX_EJEMPLO),
+          };
+        }
         break;
       }
     }
@@ -207,6 +218,7 @@ export const adaptativo = async (ctx: Contexto): Promise<Response> => {
           firstSolve: procesado.first_solve,
           intento: procesado.intento,
           casoFallido,
+          ...(ejemploFallido ?? {}),
         },
       },
       cors,
