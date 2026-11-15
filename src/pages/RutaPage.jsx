@@ -5,6 +5,7 @@ import { useEntrenamiento } from '../scripts/useEntrenamiento';
 import { META_TEMA, rutaDeTemas } from '../scripts/entrenamiento';
 import { useIdioma } from '../scripts/useIdioma';
 import { EsqPagina } from '../components/Esqueleto';
+import { LECCIONES } from '../scripts/lecciones/contenido';
 
 // Ruta de entrenamiento por temas. Textos borrador: los decide el equipo.
 
@@ -72,6 +73,13 @@ const RutaPage = () => {
                 </div>
                 <span className="nb-ruta-estado">{t.recomendado && t.estado === 'en-curso' ? 'Sigue aquí' : ESTADOS[t.estado]}</span>
               </div>
+              {LECCIONES[t.slug] ? (
+                <Link to={`/dashboard/ruta/${t.slug}`} className="nb-ex-send nb-ruta-leccion">
+                  Ver la lección: {LECCIONES[t.slug].tecnica} →
+                </Link>
+              ) : (
+                <span className="nb-ruta-pronto">Lección interactiva en preparación</span>
+              )}
               <div className="nb-ruta-avance">
                 <span className="nb-ruta-barra" style={{ '--avance': `${(t.resueltos / META_TEMA) * 100}%` }} aria-hidden="true" />
                 <span className="nb-ruta-cifra">{t.resueltos}/{META_TEMA} resueltos · {t.total} en el tema</span>
