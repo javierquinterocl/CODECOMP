@@ -12,9 +12,10 @@ import NivelEvolucion from '../components/NivelEvolucion';
 import MapaActividad from '../components/MapaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
 import FotoPerfil from '../components/FotoPerfil';
+import { EsqPagina } from '../components/Esqueleto';
 
-const Seccion = ({ titulo, sub, children }) => (
-  <section className="nb-dash-card nb-dash-pad">
+const Seccion = ({ titulo, sub, children, className = '' }) => (
+  <section className={`nb-dash-card nb-dash-pad${className ? ` ${className}` : ''}`}>
     <h2 className="nb-dash-section-title">{titulo}</h2>
     {sub && <div className="nb-dash-section-sub">{sub}</div>}
     {children}
@@ -98,7 +99,7 @@ const EstudianteFichaPage = () => {
       </div>
     );
   }
-  if (!ficha) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando la ficha…</p></div>;
+  if (!ficha) return <EsqPagina aviso="Cargando la ficha…" />;
 
   const { usuario, clase, evolucion, envios, pistas, actividad, mapa, ejercicios, fundamentos, parecidos } = ficha;
   const pistasFundamentos = ficha.pistas_fundamentos ?? [];
@@ -208,7 +209,8 @@ const EstudianteFichaPage = () => {
           </div>
 
           <div className="nb-dash-col is-7 nb-doc-stack">
-            <Seccion titulo="Envíos recientes" sub={`Últimos ${envios.length} · abre uno para ver el código`}>
+            {/* Toma la altura de la columna de al lado; si hay muchos envíos, la lista se desplaza. */}
+            <Seccion titulo="Envíos recientes" sub={`Últimos ${envios.length} · abre uno para ver el código`} className="nb-doc-llenar">
               {envios.length ? (
                 <ul className="nb-doc-tabla">
                   {envios.map((e) => (

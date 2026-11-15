@@ -9,6 +9,7 @@ import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
 import MapaActividad from '../components/MapaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
+import { EsqPagina } from '../components/Esqueleto';
 
 const RESUELTOS_PARA_SUBIR = 5;
 
@@ -21,7 +22,8 @@ const Seccion = ({ titulo, sub, children, className = '' }) => {
       {children}
     </section>
   );
-  return className ? <div className={className}>{tarjeta}</div> : tarjeta;
+  // En una fila, la tarjeta llena su columna: las dos quedan a la misma altura.
+  return className ? <div className={`${className} is-llena`}>{tarjeta}</div> : tarjeta;
 };
 
 const PendienteFila = ({ p }) => {
@@ -76,7 +78,7 @@ const MiProgresoPage = () => {
   // Solo para estudiantes (decisión del equipo): el docente va a su vista.
   if (isAdmin) return <Navigate to="/historial-usuarios" replace />;
   if (error && !datos) return <div className="nb-dash-inner"><div className="nb-pb-empty"><p className="nb-pb-empty-title">{error}</p></div></div>;
-  if (!datos) return <div className="nb-dash-inner"><p className="nb-doc-vacio">Cargando tu progreso…</p></div>;
+  if (!datos) return <EsqPagina aviso="Cargando tu progreso…" />;
 
   const { usuario, evolucion, pendientes, mapa, ejercicios } = datos;
   const autorizado = usuario.datos_autorizados === true;

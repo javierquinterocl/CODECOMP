@@ -601,7 +601,7 @@ const FundamentosDetailPage = () => {
   const { ejercicios, cargando, error } = useFundamentos();
   const volverA = nivel ? `/dashboard/fundamentos/${nivel.slug}` : '/dashboard/fundamentos';
 
-  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA={volverA} />;
+  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA={volverA} forma="ejercicio" />;
 
   // Un ejercicio se identifica por su nivel y su número dentro de ese nivel.
   const delNivel = (nivel && ejercicios?.[nivel.slug]) || [];

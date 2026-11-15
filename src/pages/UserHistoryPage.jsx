@@ -12,6 +12,7 @@ import AvisarClase from '../components/AvisarClase';
 import { Plegable } from '../components/ExerciseBits';
 import { DownloadIcon, SearchIcon } from '../components/AppIcons';
 import { archivoDeClase, csvDeClase } from '../scripts/reporteClase';
+import { EsqFilas } from '../components/Esqueleto';
 
 const Alertas = ({ lista }) => (lista.length ? (
   <span className="nb-doc-alertas">
@@ -131,7 +132,7 @@ const UserHistoryPage = () => {
             {datos && <span className="nb-dash-clase-codigo" title="Código para entrar a la clase">{datos.clase.codigo}</span>}
           </div>
 
-          {!datos && !error && <p className="nb-doc-vacio">Cargando la clase…</p>}
+          {!datos && !error && <EsqFilas n={5} aviso="Cargando la clase…" />}
 
           {datos && !estudiantes.length && (
             <div className="nb-pb-empty">
@@ -149,7 +150,7 @@ const UserHistoryPage = () => {
                     <h2 className="nb-dash-section-title">Estudiantes de la clase</h2>
                     <div className="nb-dash-section-sub">Ordenados por nivel · toca uno para ver su ficha</div>
                   </div>
-                  <div className="nb-doc-herramientas">
+                  <div className="nb-doc-reporte">
                     <div className="nb-pb-search nb-pb-search-inline nb-doc-buscar">
                       <SearchIcon />
                       <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o correo" aria-label="Buscar estudiante" />

@@ -55,7 +55,7 @@ const FundamentosListPage = () => {
       .filter((g) => g.ejercicios.length > 0);
   }, [delNivel, temas, busqueda]);
 
-  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA="/dashboard/fundamentos" />;
+  if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA="/dashboard/fundamentos" forma="lista" />;
 
   if (!nivel || delNivel.length === 0) {
     return (

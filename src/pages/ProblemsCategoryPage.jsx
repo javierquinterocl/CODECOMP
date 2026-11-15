@@ -15,6 +15,7 @@ import { useIdioma } from '../scripts/useIdioma';
 import useEscalon from '../scripts/useEscalon';
 import { useAuth } from '../context/AuthContext';
 import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
+import { EsqFilas } from '../components/Esqueleto';
 
 const ADAPTIVO = import.meta.env.VITE_ENABLE_ADAPTIVE === 'true';
 
@@ -186,7 +187,7 @@ const ProblemsCategoryPage = () => {
       )}
 
       <div className="nb-pb-list">
-        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas…</p></div>}
+        {cargando && <EsqFilas aviso="Cargando problemas…" />}
         {error && <div className="nb-pb-empty"><p className="nb-dash-body-text">{error}</p></div>}
         {visibles.map((e) => (
           <ProblemRow

@@ -3,6 +3,7 @@ import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getSessionsHistory } from '../scripts/registerService';
 import { SearchIcon } from './AppIcons';
+import { EsqFilas } from './Esqueleto';
 
 const POR_PAGINA = 8;
 const METODOS = ['facebook', 'github', 'google', 'password'];
@@ -115,7 +116,7 @@ const HistorialSesiones = () => {
     });
   }, [sesiones, busqueda, estado, metodo]);
 
-  if (!sesiones) return <p className="nb-doc-vacio">Cargando sesiones…</p>;
+  if (!sesiones) return <EsqFilas n={4} aviso="Cargando sesiones…" />;
 
   const paginas = Math.max(1, Math.ceil(filtradas.length / POR_PAGINA));
   const actual = Math.min(pagina, paginas);

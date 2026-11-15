@@ -510,6 +510,10 @@ label.nb-dash-btn-claro:focus-within { outline: 3px solid var(--nb-blue); outlin
 
 /* ── Vista docente (Estudiantes y ficha del estudiante) ── */
 .nb-doc-stack { display: flex; flex-direction: column; gap: var(--sp-gap); margin-bottom: var(--sp-gap); }
+/* Tarjetas de una misma fila a la misma altura: la corta se estira; una lista larga se desplaza dentro. */
+.nb-dash-col.is-llena > .nb-dash-card { flex: 1 1 auto; }
+.nb-doc-llenar { flex: 1 1 auto; }
+.nb-doc-llenar > .nb-doc-tabla { max-height: 560px; overflow-y: auto; }
 .nb-doc-clase { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
 .nb-doc-clase .nb-dash-section-title { margin: 0; }
 .nb-doc-vacio { margin: 12px 0 0; font-size: var(--fs-sm); color: var(--nb-ink-mute); }
@@ -521,8 +525,8 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-escalon .nb-doc-nota-top { flex: 1 1 320px; margin: 0; }
 .nb-doc-buscar { flex: 0 1 340px; }
 /* Buscador y descarga del reporte, juntos a la derecha de la cabecera. */
-.nb-doc-herramientas { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; flex: 0 1 560px; justify-content: flex-end; }
-.nb-doc-herramientas .nb-doc-buscar { flex: 1 1 240px; }
+.nb-doc-reporte { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; flex: 0 1 560px; justify-content: flex-end; }
+.nb-doc-reporte .nb-doc-buscar { flex: 1 1 240px; }
 .nb-doc-csv { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
 .nb-doc-csv svg { width: 16px; height: 16px; }
 
@@ -742,3 +746,25 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 @media (max-width: 640px) {
   .nb-doc-calor { --c: 10px; --g: 2px; }
 }
+
+/* ── Esqueletos de carga: la forma de lo que llega, en bloques planos que laten ── */
+.nb-esq { display: block; flex: 0 0 auto; width: var(--esq-w, 100%); max-width: 100%; height: var(--esq-h, 14px); background: var(--nb-canvas); animation: nb-esq-latido 1.3s ease-in-out infinite; }
+@keyframes nb-esq-latido { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+.nb-esq-contenido { display: flex; flex-direction: column; gap: var(--sp-gap); }
+.nb-esq-filas, .nb-esq-tarjetas { grid-column: 1 / -1; }
+.nb-esq-filas .nb-esq-contenido { gap: 12px; }
+.nb-esq-tarjetas .nb-esq-contenido { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.nb-esq-tarjeta { min-width: 0; display: flex; flex-direction: column; gap: 12px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: var(--sp-card); }
+.nb-esq-tarjeta.is-alta { min-height: clamp(220px, 22vw, 320px); }
+.nb-esq-tarjeta.is-editor { min-height: clamp(380px, 58vh, 980px); }
+.nb-esq-fila { display: flex; align-items: center; gap: 16px; background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 14px 18px; }
+.nb-esq-fila.is-plana { border: none; border-top: 1px solid #000; box-shadow: none; padding: 14px 0; }
+.nb-esq-fila.is-plana:first-child { border-top: none; }
+.nb-esq-col { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.nb-esq-chip { margin-left: auto; }
+.nb-esq-fila-doble { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--sp-gap); align-items: stretch; }
+@media (max-width: 1180px) { .nb-esq-tarjetas .nb-esq-contenido { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1024px) { .nb-esq-fila-doble { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .nb-esq-tarjetas .nb-esq-contenido { grid-template-columns: minmax(0, 1fr); } .nb-esq-chip { display: none; } }
+@media (max-width: 640px) { .nb-esq-tarjeta, .nb-esq-fila { box-shadow: 3px 3px 0px #000; } }
+@media (prefers-reduced-motion: reduce) { .nb-esq { animation: none; } }
