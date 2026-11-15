@@ -289,7 +289,22 @@ a.nb-brand:hover { color: var(--nb-blue); }
 .nb-login .nb-label { color: #fff; }
 .nb-login .nb-error { color: #FFE8E8; }
 .nb-login .nb-input:focus { box-shadow: 4px 4px 0px #000; }
-.nb-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--nb-danger); }
+.nb-error { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; color: var(--nb-danger); line-height: 1.45; }
+.nb-error::before { content: '! '; }
+/* Ayuda con un ejemplo de lo que va en el campo: siempre visible, discreta. */
+.nb-ayuda { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nb-ink-soft); line-height: 1.45; }
+.nb-opcional { text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--nb-ink-soft); }
+.nb-login .nb-ayuda, .nb-login .nb-opcional { color: #DDE3FF; }
+/* Requisitos de la contraseña en vivo. */
+.nb-requisitos { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--nb-ink-soft); }
+.nb-requisitos li.is-ok { color: #000; font-weight: 700; }
+.nb-requisitos li.is-ok > span:first-child { color: var(--nb-blue); }
+/* Casilla de autorización: el texto puede llevar un enlace. */
+.nb-check { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; line-height: 1.45; cursor: pointer; }
+.nb-check input { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 1px; accent-color: var(--nb-blue); }
+.nb-check input[aria-invalid="true"] { outline: 2px solid var(--nb-danger); outline-offset: 2px; }
+.nb-check a { color: var(--nb-blue); font-weight: 700; }
+.nb-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .nb-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 @media (max-width: 620px) { .nb-row { grid-template-columns: 1fr; } }
 
@@ -406,4 +421,32 @@ a.nb-brand:hover { color: var(--nb-blue); }
   .nb-login-backdrop, .nb-login-panel,
   .nb-dialog-backdrop, .nb-dialog { animation: none; }
   .nb-faq-body { transition: none; }
+}
+
+/* ============================================================
+   Páginas de lectura públicas (Guía, Política de datos)
+   ============================================================ */
+.nb-info { min-height: 100vh; background: var(--nb-canvas); color: #000; font-family: 'Space Grotesk', sans-serif; }
+.nb-info-head { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px clamp(16px, 4vw, 48px); background: #fff; border-bottom: 3px solid #000; }
+.nb-info-marca { font-family: 'Press Start 2P', monospace; font-size: 14px; line-height: 1.6; color: var(--nb-blue); text-decoration: none; }
+.nb-info-volver { cursor: pointer; font-family: inherit; }
+.nb-info-volver:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-info-main { max-width: 860px; margin: 0 auto; padding: clamp(20px, 4vw, 48px) clamp(16px, 4vw, 32px) 64px; }
+.nb-info-kicker { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; color: var(--nb-blue); }
+.nb-info-titulo { font-family: 'Press Start 2P', monospace; font-size: clamp(18px, 3vw, 28px); line-height: 1.5; margin: 10px 0 12px; }
+.nb-info-intro { font-size: 17px; line-height: 1.6; color: var(--nb-ink-soft); margin: 0 0 20px; }
+.nb-info-indice { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: 14px 18px; margin-bottom: 24px; }
+.nb-info-indice ol { margin: 0; padding-left: 20px; columns: 2 220px; column-gap: 24px; }
+.nb-info-indice li { break-inside: avoid; padding: 3px 0; }
+.nb-info-indice a, .nb-info-sec a { color: var(--nb-blue); font-weight: 700; }
+.nb-info-acciones { margin: 0 0 24px; }
+.nb-info-acciones .nb-btn-blue { cursor: pointer; font-family: inherit; }
+.nb-info-acciones .nb-btn-blue:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-info-sec { background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; padding: clamp(16px, 2.5vw, 28px); margin-bottom: 20px; scroll-margin-top: 80px; }
+.nb-info-sec h2 { font-size: 20px; margin: 0 0 12px; }
+.nb-info-sec p, .nb-info-sec li { font-size: 16px; line-height: 1.6; }
+.nb-info-sec ul, .nb-info-sec ol { padding-left: 22px; margin: 8px 0; }
+.nb-info-sec kbd { font-family: 'JetBrains Mono', monospace; border: 2px solid #000; padding: 0 5px; background: var(--nb-hover); }
+@media (max-width: 640px) {
+  .nb-info-indice, .nb-info-sec { box-shadow: 3px 3px 0px #000; }
 }

@@ -14,7 +14,7 @@ const SearchIcon = () => (
 );
 
 const Fila = ({ nivelSlug, ejercicio, resuelto }) => (
-  <div className="nb-pb-row">
+  <div className="nb-pb-row" data-tour={`ejercicio-${ejercicio.numero}`}>
     <span className="nb-pb-row-num">{ejercicio.numero}</span>
 
     <div className="nb-pb-row-main">

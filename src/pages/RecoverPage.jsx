@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
 import AuthShell, { AuthDialog } from '../components/AuthShell';
+import { errorDeCorreo } from '../scripts/validaciones';
 
 const RecoverPage = () => {
     const [formData, setFormData] = useState({
@@ -29,18 +30,8 @@ const RecoverPage = () => {
     };
 
     const validateForm = () => {
-        const newErrors = {};
-        const emailRegex = /^[^\s@]{4,}@[^\s@]+\.[^\s@]{2,}$/;
-
-        if (!formData.email.trim()) {
-        newErrors.email = 'El correo electronico es obligatorio.';
-        } else if (formData.email.trim().length > 254) {
-        newErrors.email = 'El correo electronico debe tener maximo 254 caracteres.';
-        } else if (!emailRegex.test(formData.email)) {
-        newErrors.email = 'Ingresa un correo electronico valido.';
-        }
-
-        return newErrors;
+        const error = errorDeCorreo(formData.email);
+        return error ? { email: error } : {};
     };
 
     const handleSubmit = async (event) => {
@@ -103,9 +94,12 @@ const RecoverPage = () => {
                             placeholder="correo@ufpso.edu.co"
                             value={formData.email}
                             onChange={handleInputChange}
+                            aria-invalid={Boolean(errors.email)}
+                            aria-describedby={errors.email ? 'email-error email-ayuda' : 'email-ayuda'}
                             className={`nb-input${errors.email ? ' is-error' : ''}`}
                         />
-                        {errors.email && <span className="nb-error">{errors.email}</span>}
+                        {errors.email && <span id="email-error" className="nb-error">{errors.email}</span>}
+                        <span id="email-ayuda" className="nb-ayuda">El correo con el que creaste tu cuenta. Si entras con Google, no necesitas contraseña.</span>
                     </div>
 
                     <button type="submit" disabled={isLoading} className="nb-submit">

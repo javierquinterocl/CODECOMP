@@ -104,7 +104,7 @@ const UserHistoryPage = () => {
 
       {clases?.length > 0 && (
         <div className="nb-doc-stack">
-          <div className="nb-dash-card nb-dash-pad nb-doc-clase">
+          <div className="nb-dash-card nb-dash-pad nb-doc-clase" data-tour="panel-clase">
             <div>
               {clases.length === 1 && <div className="nb-dash-kicker">Clase</div>}
               {clases.length > 1 ? (

@@ -157,7 +157,7 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTe
           <span className="nb-fd-play is-locked"><LockIcon /> Pronto</span>
         ) : (
           // El enlace se estira sobre toda la tarjeta con ::after.
-          <Link to={`/dashboard/fundamentos/${nivel.slug}`} className="nb-fd-play">
+          <Link to={`/dashboard/fundamentos/${nivel.slug}`} className="nb-fd-play" data-tour={`nivel-${nivel.slug}`}>
             <PlayIcon /> Ver los ejercicios
           </Link>
         )}

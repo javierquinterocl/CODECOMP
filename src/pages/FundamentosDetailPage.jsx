@@ -285,6 +285,10 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     try {
       const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
       setResultado(respuesta);
+      // El recorrido guiado avanza con el primer envío del ejercicio 1.
+      if (nivel.slug === 'fundamentos' && Number(ejercicio.numero) === 1) {
+        window.dispatchEvent(new Event('codecomp:veredicto'));
+      }
       setPista('');
       setErrorPista('');
       olvidarEscalon(); // el envío cuenta para la racha de la cabecera
@@ -331,7 +335,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
       <div className={`nb-ex nb-fd-ex${expandido ? ' is-expanded' : ''}`}>
 
         {/* ══ Columna izquierda: el enunciado ══ */}
-        <div className="nb-ex-left">
+        <div className="nb-ex-left" data-tour="enunciado">
           <div className="nb-ex-card nb-ex-title-card" style={{ '--cat-bg': nivel.color.bgSuave, '--cat-ink': nivel.color.inkSuave }}>
             <div className="nb-ex-title-main">
               <div className="nb-ex-kicker">{tema.titulo}</div>
@@ -382,7 +386,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
         </div>
 
         {/* ══ Columna derecha: el editor ══ */}
-        <div className="nb-ex-right">
+        <div className="nb-ex-right" data-tour="editor">
           <div className="nb-ex-toolbar">
             <div className="nb-fd-lenguaje">
               <span className="nb-select-label">Lenguaje</span>
@@ -391,7 +395,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
 
             <button
               type="button"
-              className={`nb-ex-send${evaluando ? ' is-busy' : ''}`}
+              data-tour="enviar"
               onClick={evaluar}
               disabled={evaluando}
             >
@@ -422,7 +426,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
             )}
           />
 
-          <div className={`nb-ex-feedback${veredicto ? veredicto.clase : ''}`}>
+          <div className={`nb-ex-feedback${veredicto ? veredicto.clase : ''}`} data-tour="veredicto">
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
             <div className="nb-ex-feedback-main" aria-live="polite">
               <div className="nb-ex-feedback-title">

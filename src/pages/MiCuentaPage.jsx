@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { iniciarTutorial } from '../scripts/tutorial';
 import { sendEmailVerification } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../scripts/firebaseConfig';
@@ -11,6 +12,8 @@ import {
 } from '../scripts/cuentaApi';
 import { borrarPerfilFirestore, getUserSessions } from '../scripts/registerService';
 import { codigoVigente, errorDeCodigo, LARGO_CODIGO } from '../scripts/codigoUfpso';
+import { errorDeNombre } from '../scripts/validaciones';
+import Campo from '../components/Campo';
 import { useResumenProgreso } from '../scripts/useEscalon';
 import { useIdioma } from '../scripts/useIdioma';
 import { useTemaEditor } from '../scripts/useTemaEditor';
@@ -56,6 +59,7 @@ const MiCuentaPage = () => {
     fotoPropia, refrescarFoto, actualizarNombre, handleLogout,
   } = useAuth();
   const resumen = useResumenProgreso(user);
+  const navigate = useNavigate();
   const { idioma, cambiar: cambiarIdioma } = useIdioma();
   const [claroProblemas, setClaroProblemas] = useTemaEditor('problemas');
   const [claroPseint, setClaroPseint] = useTemaEditor('pseint');
@@ -129,7 +133,8 @@ const MiCuentaPage = () => {
   /* ── Perfil ── */
   const guardarNombre = (e) => {
     e.preventDefault();
-    if (!nombre.nombre.trim()) return avisar('perfil', false, 'Escribe tu nombre.');
+    const problema = errorDeNombre(nombre.nombre, 'nombre') || errorDeNombre(nombre.apellido, 'apellido');
+    if (problema) return avisar('perfil', false, problema);
     return ejecutar('perfil', () => actualizarNombre(nombre.nombre.trim(), nombre.apellido.trim()), 'Nombre actualizado.');
   };
   const guardarCodigo = (e) => {
@@ -260,10 +265,12 @@ const MiCuentaPage = () => {
         {/* ── Editar perfil ── */}
         <Seccion titulo="Editar perfil" sub={isAdmin ? undefined : 'Tu docente sigue viendo tu nombre de usuario de CODECOMP'}>
           <form className="nb-comp-form nb-comp-campos" onSubmit={guardarNombre}>
-            <label className="nb-comp-campo"><span className="nb-label">Nombre</span>
-              <input className="nb-input" value={nombre.nombre} maxLength={60} onChange={(e) => setNombre((n) => ({ ...n, nombre: e.target.value }))} /></label>
-            <label className="nb-comp-campo"><span className="nb-label">Apellido</span>
-              <input className="nb-input" value={nombre.apellido} maxLength={60} onChange={(e) => setNombre((n) => ({ ...n, apellido: e.target.value }))} /></label>
+            <Campo id="cuenta-nombre" label="Nombre" ayuda="Por ejemplo «Ana»." className="nb-comp-campo">
+              <input value={nombre.nombre} maxLength={50} onChange={(e) => setNombre((n) => ({ ...n, nombre: e.target.value }))} />
+            </Campo>
+            <Campo id="cuenta-apellido" label="Apellido" ayuda="Por ejemplo «Pérez»." className="nb-comp-campo">
+              <input value={nombre.apellido} maxLength={50} onChange={(e) => setNombre((n) => ({ ...n, apellido: e.target.value }))} />
+            </Campo>
             <div className="nb-comp-campo is-boton"><button type="submit" className={`nb-ex-send${ocupado ? ' is-busy' : ''}`} disabled={ocupado}>Guardar nombre</button></div>
           </form>
           <Mensaje m={mensajes.perfil} />
@@ -274,9 +281,11 @@ const MiCuentaPage = () => {
               </p>
               <form className="nb-dash-clase-form" onSubmit={guardarCodigo}>
                 <input className="nb-input" aria-label="Código UFPSO nuevo" inputMode="numeric" maxLength={LARGO_CODIGO}
-                  placeholder={`Nuevo código de ${LARGO_CODIGO} dígitos`} value={codigo} onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} />
+                  aria-describedby="cuenta-codigo-ayuda"
+                  placeholder="Ej.: 1191000" value={codigo} onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))} />
                 <button type="submit" className={`nb-ex-send${ocupado ? ' is-busy' : ''}`} disabled={ocupado}>Cambiar código</button>
               </form>
+              <p id="cuenta-codigo-ayuda" className="nb-ayuda">Tu código de la UFPSO: {LARGO_CODIGO} dígitos, solo números.</p>
               <Mensaje m={mensajes.codigo} />
             </>
           )}
@@ -331,6 +340,11 @@ const MiCuentaPage = () => {
 
         {/* ── Preferencias ── */}
         <Seccion titulo="Preferencias" sub="Se guardan en este navegador">
+          <div className="nb-cuenta-acciones">
+            <button type="button" className="nb-dash-btn-claro" onClick={() => { iniciarTutorial(user.uid); navigate('/dashboard'); }}>
+              Repetir el recorrido guiado
+            </button>
+          </div>
           <div className="nb-cuenta-acciones">
             <IdiomaSwitch idioma={idioma} onCambiar={cambiarIdioma} conEtiqueta />
             <DosOpciones etiqueta="Editor de Problemas" valor={claroProblemas} onCambiar={setClaroProblemas} opciones={[[false, 'Oscuro'], [true, 'Claro']]} />

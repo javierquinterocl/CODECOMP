@@ -384,6 +384,13 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 /* Avisos fijos abajo a la derecha (cookies, código UFPSO), apilados hasta que el estudiante responde. */
 .nb-dash-avisos { position: fixed; right: var(--sp-main); bottom: var(--sp-main); z-index: 60; width: min(440px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
 .nb-dash-avisos.is-oculto { display: none; }
+/* Recorrido guiado: la tarjeta va en la pila de avisos y el elemento del paso se marca en azul. */
+.nb-tour { display: flex; flex-direction: column; gap: 10px; padding: clamp(14px, 1vw, 20px); }
+.nb-tour-titulo { margin: 0; font-size: var(--fs-lg); }
+.nb-tour-titulo:focus { outline: none; }
+.nb-tour-salir { margin-left: auto; align-self: center; }
+/* Hacia dentro: el menú lateral y las tarjetas recortan lo que sobresale. */
+.nb-tour-foco { outline: 4px solid var(--nb-blue) !important; outline-offset: -4px; position: relative; z-index: 2; }
 .nb-dash-aviso { pointer-events: auto; box-shadow: 5px 5px 0px #000; }
 .nb-dash-aviso.is-corto { padding: clamp(14px, 1vw, 20px); }
 .nb-dash-aviso-text { font-size: var(--fs-sm); line-height: 1.55; color: var(--nb-ink-soft); margin: 0 0 14px; }

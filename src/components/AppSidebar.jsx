@@ -10,6 +10,7 @@ const NavItem = ({ label, to, icono, end = false }) => (
     to={to}
     end={end}
     title={label}
+    data-tour={`menu${to.replaceAll('/', '-')}`}
     className={({ isActive }) => `nb-dash-navitem${isActive ? ' is-active' : ''}`}
   >
     <span className="nb-dash-navicon" aria-hidden="true">{icono}</span>
@@ -77,9 +78,7 @@ const AppSidebar = () => {
       </div>
 
       <div className="nb-dash-side-foot">
-        {/* Sin página de tutorial todavía; cuando exista, cambiar por
-            <NavLink to="/dashboard/tutorial" className="nb-dash-tutorial"> */}
-        <span className="nb-dash-tutorial is-soon" aria-disabled="true">Tutorial</span>
+        <NavLink to="/guia" className="nb-dash-tutorial" data-tour="guia">Guía</NavLink>
       </div>
     </nav>
   );

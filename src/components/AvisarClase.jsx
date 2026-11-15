@@ -2,6 +2,7 @@ import { useState } from 'react';
 import ConfirmarDialogo from './ConfirmarDialogo';
 import useConfirmar from '../scripts/useConfirmar';
 import { avisarClase } from '../scripts/docenteApi';
+import Campo from './Campo';
 
 const MAX_TITULO = 80;
 const MAX_TEXTO = 500;
@@ -12,11 +13,15 @@ const AvisarClase = ({ user, clase, estudiantes }) => {
   const [texto, setTexto] = useState('');
   const [ocupado, setOcupado] = useState(false);
   const [mensaje, setMensaje] = useState(null);
+  const [intento, setIntento] = useState(false);
   const { pedido, confirmar, responder } = useConfirmar();
 
   const enviar = async (e) => {
     e.preventDefault();
-    if (!titulo.trim() || !texto.trim() || ocupado) return;
+    if (ocupado) return;
+    setIntento(true);
+    if (!titulo.trim()) { document.getElementById('aviso-titulo')?.focus(); return; }
+    if (!texto.trim()) { document.getElementById('aviso-texto')?.focus(); return; }
     const ok = await confirmar({
       titulo: 'Avisar a la clase',
       mensaje: `${estudiantes === 1 ? 'El estudiante' : `Los ${estudiantes} estudiantes`} de ${clase.nombre} lo verán en la campana y, si tienen los correos activos, también por correo.`,
@@ -28,6 +33,7 @@ const AvisarClase = ({ user, clase, estudiantes }) => {
     try {
       const r = await avisarClase(user, clase.id, { titulo, texto });
       setTitulo('');
+      setIntento(false);
       setTexto('');
       setMensaje({ ok: true, texto: `Aviso enviado a ${r.destinatarios} ${r.destinatarios === 1 ? 'estudiante' : 'estudiantes'}. Te quedan ${r.restantes} hoy.` });
     } catch (error) {
@@ -38,7 +44,7 @@ const AvisarClase = ({ user, clase, estudiantes }) => {
   };
 
   return (
-    <section className="nb-dash-card nb-dash-pad nb-comp-form">
+    <section className="nb-dash-card nb-dash-pad nb-comp-form" data-tour="avisar">
       <div className="nb-dash-sechead">
         <div>
           <h2 className="nb-dash-section-title">Avisar a la clase</h2>
@@ -46,14 +52,15 @@ const AvisarClase = ({ user, clase, estudiantes }) => {
         </div>
       </div>
       <form className="nb-comp-form" onSubmit={enviar}>
-        <label className="nb-comp-campo">
-          <span className="nb-label">Título</span>
-          <input className="nb-input" value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={MAX_TITULO} required placeholder="Ej.: Práctica del jueves" />
-        </label>
-        <label className="nb-comp-campo">
-          <span className="nb-label">Mensaje ({texto.length}/{MAX_TEXTO})</span>
-          <textarea className="nb-input nb-comp-textarea" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={MAX_TEXTO} required rows={3} />
-        </label>
+        <Campo id="aviso-titulo" label="Título" className="nb-comp-campo" ayuda="Corto y claro, por ejemplo «Práctica del jueves»."
+          error={intento && !titulo.trim() ? 'Escribe un título para el aviso.' : null}>
+          <input value={titulo} onChange={(e) => setTitulo(e.target.value)} maxLength={MAX_TITULO} placeholder="Ej.: Práctica del jueves" />
+        </Campo>
+        <Campo id="aviso-texto" label={`Mensaje (${texto.length}/${MAX_TEXTO})`} className="nb-comp-campo"
+          ayuda="Lo que deben saber: qué, cuándo y dónde."
+          error={intento && !texto.trim() ? 'Escribe el mensaje del aviso.' : null}>
+          <textarea className="nb-input nb-comp-textarea" value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={MAX_TEXTO} rows={3} />
+        </Campo>
         <div className="nb-comp-campo is-boton">
           <button type="submit" className={`nb-ex-send${ocupado ? ' is-busy' : ''}`} disabled={ocupado || !estudiantes}>
             {ocupado ? 'Enviando…' : 'Enviar aviso'}

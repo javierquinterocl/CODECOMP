@@ -5,7 +5,7 @@ import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
 import { useSocialLogin } from '../scripts/socialAuth';
 import { GoogleIcon, GithubIcon, FacebookIcon } from './BrandIcons';
 
-const emailRegex = /^[^\s@]{4,}@[^\s@]+\.[^\s@]{2,}$/;
+import { errorDeCorreo } from '../scripts/validaciones';
 
 /**
  * Panel de inicio de sesión que se abre desde el HomePage.
@@ -78,13 +78,11 @@ const LoginModal = ({ open, onClose, topOffset = '0px' }) => {
 
   const validate = () => {
     const next = {};
-    const email = form.email.trim();
-    if (!email) next.email = 'El correo es obligatorio.';
-    else if (email.length > 254) next.email = 'Máximo 254 caracteres.';
-    else if (!emailRegex.test(email)) next.email = 'Ingresa un correo válido.';
-
-    if (!form.password) next.password = 'La contraseña es obligatoria.';
-    else if (form.password.length < 6) next.password = 'Mínimo 6 caracteres.';
+    const errorCorreo = errorDeCorreo(form.email);
+    if (errorCorreo) next.email = errorCorreo;
+    // Al entrar se aceptan las contraseñas de siempre: las reglas nuevas son solo para crear una.
+    if (!form.password) next.password = 'Escribe tu contraseña.';
+    else if (form.password.length < 6) next.password = 'Tu contraseña tiene al menos 6 caracteres: revísala.';
     return next;
   };
 
@@ -221,6 +219,9 @@ const LoginModal = ({ open, onClose, topOffset = '0px' }) => {
           <div className="nb-login-foot">
             ¿Aún no tienes cuenta? <Link to="/register">Regístrate</Link>
           </div>
+          <p className="nb-login-foot nb-ayuda">
+            Al continuar aceptas la <Link to="/privacidad">política de tratamiento de datos</Link>.
+          </p>
         </form>
       </aside>
     </div>

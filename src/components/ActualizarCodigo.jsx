@@ -37,15 +37,17 @@ const ActualizarCodigo = () => {
         <input
           className={`nb-input${error ? ' is-error' : ''}`}
           aria-label="Código UFPSO de 7 dígitos"
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? 'codigo-aviso-error' : undefined}
           inputMode="numeric"
           maxLength={LARGO_CODIGO}
-          placeholder={`Código de ${LARGO_CODIGO} dígitos`}
+          placeholder="Ej.: 1191000"
           value={codigo}
           onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
         />
         <button type="submit" className={`nb-ex-send${guardando ? ' is-busy' : ''}`} disabled={guardando}>Guardar</button>
       </form>
-      {error && <p className="nb-dash-clase-msg is-error" role="alert">{error}</p>}
+      {error && <p id="codigo-aviso-error" className="nb-dash-clase-msg is-error" role="alert">{error}</p>}
     </aside>
   );
 };
