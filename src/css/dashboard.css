@@ -384,13 +384,56 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 /* Avisos fijos abajo a la derecha (cookies, código UFPSO), apilados hasta que el estudiante responde. */
 .nb-dash-avisos { position: fixed; right: var(--sp-main); bottom: var(--sp-main); z-index: 60; width: min(440px, calc(100vw - 32px)); display: flex; flex-direction: column; gap: 12px; pointer-events: none; }
 .nb-dash-avisos.is-oculto { display: none; }
-/* Recorrido guiado: la tarjeta va en la pila de avisos y el elemento del paso se marca en azul. */
-.nb-tour { display: flex; flex-direction: column; gap: 10px; padding: clamp(14px, 1vw, 20px); }
-.nb-tour-titulo { margin: 0; font-size: var(--fs-lg); }
+/* ── Recorrido guiado ──
+   El foco oscurece todo menos el elemento del paso (con el azul profundo de la marca) y la
+   tarjeta flota junto a él con una flecha. No bloquea clics: la página sigue usable. */
+.nb-tour-oferta { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; padding: clamp(14px, 1vw, 20px); }
+.nb-tour-oferta .nb-tour-gato { width: 56px; height: auto; }
+.nb-tour-pausa { padding: clamp(14px, 1vw, 20px); }
+.nb-tour-velo { position: fixed; inset: 0; z-index: 70; background: rgba(0, 7, 43, 0.55); pointer-events: none; animation: om-fade-in 0.2s ease-out; }
+.nb-tour-foco {
+  position: fixed; z-index: 70; pointer-events: none;
+  border: 3px solid #fff;
+  box-shadow: 6px 6px 0 0 var(--nb-blue), 0 0 0 9999px rgba(0, 7, 43, 0.55);
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.nb-tour-foco::after { content: ''; position: absolute; inset: -9px; border: 3px solid #fff; animation: nb-tour-pulso 1.6s ease-out infinite; }
+@keyframes nb-tour-pulso { from { opacity: 0.9; transform: scale(1); } to { opacity: 0; transform: scale(1.06); } }
+.nb-tour-tarjeta {
+  --fs-xs: 11px; --fs-sm: 13px; --fs-base: 15px; --fs-lg: 19px;
+  position: fixed; z-index: 71; width: 340px; max-width: calc(100vw - 24px);
+  background: #fff; color: #000; border: 2px solid #000; box-shadow: 6px 6px 0 #000;
+  padding: 18px; display: flex; flex-direction: column; gap: 10px;
+  font-family: 'Space Grotesk', sans-serif; animation: om-pop-in 0.22s ease-out;
+}
+.nb-tour-tarjeta.is-centro { top: 50%; left: 50%; transform: translate(-50%, -50%); width: 400px; animation: om-fade-in 0.22s ease-out; }
+.nb-tour-tarjeta.is-hoja { left: 12px; right: 12px; bottom: 12px; width: auto; max-width: none; }
+/* Flecha cuadrada hacia el elemento: un rombo con el borde de la tarjeta. */
+.nb-tour-tarjeta::before { content: ''; position: absolute; width: 14px; height: 14px; background: #fff; border: 2px solid #000; transform: rotate(45deg); }
+.nb-tour-tarjeta.is-centro::before, .nb-tour-tarjeta.is-hoja::before { display: none; }
+.nb-tour-tarjeta.is-derecha::before { left: -9px; top: calc(var(--tour-flecha) - 7px); border-top: none; border-right: none; }
+.nb-tour-tarjeta.is-izquierda::before { right: -9px; top: calc(var(--tour-flecha) - 7px); border-bottom: none; border-left: none; }
+.nb-tour-tarjeta.is-abajo::before { top: -9px; left: calc(var(--tour-flecha) - 7px); border-bottom: none; border-right: none; }
+.nb-tour-tarjeta.is-arriba::before { bottom: -9px; left: calc(var(--tour-flecha) - 7px); border-top: none; border-left: none; }
+.nb-tour-cabeza { display: flex; align-items: center; gap: 10px; }
+.nb-tour-gato { width: 34px; height: 34px; image-rendering: pixelated; flex: 0 0 auto; }
+.nb-tour-puntos { display: flex; gap: 5px; flex: 1 1 auto; }
+.nb-tour-puntos span { width: 9px; height: 9px; border: 2px solid #000; background: #fff; }
+.nb-tour-puntos span.is-hecho { background: #000; }
+.nb-tour-puntos span.is-actual { background: var(--nb-blue); width: 22px; }
+.nb-tour-cerrar { flex: 0 0 auto; width: 30px; height: 30px; border: 2px solid #000; background: #fff; font-size: 18px; line-height: 1; cursor: pointer; transition: var(--nb-tr); }
+.nb-tour-cerrar:hover { background: var(--nb-blue); color: #fff; }
+.nb-tour-titulo { margin: 0; font-size: var(--fs-lg); line-height: 1.3; }
 .nb-tour-titulo:focus { outline: none; }
-.nb-tour-salir { margin-left: auto; align-self: center; }
-/* Hacia dentro: el menú lateral y las tarjetas recortan lo que sobresale. */
-.nb-tour-foco { outline: 4px solid var(--nb-blue) !important; outline-offset: -4px; position: relative; z-index: 2; }
+.nb-tour-texto { margin: 0; font-size: var(--fs-base); line-height: 1.55; color: var(--nb-ink-soft); }
+.nb-tour-enlace { font-weight: 700; color: var(--nb-blue); font-size: var(--fs-sm); }
+.nb-tour-acciones { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.nb-tour-acciones .nb-ex-send, .nb-tour-acciones .nb-dash-btn-claro { flex: 0 0 auto; }
+.nb-tour-cuenta { margin-right: auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-ink-mute); }
+@media (prefers-reduced-motion: reduce) {
+  .nb-tour-velo, .nb-tour-tarjeta, .nb-tour-foco::after, .nb-tour-oferta .nb-tour-gato { animation: none; }
+  .nb-tour-foco { transition: none; }
+}
 .nb-dash-aviso { pointer-events: auto; box-shadow: 5px 5px 0px #000; }
 .nb-dash-aviso.is-corto { padding: clamp(14px, 1vw, 20px); }
 .nb-dash-aviso-text { font-size: var(--fs-sm); line-height: 1.55; color: var(--nb-ink-soft); margin: 0 0 14px; }
