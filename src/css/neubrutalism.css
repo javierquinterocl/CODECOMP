@@ -478,3 +478,8 @@ a.nb-brand:hover { color: var(--nb-blue); }
 .nb-404-titulo { outline: none; }
 .nb-404-num { display: block; font-size: clamp(56px, 11vw, 140px); line-height: 1.2; text-shadow: 0.06em 0.06em 0 #000; margin-bottom: 10px; }
 .nb-404-acciones { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 28px; }
+
+/* Página /accion: enlaces de los correos de cuenta. */
+.nb-accion-texto { margin: 0; font-size: 15px; line-height: 1.6; }
+.nb-accion-ok { display: flex; flex-direction: column; gap: 18px; }
+.nb-accion-boton { display: block; text-align: center; text-decoration: none; }

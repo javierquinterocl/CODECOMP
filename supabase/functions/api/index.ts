@@ -23,6 +23,7 @@ import { jurado } from '../_compartido/rutas/jurado.ts';
 import { correoBaja, cronAvisos } from '../_compartido/rutas/cron.ts';
 import { rechazoDeCuenta } from '../_compartido/cuenta.ts';
 import { cuenta } from '../_compartido/rutas/cuenta.ts';
+import { acceso } from '../_compartido/rutas/acceso.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -128,6 +129,8 @@ Deno.serve(async (req: Request) => {
         return await competencias(ctx, segmentos[1], segmentos[2]);
       case 'jurado':
         return await jurado(ctx, segmentos.slice(1));
+      case 'acceso':
+        return await acceso(ctx, segmentos[1]);
       case 'cuenta':
         return await cuenta(ctx, segmentos.slice(1));
       default:

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { iniciarTutorial } from '../scripts/tutorial';
-import { sendEmailVerification } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '../scripts/firebaseConfig';
 import { useAuth } from '../context/AuthContext';
@@ -23,6 +22,7 @@ import { IdiomaSwitch } from '../components/ProblemBits';
 import FotoPerfil from '../components/FotoPerfil';
 import ConfirmarDialogo from '../components/ConfirmarDialogo';
 import useConfirmar from '../scripts/useConfirmar';
+import { pedirVerificacion } from '../scripts/accesoApi';
 
 const PROGRAMA = 'Ingeniería de Sistemas';
 const PROVEEDORES = { 'google.com': 'Google', password: 'Correo y contraseña', 'github.com': 'GitHub', 'facebook.com': 'Facebook' };
@@ -189,7 +189,7 @@ const MiCuentaPage = () => {
     const r = await guardarAvisosCorreo(user, activo);
     setAvisosCorreo(r.avisosCorreo);
   }, activo ? 'Avisos por correo activados.' : 'Ya no recibirás avisos por correo.');
-  const reenviarVerificacion = () => ejecutar('correo', () => sendEmailVerification(user),
+  const reenviarVerificacion = () => ejecutar('correo', () => pedirVerificacion(user),
     `Te enviamos un enlace a ${user.email}. Ábrelo y vuelve a iniciar sesión.`);
   const cambiarAutorizacion = async (acepta) => {
     if (!acepta && !(await confirmar({

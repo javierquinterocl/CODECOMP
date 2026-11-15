@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth, hasFirebaseConfig } from '../scripts/firebaseConfig';
 import AuthShell, { AuthDialog } from '../components/AuthShell';
 import { errorDeCorreo } from '../scripts/validaciones';
+import { pedirRecuperacion } from '../scripts/accesoApi';
 
 const RecoverPage = () => {
     const [formData, setFormData] = useState({
@@ -54,19 +54,15 @@ const RecoverPage = () => {
         setIsLoading(true);
         setIsError(false);
         try {
-            await sendPasswordResetEmail(auth, formData.email.trim().toLowerCase());
-            setModalMessage('Se ha enviado un correo de recuperación a tu dirección de email. Por favor revisa tu bandeja de entrada para continuar.');
+            // El mensaje es el mismo exista o no la cuenta: así no se revela qué correos están registrados.
+            setModalMessage(await pedirRecuperacion(formData.email.trim().toLowerCase()));
             setIsError(false);
             setIsModalOpen(true);
             setFormData({ email: '' });
         } catch (error) {
-            if (error?.code === 'auth/user-not-found') {
-                setModalMessage('No encontramos una cuenta con este correo electrónico.');
-            } else if (error?.code === 'auth/too-many-requests') {
-                setModalMessage('Demasiados intentos. Por favor intenta más tarde.');
-            } else {
-                setModalMessage('No se pudo enviar el correo de recuperación. Intenta de nuevo.');
-            }
+            setModalMessage(error?.code === 'auth/too-many-requests'
+                ? 'Demasiados intentos. Por favor intenta más tarde.'
+                : error?.message || 'No se pudo enviar el correo de recuperación. Intenta de nuevo.');
             setIsError(true);
             setIsModalOpen(true);
         } finally {

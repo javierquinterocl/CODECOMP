@@ -71,6 +71,10 @@ export interface Config {
   cronClave: string;
   appUrl: string;
   apiUrl: string;
+
+  firebaseCuentaServicio: string;
+  accesoMaxDiario: number;
+  accesoMaxMensual: number;
 }
 
 export const cargarConfig = (): Config => ({
@@ -164,6 +168,13 @@ export const cargarConfig = (): Config => ({
   cronClave: env('CRON_CLAVE') ?? '',
   appUrl: (env('APP_URL') ?? 'https://codecomp.online').replace(/\/+$/, ''),
   apiUrl: (env('API_URL') ?? 'https://api.codecomp.online').replace(/\/+$/, ''),
+
+  // JSON de la cuenta de servicio (rol de Firebase Authentication) para los correos de
+  // recuperacion y verificacion propios; vacio = se usan los correos de Firebase.
+  firebaseCuentaServicio: env('FIREBASE_CUENTA_SERVICIO') ?? '',
+  // Tope propio de esos correos, dentro del cupo general de correo.
+  accesoMaxDiario: num(env('ACCESO_MAX_DIARIO'), 30),
+  accesoMaxMensual: num(env('ACCESO_MAX_MENSUAL'), 300),
 });
 
 // En zona horaria del proyecto, no UTC: si no, el tope se reinicia a las 7pm.

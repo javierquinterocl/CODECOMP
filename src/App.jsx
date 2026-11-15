@@ -28,6 +28,7 @@ import FundamentosPage from './pages/FundamentosPage';
 import FundamentosListPage from './pages/FundamentosListPage';
 import FundamentosDetailPage from './pages/FundamentosDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AccionPage from './pages/AccionPage';
 import DashboardLayout from './components/DashboardLayout';
 
 
@@ -103,6 +104,8 @@ function App() {
         {/* Públicas para todos, con o sin sesión: la política se consulta antes de registrarse. */}
         <Route path="/guia"       element={<GuiaPage />} />
         <Route path="/privacidad" element={<PrivacidadPage />} />
+        {/* Enlaces de los correos de cuenta: sin guarda, sirven con o sin sesión */}
+        <Route path="/accion" element={<AccionPage />} />
 
         {/* Rutas protegidas con layout compartido */}
         <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
