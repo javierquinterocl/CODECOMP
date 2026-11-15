@@ -6,6 +6,7 @@ import { getRecommendations } from '../scripts/recommendationApi';
 import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
 import { PencilIcon, CpuIcon, FlagIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
 import ClaseCard from '../components/ClaseCard';
+import RepasoHoy from '../components/RepasoHoy';
 import { getClases } from '../scripts/registroApi';
 import { nombreVisible } from '../scripts/docenteData';
 
@@ -294,6 +295,8 @@ const DashboardPage = () => {
             </pre>
           </div>
         </div>
+
+        {!isAdmin && user && <RepasoHoy user={user} />}
 
         <div className="nb-dash-card nb-dash-pad">
           <div className="nb-dash-sechead">

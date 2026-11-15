@@ -10,7 +10,7 @@ import { useTemaEditor } from '../scripts/useTemaEditor';
 import NbSelect from '../components/NbSelect';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
 import { getProblem } from '../scripts/problemsApi';
-import { pedirPista } from '../scripts/tutorApi';
+import { pedirIdeaClave, pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
 import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
 import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
@@ -41,7 +41,11 @@ const Detalle = () => {
   const [errorEnvio, setErrorEnvio] = useState('');
   const [problemaReal, setProblemaReal] = useState(null);
   const [errorCarga, setErrorCarga] = useState('');
-  const [pista, setPista] = useState('');
+  // Pistas de este resultado (las quita un envío nuevo) y el nivel ya alcanzado en la visita:
+  // tras otro envío, la siguiente pista sigue desde ahí.
+  const [pistas, setPistas] = useState([]);
+  const [nivelAlcanzado, setNivelAlcanzado] = useState(0);
+  const [idea, setIdea] = useState({ texto: '', cargando: false, error: '' });
   const [pidiendoPista, setPidiendoPista] = useState(false);
   const [errorPista, setErrorPista] = useState('');
   const [pistaHasta, setPistaHasta] = useState(0);
@@ -106,7 +110,8 @@ const Detalle = () => {
   const texto = problema.textos?.[idioma] || problema;
 
   const limpiarPista = () => {
-    setPista('');
+    setPistas([]);
+    setIdea({ texto: '', cargando: false, error: '' });
     setErrorPista('');
   };
 
@@ -123,6 +128,7 @@ const Detalle = () => {
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
      cuesta, asi que sale solo cuando el estudiante la pulsa. */
   const solicitarPista = async () => {
+    const nivel = Math.min(nivelAlcanzado + 1, 3);
     setPidiendoPista(true);
     setErrorPista('');
     // La espera arranca al pulsar, no al responder: un fallo del tutor ya
@@ -137,12 +143,23 @@ const Detalle = () => {
         verdict: resultado?.verdict,
         judgeOutput: resultado?.errorDetails || resultado?.stdout || '',
         language: lenguaje.nombre,
+        nivel,
       });
-      setPista(texto);
+      setPistas((previas) => [...previas, { nivel, texto }]);
+      setNivelAlcanzado(nivel);
     } catch (error) {
       setErrorPista(error.message || 'No se pudo pedir la pista.');
     } finally {
       setPidiendoPista(false);
+    }
+  };
+
+  const verIdea = async () => {
+    setIdea({ texto: '', cargando: true, error: '' });
+    try {
+      setIdea({ texto: await pedirIdeaClave(user, Number(problema.numero)), cargando: false, error: '' });
+    } catch (error) {
+      setIdea({ texto: '', cargando: false, error: error.message });
     }
   };
 
@@ -352,7 +369,15 @@ const Detalle = () => {
                   {/* El tutor solo entra cuando hay algo que orientar. */}
                   {resultado.verdict && resultado.verdict !== 'ACCEPTED' && (
                     <div className="nb-ex-tutor">
-                      {!pista && (
+                      {/* Tres niveles, uno tras otro: orienta, nombra la técnica y da el esquema. */}
+                      {pistas.map((p) => (
+                        <div key={p.nivel} className="nb-ex-tutor-pista">
+                          <span className="nb-ex-feedback-label">Pista {p.nivel} de 3 · {NIVELES_PISTA[p.nivel]}</span>
+                          <p className="nb-ex-feedback-text">{p.texto}</p>
+                        </div>
+                      ))}
+                      {errorPista && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorPista}</p>}
+                      {nivelAlcanzado < 3 ? (
                         <button
                           type="button"
                           className="nb-ex-tutor-btn"
@@ -364,16 +389,28 @@ const Detalle = () => {
                             ? 'Pensando…'
                             : esperaPista > 0
                               ? `Espera ${esperaPista} s`
-                              : 'Pedir retroalimentación'}
+                              : `Pedir pista ${nivelAlcanzado + 1} de 3: ${NIVELES_PISTA[nivelAlcanzado + 1]}`}
+                        </button>
+                      ) : (
+                        <p className="nb-ex-feedback-text">Ya usaste las tres pistas: el resto lo descubres tú.</p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Al resolverlo: la idea clave, para consolidar lo aprendido. */}
+                  {resultado.verdict === 'ACCEPTED' && (
+                    <div className="nb-ex-tutor">
+                      {idea.texto ? (
+                        <div className="nb-ex-tutor-pista">
+                          <span className="nb-ex-feedback-label">Idea clave · escrita por el tutor de IA</span>
+                          <p className="nb-ex-feedback-text">{idea.texto}</p>
+                        </div>
+                      ) : (
+                        <button type="button" className="nb-ex-tutor-btn" onClick={verIdea} disabled={idea.cargando}>
+                          {idea.cargando ? 'Pensando…' : 'Ver la idea clave'}
                         </button>
                       )}
-                      {errorPista && <p className="nb-ex-feedback-text nb-ex-feedback-error">{errorPista}</p>}
-                      {pista && (
-                        <div className="nb-ex-tutor-pista">
-                          <span className="nb-ex-feedback-label">Retroalimentación</span>
-                          <p className="nb-ex-feedback-text">{pista}</p>
-                        </div>
-                      )}
+                      {idea.error && <p className="nb-ex-feedback-text nb-ex-feedback-error">{idea.error}</p>}
                     </div>
                   )}
                 </div>
@@ -387,6 +424,8 @@ const Detalle = () => {
 };
 
 // La `key` devuelve el editor a la plantilla al pasar de un problema a otro.
+const NIVELES_PISTA = { 1: 'Orientación', 2: 'La técnica', 3: 'El esquema' };
+
 // Java exige que el archivo se llame como su clase pública.
 const EXTENSION = { python: 'py', cpp: 'cpp', javascript: 'js', java: 'java' };
 const nombreDeArchivo = (lenguajeId, numero, codigo) => {
