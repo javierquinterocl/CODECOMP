@@ -29,6 +29,8 @@ import FundamentosListPage from './pages/FundamentosListPage';
 import FundamentosDetailPage from './pages/FundamentosDetailPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AccionPage from './pages/AccionPage';
+import RutaPage from './pages/RutaPage';
+import LeccionPage from './pages/LeccionPage';
 import DashboardLayout from './components/DashboardLayout';
 
 
@@ -118,6 +120,8 @@ function App() {
           <Route path="/dashboard/fundamentos/:nivel/:numero"     element={<FundamentosDetailPage />} />
           <Route path="/dashboard/retos"    element={<DailyChallengesPage />} />
           <Route path="/dashboard/progreso" element={<MiProgresoPage />} />
+          <Route path="/dashboard/ruta" element={<RutaPage />} />
+          <Route path="/dashboard/ruta/:tema" element={<LeccionPage />} />
           <Route path="/dashboard/cuenta"   element={<MiCuentaPage />} />
           <Route path="/dashboard/torneos"  element={<TournamentsPage />} />
           <Route path="/dashboard/competencias" element={<CompetenciasPage />} />

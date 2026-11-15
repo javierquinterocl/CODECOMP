@@ -24,6 +24,7 @@ import { correoBaja, cronAvisos } from '../_compartido/rutas/cron.ts';
 import { rechazoDeCuenta } from '../_compartido/cuenta.ts';
 import { cuenta } from '../_compartido/rutas/cuenta.ts';
 import { acceso } from '../_compartido/rutas/acceso.ts';
+import { entrenamiento } from '../_compartido/rutas/entrenamiento.ts';
 
 Deno.serve(async (req: Request) => {
   const config = cargarConfig();
@@ -98,7 +99,7 @@ Deno.serve(async (req: Request) => {
       case 'adaptive':
         return await adaptativo(ctx);
       case 'tutor':
-        return await tutor(ctx);
+        return await tutor(ctx, segmentos[1], segmentos[2]);
       case 'sync-user':
         return await sincronizarUsuario(ctx);
       case 'recommendations':
@@ -129,6 +130,8 @@ Deno.serve(async (req: Request) => {
         return await competencias(ctx, segmentos[1], segmentos[2]);
       case 'jurado':
         return await jurado(ctx, segmentos.slice(1));
+      case 'entrenamiento':
+        return await entrenamiento(ctx);
       case 'acceso':
         return await acceso(ctx, segmentos[1]);
       case 'cuenta':

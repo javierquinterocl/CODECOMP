@@ -241,7 +241,7 @@ const EstudianteFichaPage = () => {
                 <li key={`${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
                   <div className="nb-doc-fila-top">
                     <span className="nb-doc-estado">{veredictoEs(p.veredicto)}</span>
-                    <span className="nb-doc-celda is-grande"><strong>#{p.numero} · {p.titulo}</strong><small>{fecha(p.creado_en)}</small></span>
+                    <span className="nb-doc-celda is-grande"><strong>#{p.numero} · {p.titulo}</strong><small>{fecha(p.creado_en)} · pista {p.nivel ?? 1} de 3</small></span>
                   </div>
                   <p className="nb-doc-pista">{p.pista}</p>
                 </li>

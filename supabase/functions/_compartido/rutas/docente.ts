@@ -161,7 +161,7 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     WHERE s.user_id = ${estudianteId} ORDER BY s.created_at DESC LIMIT 50
   `;
   const pistas = await sql`
-    SELECT x.creado_en, x.veredicto, x.pista, p.problem_number AS numero, p.title AS titulo
+    SELECT x.creado_en, x.veredicto, x.pista, x.nivel, p.problem_number AS numero, p.title AS titulo
     FROM pistas x JOIN problems p ON p.id = x.problem_id
     WHERE x.user_id = ${estudianteId} ORDER BY x.creado_en DESC LIMIT 30
   `;
