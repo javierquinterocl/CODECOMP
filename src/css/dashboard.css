@@ -748,8 +748,14 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 }
 
 /* ── Esqueletos de carga: la forma de lo que llega, en bloques planos que laten ── */
-.nb-esq { display: block; flex: 0 0 auto; width: var(--esq-w, 100%); max-width: 100%; height: var(--esq-h, 14px); background: var(--nb-canvas); animation: nb-esq-latido 1.3s ease-in-out infinite; }
-@keyframes nb-esq-latido { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+/* Reflejo: una franja de luz de bordes nítidos, fija a la ventana, que barre todos los bloques
+   a la vez de izquierda a derecha mientras la página carga. */
+.nb-esq { display: block; flex: 0 0 auto; width: var(--esq-w, 100%); max-width: 100%; height: var(--esq-h, 14px);
+  background-color: #C9CEE4;
+  background-image: linear-gradient(100deg, transparent 0 46%, rgba(255, 255, 255, 0.95) 46% 50%, transparent 50% 51.5%, rgba(255, 255, 255, 0.6) 51.5% 53%, transparent 53% 100%);
+  background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed;
+  animation: nb-esq-reflejo 1.8s ease-in-out infinite; }
+@keyframes nb-esq-reflejo { 0% { background-position: -110vw 0; } 75%, 100% { background-position: 10vw 0; } }
 .nb-esq-contenido { display: flex; flex-direction: column; gap: var(--sp-gap); }
 .nb-esq-filas, .nb-esq-tarjetas { grid-column: 1 / -1; }
 .nb-esq-filas .nb-esq-contenido { gap: 12px; }
@@ -767,7 +773,9 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 @media (max-width: 1024px) { .nb-esq-fila-doble { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .nb-esq-tarjetas .nb-esq-contenido { grid-template-columns: minmax(0, 1fr); } .nb-esq-chip { display: none; } }
 @media (max-width: 640px) { .nb-esq-tarjeta, .nb-esq-fila { box-shadow: 3px 3px 0px #000; } }
-@media (prefers-reduced-motion: reduce) { .nb-esq { animation: none; } }
+/* Con movimiento reducido no hay barrido: un latido lento indica que sigue cargando. */
+@keyframes nb-esq-latido { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+@media (prefers-reduced-motion: reduce) { .nb-esq { background-image: none; animation: nb-esq-latido 2.4s ease-in-out infinite; } }
 
 /* ── Ruta de entrenamiento: camino de temas con su avance ── */
 .nb-ruta-hero { margin-bottom: var(--sp-gap); }
