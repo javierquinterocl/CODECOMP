@@ -6,6 +6,7 @@ import { getProgress } from '../scripts/progressApi';
 import { useAuth } from '../context/AuthContext';
 import { useIdioma } from '../scripts/useIdioma';
 import { IdiomaSwitch } from '../components/ProblemBits';
+import { EsqTarjetas } from '../components/Esqueleto';
 
 const SearchIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="square">
@@ -159,7 +160,7 @@ const ProblemsPage = () => {
 
       {/* ── Rejilla de categorías ── */}
       <div className="nb-pb-grid">
-        {cargando && <div className="nb-pb-empty"><p className="nb-dash-body-text">Cargando problemas…</p></div>}
+        {cargando && <EsqTarjetas aviso="Cargando problemas…" />}
         {visibles.map((c) => <CategoryCard key={c.slug} categoria={c} />)}
 
         {!cargando && !error && visibles.length === 0 && (
