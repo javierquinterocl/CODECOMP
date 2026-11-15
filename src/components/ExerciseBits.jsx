@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { resaltar } from '../scripts/syntaxHighlight';
-import { DownloadIcon, ReloadIcon } from './AppIcons';
+import { DownloadIcon, RedoIcon, ReloadIcon, UndoIcon } from './AppIcons';
 
 /* Piezas de la vista del ejercicio, compartidas entre Problemas y Fundamentos. */
 
@@ -62,6 +62,7 @@ const descargarCodigo = (codigo, archivo) => {
 export const Editor = ({
   codigo, lenguajeId, onChange, expandido, onExpandir, claro, onTema, onReiniciar,
   bloquearPegado = false, tabulador = false, extra = null, lineaError = null, archivo = null,
+  onRetroceder = null, onAdelantar = null, puedeRetroceder = false, puedeAdelantar = false,
 }) => {
   const regletaRef = useRef(null);
   const resaltadoRef = useRef(null);
@@ -134,6 +135,31 @@ export const Editor = ({
               aria-label={`Descargar el código como ${archivo}`}
             >
               <DownloadIcon />
+            </button>
+          )}
+          {/* Al quedar deshabilitado tras pulsarlo, el foco vuelve al código. */}
+          {onRetroceder && (
+            <button
+              type="button"
+              className="nb-ex-icon-btn is-square"
+              onClick={() => { onRetroceder(); areaRef.current?.focus(); }}
+              disabled={!puedeRetroceder}
+              title="Recuperar el código de antes del reinicio"
+              aria-label="Recuperar el código de antes del reinicio"
+            >
+              <UndoIcon />
+            </button>
+          )}
+          {onAdelantar && (
+            <button
+              type="button"
+              className="nb-ex-icon-btn is-square"
+              onClick={() => { onAdelantar(); areaRef.current?.focus(); }}
+              disabled={!puedeAdelantar}
+              title="Volver al código después del reinicio"
+              aria-label="Volver al código después del reinicio"
+            >
+              <RedoIcon />
             </button>
           )}
           <button

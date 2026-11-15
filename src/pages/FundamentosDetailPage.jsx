@@ -22,7 +22,10 @@ import FundamentosCarga from '../components/FundamentosCarga';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
-import { CollapseIcon, ExpandIcon, ClockIcon } from '../components/AppIcons';
+import { CollapseIcon, ExpandIcon, ClockIcon, ChatIcon } from '../components/AppIcons';
+import useConfirmar from '../scripts/useConfirmar';
+import useReinicios from '../scripts/useReinicios';
+import ConfirmarDialogo from '../components/ConfirmarDialogo';
 import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
 
 // Mientras se teclea, el borrador va a la base como mucho una vez cada tanto (y al salir).
@@ -132,9 +135,29 @@ const Salida = ({ etiqueta, texto, vacio }) => (
    lectura: los mensajes vienen con el tema y aclaran el concepto, nunca el
    ejercicio. Se pliega igual que el menú: el contenido conserva su ancho y
    el panel lo recorta. */
-const PanelGato = ({ tema, extra, oculto, onAlternar }) => {
+// Tope de mensajes del chat de errores en una sesión larga.
+const MAX_ERRORES = 30;
+
+/* Errores de la sesión, como mensajes del gato. No se guardan: Reiniciar o salir los borra. */
+const ChatErrores = ({ errores }) => errores.map((e) => (
+  <div key={e.n} className="nb-fd-msg">
+    <span className="nb-fd-gato-avatar" aria-hidden="true"><img src="/cat-pixel.png" alt="" width="512" height="512" /></span>
+    <div className="nb-fd-burbuja is-error">
+      <span className="nb-fd-error-envio">Envío {e.n}</span>
+      <p><strong>{e.titulo}</strong></p>
+      {e.oficial && <p>{e.oficial}</p>}
+      <p>{e.texto}</p>
+      {e.diferencia && <p className="nb-fd-error-dif">{e.diferencia}</p>}
+    </div>
+  </div>
+));
+
+const PanelGato = ({ tema, extra, oculto, onAlternar, errores, sinLeer, vista, onVista, onAbrirErrores }) => {
   const mensajes = extra ? [...tema.conceptos, { texto: extra }] : tema.conceptos;
   const accion = oculto ? 'Mostrar los datos del tema' : 'Ocultar los datos del tema';
+  const conErrores = errores.length > 0;
+  const enErrores = conErrores && vista === 'errores';
+  const etiquetaErrores = `Errores de este ejercicio${sinLeer ? `, ${sinLeer} sin leer` : ''}`;
 
   return (
     <aside className={`nb-fd-lateral${oculto ? ' is-collapsed' : ''}`} aria-label={`Datos del tema ${tema.titulo}`}>
@@ -153,6 +176,19 @@ const PanelGato = ({ tema, extra, oculto, onAlternar }) => {
           <span className="nb-fd-lateral-nombre">¡Datos que debes tener en cuenta!</span>
           <span className="nb-fd-lateral-tema">{tema.titulo}</span>
         </div>
+        {/* Plegado: bajo la cara del gato. En pantallas angostas: en la cabecera. */}
+        {conErrores && (
+          <button
+            type="button"
+            className={`nb-fd-lateral-errores${oculto ? ' is-visible' : ''}`}
+            onClick={onAbrirErrores}
+            title={etiquetaErrores}
+            aria-label={etiquetaErrores}
+          >
+            <ChatIcon />
+            {sinLeer > 0 && <span className="nb-fd-errores-cuenta" aria-hidden="true">{sinLeer > 9 ? '9+' : sinLeer}</span>}
+          </button>
+        )}
       </div>
 
       {/* Con el panel plegado solo queda la cara del gato, que lo vuelve a abrir. */}
@@ -169,7 +205,13 @@ const PanelGato = ({ tema, extra, oculto, onAlternar }) => {
       </button>
 
       <div className="nb-fd-lateral-body" inert={oculto}>
-        {mensajes.map((m) => (
+        {conErrores && (
+          <div className="nb-ex-idioma nb-fd-vistas" role="group" aria-label="Qué mostrar en el panel">
+            <button type="button" className={`nb-ex-idioma-btn${enErrores ? '' : ' is-active'}`} aria-pressed={!enErrores} onClick={() => onVista('tema')}>Tema</button>
+            <button type="button" className={`nb-ex-idioma-btn${enErrores ? ' is-active' : ''}`} aria-pressed={enErrores} onClick={() => onVista('errores')}>Errores ({errores.length})</button>
+          </div>
+        )}
+        {enErrores ? <ChatErrores errores={errores} /> : mensajes.map((m) => (
           <div key={m.texto} className="nb-fd-msg">
             <span className="nb-fd-gato-avatar" aria-hidden="true"><img src="/cat-pixel.png" alt="" width="512" height="512" /></span>
             <div className="nb-fd-burbuja">
@@ -199,6 +241,12 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
   const [lineaError, setLineaError] = useState(null);
   // El panel arranca plegado: el estudiante lo abre cuando quiere repasar el tema.
   const [gatoOculto, setGatoOculto] = useState(true);
+  // Chat de errores de esta sesión: solo vive en pantalla.
+  const [vistaGato, setVistaGato] = useState('tema');
+  const [errores, setErrores] = useState([]);
+  const [leidos, setLeidos] = useState(0);
+  const envios = useRef(0);
+  const { pedido, confirmar, responder } = useConfirmar();
   const [ahora, setAhora] = useState(() => Date.now());
   // Pista del tutor de IA: como en Problemas, solo la quita un envío nuevo.
   const [pista, setPista] = useState('');
@@ -278,7 +326,30 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     return () => clearInterval(tic);
   }, [corriendo]);
 
-  const reiniciar = () => escribir(PLANTILLA_PSEINT);
+  const reinicios = useReinicios({
+    clave: 'pseint', codigo, plantilla: PLANTILLA_PSEINT, poner: (texto) => escribir(texto), confirmar,
+  });
+  // Reiniciar también vacía el chat de errores (si de verdad reinició).
+  const reiniciar = async () => {
+    if (!(await reinicios.reiniciar())) return;
+    setErrores([]);
+    setLeidos(0);
+  };
+
+  const viendoErrores = !gatoOculto && vistaGato === 'errores' && errores.length > 0;
+  const sinLeer = viendoErrores ? 0 : Math.max(0, errores.length - leidos);
+  const alternarGato = () => {
+    if (viendoErrores) setLeidos(errores.length);
+    setGatoOculto((v) => !v);
+  };
+  const cambiarVista = (v) => {
+    if (viendoErrores && v !== 'errores') setLeidos(errores.length);
+    setVistaGato(v);
+  };
+  const abrirErrores = () => {
+    setVistaGato('errores');
+    setGatoOculto(false);
+  };
 
   const evaluar = async () => {
     if (!user || evaluando) return;
@@ -286,6 +357,18 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
     try {
       const respuesta = await enviarSolucion(user, nivel.slug, ejercicio.numero, codigo);
       setResultado(respuesta);
+      envios.current += 1;
+      const descrito = describir(respuesta);
+      if (descrito?.clase?.includes('is-fail')) {
+        const nuevo = {
+          n: envios.current,
+          titulo: descrito.titulo,
+          texto: descrito.texto,
+          oficial: descrito.oficial,
+          diferencia: descrito.comparar ? textoDeDiferencia(primeraDiferencia(respuesta.esperada, respuesta.obtenida)) : null,
+        };
+        setErrores((lista) => [...lista, nuevo].slice(-MAX_ERRORES));
+      }
       // El recorrido guiado avanza con el primer envío del ejercicio 1.
       if (nivel.slug === 'fundamentos' && Number(ejercicio.numero) === 1) {
         window.dispatchEvent(new Event('codecomp:veredicto'));
@@ -415,6 +498,10 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
             claro={temaClaro}
             onTema={() => setTemaClaro((v) => !v)}
             onReiniciar={reiniciar}
+            onRetroceder={reinicios.retroceder}
+            onAdelantar={reinicios.adelantar}
+            puedeRetroceder={reinicios.puedeRetroceder}
+            puedeAdelantar={reinicios.puedeAdelantar}
             bloquearPegado
             tabulador
             lineaError={lineaError}
@@ -428,6 +515,7 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
               </span>
             )}
           />
+          <ConfirmarDialogo pedido={pedido} onRespuesta={responder} />
 
           <div className={`nb-ex-feedback${veredicto ? veredicto.clase : ''}`} data-tour="veredicto">
             <img className="nb-ex-cat" src="/cat-pixel.png" alt="" width="512" height="512" aria-hidden="true" />
@@ -496,7 +584,12 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
         tema={tema}
         extra={ejercicio.pistaConcepto}
         oculto={gatoOculto}
-        onAlternar={() => setGatoOculto((v) => !v)}
+        onAlternar={alternarGato}
+        errores={errores}
+        sinLeer={sinLeer}
+        vista={vistaGato}
+        onVista={cambiarVista}
+        onAbrirErrores={abrirErrores}
       />
     </div>
   );

@@ -188,6 +188,19 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-lateral.is-collapsed .nb-fd-lateral-body { visibility: hidden; }
 .nb-fd-lateral.is-collapsed .nb-fd-lateral-cara { opacity: 1; visibility: visible; }
 
+/* Chat de errores: botón rojo bajo la cara del gato con contador, como en Discord. */
+.nb-fd-lateral-errores { position: absolute; left: var(--fd-lat-pad); top: calc(var(--fd-lat-pad) * 4 + var(--fd-lat-btn) * 2 + 6px); width: var(--fd-lat-btn); height: var(--fd-lat-btn); display: grid; place-items: center; padding: 0; background: #B00A26; color: #fff; border: 2px solid #000; box-shadow: 3px 3px 0px #000; cursor: pointer; opacity: 0; visibility: hidden; transition: opacity 0.15s, transform 0.1s, box-shadow 0.1s; }
+.nb-fd-lateral-errores.is-visible { opacity: 1; visibility: visible; }
+.nb-fd-lateral-errores:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
+.nb-fd-lateral-errores:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: 2px; }
+.nb-fd-lateral-errores svg { width: 58%; height: 58%; }
+.nb-fd-errores-cuenta { position: absolute; top: -9px; right: -9px; min-width: 18px; height: 18px; padding: 0 3px; display: grid; place-items: center; background: #fff; color: #B00A26; border: 2px solid #000; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; line-height: 1; }
+.nb-fd-vistas { flex: 0 0 auto; align-self: flex-start; }
+.nb-fd-burbuja.is-error { border-left: 6px solid #B00A26; }
+.nb-fd-burbuja.is-error p + p { margin-top: 6px; }
+.nb-fd-error-envio { display: block; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #B00A26; }
+.nb-fd-error-dif { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
 /* Sin sitio para dos columnas y un panel: el gato baja y ocupa todo el ancho. */
 @media (max-width: 1024px) {
   .nb-fd-vista { flex-direction: column; align-items: stretch; margin: 0; }
@@ -201,6 +214,7 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
   .nb-fd-lateral-cara { display: none; }
   .nb-fd-lateral.is-collapsed .nb-fd-lateral-head { border-bottom: none; }
   .nb-fd-lateral-toggle svg { transform: rotate(90deg); }
+  .nb-fd-lateral-errores { position: relative; left: auto; top: auto; margin-left: auto; flex: 0 0 auto; opacity: 1; visibility: visible; }
 }
 
 /* Sin ancho para dos columnas, la ventana de código se va y queda el texto. */
