@@ -10,7 +10,8 @@ import NbSelect from '../components/NbSelect';
 import HistorialSesiones from '../components/HistorialSesiones';
 import AvisarClase from '../components/AvisarClase';
 import { Plegable } from '../components/ExerciseBits';
-import { SearchIcon } from '../components/AppIcons';
+import { DownloadIcon, SearchIcon } from '../components/AppIcons';
+import { archivoDeClase, csvDeClase } from '../scripts/reporteClase';
 
 const Alertas = ({ lista }) => (lista.length ? (
   <span className="nb-doc-alertas">
@@ -19,6 +20,17 @@ const Alertas = ({ lista }) => (lista.length ? (
 ) : null);
 
 /** Panel docente: la clase de un vistazo, cada estudiante y el historial de sesiones. */
+// Todos los estudiantes de la clase, no solo los que deja ver la búsqueda.
+const descargarReporte = (clase, estudiantes) => {
+  const csv = csvDeClase(estudiantes, { nombre: nombreVisible, alerta: (a) => ALERTAS[a] || a });
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const enlace = document.createElement('a');
+  enlace.href = url;
+  enlace.download = archivoDeClase(clase?.nombre);
+  enlace.click();
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+};
+
 const UserHistoryPage = () => {
   const navigate = useNavigate();
   const { user, isAdmin } = useAuth();
@@ -137,9 +149,14 @@ const UserHistoryPage = () => {
                     <h2 className="nb-dash-section-title">Estudiantes de la clase</h2>
                     <div className="nb-dash-section-sub">Ordenados por nivel · toca uno para ver su ficha</div>
                   </div>
-                  <div className="nb-pb-search nb-pb-search-inline nb-doc-buscar">
-                    <SearchIcon />
-                    <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o correo" aria-label="Buscar estudiante" />
+                  <div className="nb-doc-herramientas">
+                    <div className="nb-pb-search nb-pb-search-inline nb-doc-buscar">
+                      <SearchIcon />
+                      <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o correo" aria-label="Buscar estudiante" />
+                    </div>
+                    <button type="button" className="nb-dash-btn-claro nb-doc-csv" onClick={() => descargarReporte(datos.clase, estudiantes)}>
+                      <DownloadIcon /> Descargar CSV
+                    </button>
                   </div>
                 </div>
                 <ul className="nb-doc-lista">

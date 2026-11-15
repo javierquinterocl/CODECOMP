@@ -14,6 +14,8 @@ export const BookIcon   = () => <Stroke><path d="M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0
 /* Diana: los retos diarios son el blanco al que se apunta cada día. */
 export const TargetIcon = () => <Stroke><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1" /></Stroke>;
 export const UsersIcon  = () => <Stroke><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20v-1.5A4.5 4.5 0 0 1 7 14h4a4.5 4.5 0 0 1 4.5 4.5V20" /><path d="M16 5.2a3.5 3.5 0 0 1 0 6.6M17.5 14h.5a4.5 4.5 0 0 1 4.5 4.5V20" /></Stroke>;
+/* Flecha hacia una bandeja: descargar. */
+export const DownloadIcon = () => <Stroke><path d="M12 3v12" /><path d="m7 10 5 5 5-5" /><path d="M4 20h16" /></Stroke>;
 export const ReloadIcon = () => <Stroke><path d="M20 12a8 8 0 1 1-2.4-5.7" /><path d="M20 3.5V9h-5.5" /></Stroke>;
 /* Barras que suben: el avance del estudiante. */
 export const ChartIcon  = () => <Stroke><path d="M3 21h18" /><path d="M6 17v-5M11 17V8M16 17v-8M21 17V4" /></Stroke>;

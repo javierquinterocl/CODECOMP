@@ -472,3 +472,9 @@ a.nb-brand:hover { color: var(--nb-blue); }
   .nb-info-indice, .nb-info-sec { box-shadow: 3px 3px 0 #000; }
   .nb-info-gato { display: none; }
 }
+/* Página 404: la banda viva de las páginas públicas ocupa toda la pantalla. */
+.nb-404 { display: flex; flex-direction: column; }
+.nb-404-hero { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; border-bottom: none; }
+.nb-404-titulo { outline: none; }
+.nb-404-num { display: block; font-size: clamp(56px, 11vw, 140px); line-height: 1.2; text-shadow: 0.06em 0.06em 0 #000; margin-bottom: 10px; }
+.nb-404-acciones { display: flex; justify-content: center; flex-wrap: wrap; gap: 14px; margin-top: 28px; }

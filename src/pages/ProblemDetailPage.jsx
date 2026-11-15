@@ -13,6 +13,7 @@ import { getProblem } from '../scripts/problemsApi';
 import { pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
 import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
+import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -274,6 +275,7 @@ const Detalle = () => {
             onTema={() => setTemaClaro((v) => !v)}
             onReiniciar={reiniciar}
             tabulador
+            archivo={nombreDeArchivo(lenguaje.id, problema.numero, codigo)}
           />
 
           <div className={`nb-ex-feedback${errorEnvio ? ' is-fail' : enviado && resultado?.verdict ? (resultado.verdict === 'ACCEPTED' ? ' is-ok' : ' is-fail') : ''}`}>
@@ -313,9 +315,23 @@ const Detalle = () => {
                       )}
                     </div>
                   )}
+                  {/* Solo llega si falló un ejemplo visible: los casos ocultos no traen entrada ni esperada. */}
+                  {resultado.esperada !== undefined && (
+                    <>
+                      <p className="nb-ex-feedback-text nb-ex-diferencia">{textoDeDiferencia(primeraDiferencia(resultado.esperada, resultado.stdout))}</p>
+                      <div className="nb-ex-feedback-output">
+                        <span className="nb-ex-feedback-label">Entrada del ejemplo</span>
+                        <pre>{resultado.entrada || '(sin entrada)'}</pre>
+                      </div>
+                      <div className="nb-ex-feedback-output">
+                        <span className="nb-ex-feedback-label">Salida esperada</span>
+                        <pre>{resultado.esperada || '(sin salida)'}</pre>
+                      </div>
+                    </>
+                  )}
                   {resultado.stdout !== undefined && (
                     <div className="nb-ex-feedback-output">
-                      <span className="nb-ex-feedback-label">Salida</span>
+                      <span className="nb-ex-feedback-label">{resultado.esperada !== undefined ? 'Tu salida' : 'Salida'}</span>
                       <pre>{resultado.stdout || '(sin salida)'}</pre>
                     </div>
                   )}
@@ -359,6 +375,13 @@ const Detalle = () => {
 };
 
 // La `key` devuelve el editor a la plantilla al pasar de un problema a otro.
+// Java exige que el archivo se llame como su clase pública.
+const EXTENSION = { python: 'py', cpp: 'cpp', javascript: 'js', java: 'java' };
+const nombreDeArchivo = (lenguajeId, numero, codigo) => {
+  if (lenguajeId === 'java') return `${codigo.match(/public\s+class\s+(\w+)/)?.[1] ?? 'Main'}.java`;
+  return `problema-${numero}.${EXTENSION[lenguajeId] ?? 'txt'}`;
+};
+
 const ProblemDetailPage = () => {
   const { numero } = useParams();
   return <Detalle key={numero} />;

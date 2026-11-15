@@ -237,6 +237,7 @@
 .nb-ex-icon-btn:hover { background: #fff; color: #000; }
 
 .nb-ex-icon-btn.is-square { display: grid; place-items: center; width: clamp(26px, 2vw, 32px); height: clamp(26px, 2vw, 32px); padding: 0; }
+.nb-ex-icon-btn:disabled, .nb-ex-icon-btn:disabled:hover { opacity: 0.6; cursor: not-allowed; background: transparent; color: #fff; }
 
 .nb-ex-editor-body { display: flex; align-items: stretch; min-height: 0; }
 .nb-ex-gutter { position: relative; flex: 0 0 auto; overflow: hidden; background: var(--ed-gutter-bg); border-right: 2px solid var(--ed-gutter-line); padding: 0 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--ed-fs); line-height: var(--ed-lh); color: var(--ed-gutter-ink); text-align: right; user-select: none; }
@@ -313,6 +314,8 @@
 .nb-ex-tutor-pista .nb-ex-feedback-text { margin-top: 5px; color: #fff; }
 
 .nb-ex-feedback-output pre { margin: 5px 0 0; max-height: 180px; overflow: auto; padding: 10px 12px; background: #080A12; border: 1px solid rgba(255,255,255,0.35); color: #F5F7FF; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Dónde empieza a diferir la salida (Respuesta incorrecta). */
+.nb-ex-diferencia { font-family: 'JetBrains Mono', monospace; font-weight: 700; border-left: 4px solid #fff; padding-left: 10px; }
 
 /* ============================================================
    Responsive

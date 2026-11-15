@@ -520,6 +520,11 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-escalon { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
 .nb-doc-escalon .nb-doc-nota-top { flex: 1 1 320px; margin: 0; }
 .nb-doc-buscar { flex: 0 1 340px; }
+/* Buscador y descarga del reporte, juntos a la derecha de la cabecera. */
+.nb-doc-herramientas { display: flex; flex-wrap: wrap; align-items: stretch; gap: 12px; flex: 0 1 560px; justify-content: flex-end; }
+.nb-doc-herramientas .nb-doc-buscar { flex: 1 1 240px; }
+.nb-doc-csv { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; }
+.nb-doc-csv svg { width: 16px; height: 16px; }
 
 .nb-doc-alertas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; position: relative; z-index: 1; }
 .nb-doc-alerta { background: #000; color: #fff; }
