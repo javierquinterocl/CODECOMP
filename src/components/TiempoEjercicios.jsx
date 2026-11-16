@@ -1,5 +1,6 @@
 import { duracion } from '../scripts/docenteData';
 import { buscarNivel } from '../scripts/fundamentosData';
+import ListaVerMas from './VerMas';
 
 const nombreDe = (e) => (e.tipo === 'problema'
   ? `Problema ${e.numero}`
@@ -9,7 +10,7 @@ const nombreDe = (e) => (e.tipo === 'problema'
  * Cuánto tiempo activo pasó el estudiante dentro de cada ejercicio (Problemas y Fundamentos),
  * frente al tiempo total en la plataforma. Lo ven el estudiante y su docente.
  */
-const TiempoEjercicios = ({ ejercicios, totales, limite = 12 }) => {
+const TiempoEjercicios = ({ ejercicios, totales, limite = 8 }) => {
   const resueltos = ejercicios.filter((e) => e.resuelto);
   return (
     <>
@@ -23,8 +24,11 @@ const TiempoEjercicios = ({ ejercicios, totales, limite = 12 }) => {
         </div>
       </div>
       {ejercicios.length ? (
-        <ul className="nb-doc-tabla">
-          {ejercicios.slice(0, limite).map((e) => (
+        <ListaVerMas
+          className="nb-doc-tabla"
+          lista={ejercicios}
+          paso={limite}
+          render={(e) => (
             <li key={`${e.tipo}-${e.nivel || ''}-${e.numero}`} className="nb-doc-fila">
               <span className="nb-doc-celda is-grande">
                 <strong>{e.titulo}</strong>
@@ -34,8 +38,8 @@ const TiempoEjercicios = ({ ejercicios, totales, limite = 12 }) => {
               <span className="nb-doc-dato"><small>Días</small><strong>{e.dias}</strong></span>
               <span className={`nb-doc-estado${e.resuelto ? ' is-on' : ''}`}>{e.resuelto ? 'Resuelto' : 'En curso'}</span>
             </li>
-          ))}
-        </ul>
+          )}
+        />
       ) : (
         <p className="nb-doc-vacio">Aún no hay tiempo registrado dentro de un ejercicio.</p>
       )}

@@ -11,6 +11,7 @@ import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
 import TarjetaActividad from '../components/TarjetaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
+import ListaVerMas from '../components/VerMas';
 import { EsqPagina } from '../components/Esqueleto';
 
 const RESUELTOS_PARA_SUBIR = 5;
@@ -192,12 +193,12 @@ const MiProgresoPage = () => {
 
           <Seccion titulo="Qué resolver ahora" sub="Problemas que empezaste y aún no resuelves" className="nb-dash-col is-7">
             {abiertos.length ? (
-              <ul className="nb-doc-lista">{abiertos.map((p) => <PendienteFila key={p.numero} p={p} />)}</ul>
+              <ListaVerMas className="nb-doc-lista" lista={abiertos} paso={6} render={(p) => <PendienteFila key={p.numero} p={p} />} />
             ) : <p className="nb-doc-vacio">No tienes problemas a medias. Busca uno nuevo en los <Link to="/dashboard">recomendados de Inicio</Link>.</p>}
             {cerrados.length > 0 && (
               <>
                 <p className="nb-doc-nota nb-doc-nota-top">Cerrados sin resolver: ya no cambian tu nivel, pero puedes volver a intentarlos para practicar.</p>
-                <ul className="nb-doc-lista">{cerrados.map((p) => <PendienteFila key={p.numero} p={p} />)}</ul>
+                <ListaVerMas className="nb-doc-lista" lista={cerrados} paso={4} render={(p) => <PendienteFila key={p.numero} p={p} />} />
               </>
             )}
           </Seccion>
