@@ -30,7 +30,7 @@ const listarEjercicios = async (ctx: Contexto): Promise<Response> => {
       SELECT nivel, numero, tema, dificultad, titulo, resumen, descripcion, entrada, salida,
         ejemplos, pista_concepto
       FROM fundamentos_ejercicios
-      WHERE is_active
+      WHERE is_active = ${true}
       ORDER BY nivel, numero
     `;
     return responder(

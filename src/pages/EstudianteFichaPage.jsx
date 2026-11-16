@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { cambiarEscalon, getFichaEstudiante } from '../scripts/docenteApi';
+import { cambiarEscalon, getDiaEstudiante, getFichaEstudiante } from '../scripts/docenteApi';
 import { NIVELES } from '../scripts/problemsData';
 import NbSelect from '../components/NbSelect';
 import {
@@ -9,7 +9,7 @@ import {
 } from '../scripts/docenteData';
 import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
-import MapaActividad from '../components/MapaActividad';
+import TarjetaActividad from '../components/TarjetaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
 import FotoPerfil from '../components/FotoPerfil';
 import { EsqPagina } from '../components/Esqueleto';
@@ -173,9 +173,13 @@ const EstudianteFichaPage = () => {
           ) : <p className="nb-doc-vacio">Todavía no ha cerrado ningún problema: el nivel cambia al resolverlo o al cerrarlo sin resolver.</p>}
         </Seccion>
 
-        <Seccion titulo="Actividad" sub={autorizado ? 'Últimos 12 meses · pasa el cursor por un día para ver el detalle' : 'Últimos 12 meses · solo envíos (no autorizó el registro de tiempo)'}>
-          <MapaActividad mapa={mapa} conTiempo={autorizado} />
-        </Seccion>
+        <TarjetaActividad
+          titulo="Actividad"
+          sub={autorizado ? 'Últimos 12 meses · elige un día para ver qué hizo' : 'Últimos 12 meses · solo envíos (no autorizó el registro de tiempo)'}
+          mapa={mapa}
+          conTiempo={autorizado}
+          cargarDia={(f) => getDiaEstudiante(user, id, f)}
+        />
 
         <Seccion titulo="Tiempo por ejercicio" sub="Cuánto tarda de verdad en cada ejercicio · últimos 12 meses">
           {autorizado

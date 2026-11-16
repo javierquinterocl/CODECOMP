@@ -180,8 +180,9 @@ export const actividad = async (ctx: Contexto, recurso: string | undefined): Pro
     const hoy = dia(config.zonaHoraria);
     if (tocaPurgar(ultimaPurga, hoy)) {
       ultimaPurga = hoy;
-      await sql`DELETE FROM actividad_diaria WHERE dia < (now() - INTERVAL '12 months')::date`;
-      await sql`DELETE FROM actividad_ejercicio WHERE dia < (now() - INTERVAL '12 months')::date`;
+      // Con parametro: una consulta sin ninguno cuelga la conexion compartida del pooler.
+      await sql`DELETE FROM actividad_diaria WHERE dia < (now() - ${'12 months'}::interval)::date`;
+      await sql`DELETE FROM actividad_ejercicio WHERE dia < (now() - ${'12 months'}::interval)::date`;
     }
     return responder({ status: 200, cuerpo: { registrado: true } }, cors);
   } catch (error) {
