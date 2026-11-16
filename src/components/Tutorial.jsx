@@ -133,7 +133,7 @@ const Tutorial = ({ listo }) => {
             <strong>¿Te damos un recorrido?</strong>{' '}
             {isAdmin ? 'Te mostramos cómo crear tu clase y acompañar a tus estudiantes.' : 'Te acompañamos en tu primer envío, paso a paso.'}
           </p>
-          <div className="nb-cuenta-acciones">
+          <div className="nb-dash-aviso-acciones">
             <button type="button" className="nb-ex-send" onClick={() => { iniciarTutorial(user.uid); navigate(pasos[0].ir); }}>Empezar</button>
             <button type="button" className="nb-dash-btn-claro" onClick={salir}>Ahora no</button>
           </div>
@@ -147,7 +147,7 @@ const Tutorial = ({ listo }) => {
     return (
       <aside className="nb-dash-card nb-dash-aviso is-corto nb-tour-pausa" aria-label="Recorrido guiado">
         <p className="nb-dash-aviso-text"><strong>Recorrido en pausa</strong> · paso {indice + 1} de {pasos.length}</p>
-        <div className="nb-cuenta-acciones">
+        <div className="nb-dash-aviso-acciones">
           <button type="button" className="nb-ex-send" onClick={() => navigate(paso.ir)}>Volver al paso</button>
           <button type="button" className="nb-dash-btn-claro" onClick={salir}>Salir</button>
         </div>
@@ -173,6 +173,13 @@ const Tutorial = ({ listo }) => {
   const atras = () => {
     irA(indice - 1);
     if (!pasos[indice - 1].ruta.test(pathname)) navigate(pasos[indice - 1].ir);
+  };
+  // Botón de acción en lugar de "Anterior"; pulsar el ancla solo si se encontró en la página.
+  const accion = Boolean(paso.boton) && (paso.avanza === 'ruta' || Boolean(rect));
+  // Hace la acción del paso: lleva a la ruta del siguiente (y el recorrido avanza solo) o pulsa el elemento.
+  const hacerPorElUsuario = () => {
+    if (paso.avanza === 'ruta') navigate(pasos[indice + 1].ir);
+    else document.querySelector(`[data-tour="${paso.ancla}"]`)?.click();
   };
   const estiloTarjeta = pos.lado === 'centro' || pos.lado === 'hoja'
     ? undefined
@@ -204,8 +211,11 @@ const Tutorial = ({ listo }) => {
           {ultimo && <Link className="nb-tour-enlace" to="/guia">Leer la Guía completa →</Link>}
           <div className="nb-tour-acciones">
             <span className="nb-tour-cuenta">{indice + 1} / {pasos.length}</span>
-            {indice > 0 && <button type="button" className="nb-dash-btn-claro" onClick={atras}>Anterior</button>}
+            {indice > 0 && !accion && <button type="button" className="nb-dash-btn-claro" onClick={atras}>Anterior</button>}
             {paso.avanza === 'boton' && <button type="button" className="nb-ex-send" onClick={() => irA(indice + 1)}>Siguiente</button>}
+            {accion && (
+              <button type="button" className="nb-ex-send" onClick={hacerPorElUsuario}>{paso.boton}</button>
+            )}
             {ultimo && <button type="button" className="nb-ex-send" onClick={terminar}>Terminar</button>}
           </div>
         </section>

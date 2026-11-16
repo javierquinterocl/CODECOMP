@@ -442,6 +442,9 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 .nb-dash-aviso-mas { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--nb-blue); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .nb-dash-aviso-mas:hover { color: #000; }
 .nb-dash-aviso-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+/* Botones del aviso al ancho de su texto: con base fija se partían en dos líneas en pantallas grandes. */
+.nb-dash-aviso-acciones > .nb-ex-send { flex: 1 1 auto; }
+.nb-dash-aviso-acciones > .nb-dash-btn-claro { flex: 0 0 auto; }
 
 /* Mi cuenta: la acción de retirar la autorización es pequeña y roja para no tocarla por accidente. */
 .nb-cuenta-revocar { border: none; background: none; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-danger); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
