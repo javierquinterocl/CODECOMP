@@ -24,7 +24,7 @@ const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
 const auditar = (
   sql: Contexto['sql'],
   docenteId: string,
-  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon' | 'avisar_clase',
+  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon' | 'avisar_clase' | 'ruta_guiada',
   claseId: string | null,
   estudianteId: string | null,
 ) =>
@@ -132,7 +132,7 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
 const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
   const { sql, cors } = ctx;
   const [clase] = await sql`
-    SELECT id, nombre, codigo FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
+    SELECT id, nombre, codigo, ruta_guiada FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
   `;
   if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
   await auditar(sql, docenteId, 'ver_clase', claseId, null);
@@ -355,6 +355,21 @@ export const validarAviso = (cuerpo: unknown) => {
   return { titulo, texto };
 };
 
+// POST /docente/clase/:id/ruta-guiada { activa }: la clase recorre la Ruta en orden (solo el dueño).
+const cambiarRutaGuiada = async (ctx: Contexto, docenteId: string, claseId: string) => {
+  const { req, sql, cors } = ctx;
+  const cuerpo = await req.json().catch(() => ({})) as { activa?: unknown };
+  if (typeof cuerpo.activa !== 'boolean') return responder(rechazo(400, 'datos', 'Indica si el modo guiado queda activo.'), cors);
+  const [clase] = await sql`
+    UPDATE clases SET ruta_guiada = ${cuerpo.activa}
+    WHERE id = ${claseId} AND docente_id = ${docenteId}
+    RETURNING ruta_guiada
+  `;
+  if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
+  await auditar(sql, docenteId, 'ruta_guiada', claseId, null);
+  return responder({ status: 200, cuerpo: { rutaGuiada: clase.ruta_guiada } }, cors);
+};
+
 // POST /docente/clase/:id/aviso { titulo, texto }: aviso a todos los estudiantes de la clase.
 const avisarClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
   const { req, sql, config, cors } = ctx;
@@ -400,7 +415,8 @@ export const docente = async (
   const { req, sql, config, cors, identidad } = ctx;
   const cambio = recurso === 'estudiante' && accion === 'escalon';
   const aviso = recurso === 'clase' && accion === 'aviso';
-  const escritura = cambio || aviso;
+  const guiada = recurso === 'clase' && accion === 'ruta-guiada';
+  const escritura = cambio || aviso || guiada;
   const verDia = recurso === 'estudiante' && accion === 'dia';
   if (req.method !== (escritura ? 'POST' : 'GET') || (accion && !escritura && !verDia)) {
     return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
@@ -418,6 +434,7 @@ export const docente = async (
     const docenteId = await idDeUsuario(sql, identidad);
     if (cambio) return await cambiarEscalon(ctx, docenteId, id);
     if (aviso) return await avisarClase(ctx, docenteId, id);
+    if (guiada) return await cambiarRutaGuiada(ctx, docenteId, id);
     if (verDia) return await diaDeEstudiante(ctx, docenteId, id);
     return recurso === 'clase'
       ? await panelDeClase(ctx, docenteId, id)

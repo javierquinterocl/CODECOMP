@@ -148,7 +148,8 @@ const LeccionPage = () => {
   const { datos, catalogo } = useEntrenamiento(user);
   const propuestos = useMemo(() => {
     if (!datos || !catalogo) return null;
-    return rutaDeTemas(catalogo, datos.resueltos, datos.nivel).find((t) => t.slug === tema)?.propuestos ?? [];
+    const t = rutaDeTemas(catalogo, datos.resueltos, datos.nivel, { guiada: datos.rutaGuiada }).find((x) => x.slug === tema);
+    return t?.bloqueado ? { bloqueado: t.requiere } : t?.propuestos ?? [];
   }, [datos, catalogo, tema]);
 
   if (!leccion) return <Navigate to="/dashboard/ruta" replace />;
@@ -204,6 +205,11 @@ const LeccionPage = () => {
       <Seccion numero="06" titulo="Practica">
         <p className="nb-leccion-p">Problemas de este tema a tu altura. Si te atascas, pide las pistas por niveles.</p>
         {propuestos === null && <EsqFilas n={3} aviso="Cargando problemas…" />}
+        {propuestos?.bloqueado && (
+          <p className="nb-ruta-cerrado is-claro">
+            Tu docente activó la ruta guiada: domina {propuestos.bloqueado.titulo} ({propuestos.bloqueado.hechos} de {propuestos.bloqueado.meta}) para practicar este tema. Mientras tanto, la lección es toda tuya.
+          </p>
+        )}
         {propuestos?.length > 0 && (
           <ul className="nb-leccion-problemas">
             {propuestos.map((p) => (

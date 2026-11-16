@@ -14,6 +14,7 @@ import { useFavoritos } from '../scripts/useFavoritos';
 import { useIdioma } from '../scripts/useIdioma';
 import useEscalon from '../scripts/useEscalon';
 import { useAuth } from '../context/AuthContext';
+import { useBloqueoGuiado } from '../scripts/useBloqueoGuiado';
 import { StarIcon, NivelBarra, IdiomaSwitch } from '../components/ProblemBits';
 import { EsqFilas } from '../components/Esqueleto';
 
@@ -81,6 +82,7 @@ const ProblemsCategoryPage = () => {
   const { esFavorito, alternar } = useFavoritos();
   const { idioma, cambiar } = useIdioma();
   const { user } = useAuth();
+  const { bloqueoDe } = useBloqueoGuiado(user);
   const escalon = useEscalon(user);
   const [soloFavoritos, setSoloFavoritos] = useState(false);
   const [busqueda, setBusqueda] = useState('');
@@ -134,6 +136,12 @@ const ProblemsCategoryPage = () => {
   return (
     <div className="nb-dash-inner">
       <Link to="/dashboard/problemas" className="nb-pb-back">← Volver a problemas</Link>
+      {bloqueoDe(slug) && (
+        <p className="nb-ex-escalon is-cerrado nb-pb-cerrado" role="status">
+          <span className="nb-pb-escalon">Tema cerrado</span>
+          Tu docente activó la ruta guiada: puedes ver estos problemas, pero para enviarlos domina antes {bloqueoDe(slug).requiere.titulo} ({bloqueoDe(slug).requiere.hechos} de {bloqueoDe(slug).requiere.meta}). <Link to={`/dashboard/ruta/${bloqueoDe(slug).requiere.slug}`}>Ir a la lección →</Link>
+        </p>
+      )}
 
       <div className="nb-pb-cat-head" style={{ '--cat-bg': encabezado.bg, '--cat-ink': encabezado.ink }}>
         {encabezado.n && <span className="nb-pb-ghost" aria-hidden="true">{encabezado.n}</span>}

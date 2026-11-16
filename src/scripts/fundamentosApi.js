@@ -64,7 +64,7 @@ const enviar = async (user, url, cuerpo, extra = {}) => fetch(url, await conToke
  * resueltos, con al menos un envío aceptado (`resueltos`, ej. `{ fundamentos: Set{1, 2} }`).
  */
 export const getAvance = async (user) => {
-  if (!user) return { visitas: {}, resueltos: {} };
+  if (!user) return { visitas: {}, resueltos: {}, bloqueo: {} };
   const response = await fetch(URL_PROGRESO, await conToken(user));
   const data = await leer(response, 'No se pudo cargar tu avance.');
   const visitas = {};
@@ -72,7 +72,8 @@ export const getAvance = async (user) => {
   for (const fila of data.progreso) visitas[fila.nivel] ??= fila.numero;
   const resueltos = {};
   for (const fila of data.resueltos || []) (resueltos[fila.nivel] ||= new Set()).add(fila.numero);
-  return { visitas, resueltos };
+  // Niveles cerrados: { practica: { abierta, hechos, meta } } (la regla vive en el servidor).
+  return { visitas, resueltos, bloqueo: data.bloqueo || {} };
 };
 
 /** Registra la apertura y devuelve el borrador guardado. */

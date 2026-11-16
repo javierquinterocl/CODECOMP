@@ -45,3 +45,13 @@ export const getDiaEstudiante = async (user, estudianteId, fecha) => {
   if (data.dia !== fecha) throw new Error('No se pudo cargar ese día.');
   return data;
 };
+
+/** Activa o apaga el modo guiado de la clase: la Ruta se recorre en orden. */
+export const cambiarRutaGuiada = async (user, claseId, activa) => leer(
+  await fetch(rutaApi(`docente/clase/${claseId}/ruta-guiada`), {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${await user.getIdToken()}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activa }),
+  }),
+  'No se pudo cambiar el modo guiado.',
+);

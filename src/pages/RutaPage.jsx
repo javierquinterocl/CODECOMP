@@ -13,7 +13,7 @@ const RutaPage = () => {
   const { idioma } = useIdioma();
   const { datos, catalogo, error } = useEntrenamiento(user);
   const ruta = useMemo(
-    () => (datos && catalogo ? rutaDeTemas(catalogo, datos.resueltos, datos.nivel) : null),
+    () => (datos && catalogo ? rutaDeTemas(catalogo, datos.resueltos, datos.nivel, { guiada: datos.rutaGuiada }) : null),
     [datos, catalogo],
   );
 

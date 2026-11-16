@@ -19,6 +19,7 @@ import { useTemaEditor } from '../scripts/useTemaEditor';
 import { useAuth } from '../context/AuthContext';
 import { olvidarEscalon } from '../scripts/useEscalon';
 import FundamentosCarga from '../components/FundamentosCarga';
+import NivelBloqueado from '../components/NivelBloqueado';
 import { NIVELES } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import { Editor, Plegable, Ejemplo } from '../components/ExerciseBits';
@@ -472,10 +473,14 @@ const Ejercicio = ({ nivel, ejercicio, total }) => {
 const FundamentosDetailPage = () => {
   const { nivel: nivelSlug, numero } = useParams();
   const nivel = buscarNivel(nivelSlug);
-  const { ejercicios, cargando, error } = useFundamentos();
+  const { ejercicios, bloqueo, cargando, error } = useFundamentos({ conVisitas: true });
   const volverA = nivel ? `/dashboard/fundamentos/${nivel.slug}` : '/dashboard/fundamentos';
 
   if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA={volverA} forma="ejercicio" />;
+  const b = nivel && bloqueo[nivel.slug];
+  if (b && !b.abierta) {
+    return <NivelBloqueado titulo={`${nivel.titulo} todavía está cerrado`} motivo={`Para abrir ${nivel.titulo} resuelve ${b.meta} ejercicios de Fundamentos: así llegas con la base que necesitas.`} hechos={b.hechos} meta={b.meta} volverA="/dashboard/fundamentos" textoVolver="← Volver a Fundamentos" />;
+  }
 
   // Un ejercicio se identifica por su nivel y su número dentro de ese nivel.
   const delNivel = (nivel && ejercicios?.[nivel.slug]) || [];

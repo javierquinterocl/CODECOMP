@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getAvance, getEjercicios } from './fundamentosApi';
 
-const SIN_AVANCE = { visitas: {}, resueltos: {} };
+const SIN_AVANCE = { visitas: {}, resueltos: {}, bloqueo: {} };
 
 // Ejercicios de Fundamentos y, si se pide, el avance: último visto y resueltos por nivel.
 // Si falla el avance se sigue sin él; si fallan los ejercicios no hay nada que mostrar.
@@ -15,8 +15,8 @@ export const useFundamentos = ({ conVisitas = false } = {}) => {
     let vigente = true;
     const avance = conVisitas ? getAvance(user).catch(() => SIN_AVANCE) : Promise.resolve(SIN_AVANCE);
     Promise.all([getEjercicios(), avance])
-      .then(([ejercicios, { visitas, resueltos }]) => {
-        if (vigente) setEstado({ ejercicios, visitas, resueltos, error: '' });
+      .then(([ejercicios, { visitas, resueltos, bloqueo }]) => {
+        if (vigente) setEstado({ ejercicios, visitas, resueltos, bloqueo: bloqueo || {}, error: '' });
       })
       .catch((e) => {
         if (vigente) setEstado({ ejercicios: null, ...SIN_AVANCE, error: e.message });

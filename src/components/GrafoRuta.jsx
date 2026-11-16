@@ -10,6 +10,7 @@ const ESTADOS = {
   'en-curso': 'En curso',
   recomendado: 'Empieza aquí',
   'por-empezar': 'Por empezar',
+  bloqueado: 'Cerrado',
 };
 
 // Tres tonos por tema, como las tarjetas de Fundamentos: franja oscura, base y cuadro claro.
@@ -51,7 +52,7 @@ const Nodo = ({ t, i, total, titulo }) => {
       {i > 0 && <span className="nb-ruta-puerto is-entrada" aria-hidden="true" />}
       {i < total - 1 && <span className="nb-ruta-puerto is-salida" aria-hidden="true" />}
       <div className="nb-ruta-nodo-cabeza">
-        <span className="nb-ruta-nodo-num" aria-hidden="true">{t.estado === 'dominado' ? '✓' : String(i + 1).padStart(2, '0')}</span>
+        <span className="nb-ruta-nodo-num" aria-hidden="true">{t.estado === 'dominado' ? '✓' : t.bloqueado ? <LockIcon /> : String(i + 1).padStart(2, '0')}</span>
         <h2 id={`ruta-${t.slug}`} className="nb-ruta-titulo">{t.titulo}</h2>
         <span className="nb-ruta-estado">{etiqueta}</span>
       </div>
@@ -69,10 +70,16 @@ const Nodo = ({ t, i, total, titulo }) => {
           </span>
         )}
         <div className="nb-ruta-avance">
-          <span className="nb-ruta-barra" style={{ '--avance': `${(t.resueltos / META_TEMA) * 100}%` }} aria-hidden="true" />
-          <span className="nb-ruta-cifra">{t.resueltos}/{META_TEMA} resueltos · {t.total} en el tema</span>
+          <span className="nb-ruta-barra" style={{ '--avance': `${(t.resueltos / (t.meta || META_TEMA)) * 100}%` }} aria-hidden="true" />
+          <span className="nb-ruta-cifra">{t.resueltos}/{t.meta || META_TEMA} resueltos · {t.total} en el tema</span>
         </div>
-        {t.estado !== 'dominado' && t.propuestos.length > 0 && (
+        {/* Modo guiado: la lección se puede leer, pero la práctica espera al tema anterior. */}
+        {t.bloqueado && (
+          <p className="nb-ruta-cerrado">
+            <LockIcon /> Domina {t.requiere.titulo} ({t.requiere.hechos} de {t.requiere.meta}) para abrir la práctica de este tema.
+          </p>
+        )}
+        {!t.bloqueado && t.estado !== 'dominado' && t.propuestos.length > 0 && (
           <ul className="nb-ruta-problemas">
             {t.propuestos.map((p) => (
               <li key={p.numero}>

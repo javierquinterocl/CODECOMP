@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getClases } from '../scripts/registroApi';
-import { getPanelClase } from '../scripts/docenteApi';
+import { cambiarRutaGuiada, getPanelClase } from '../scripts/docenteApi';
 import {
   CATEGORIAS_TEMA, etiquetaAlerta, sugerenciaAlerta, duracion, haceCuanto, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria,
 } from '../scripts/docenteData';
@@ -45,6 +45,7 @@ const UserHistoryPage = () => {
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [generando, setGenerando] = useState('');
+  const [cambiandoGuiada, setCambiandoGuiada] = useState(false);
   const [errorReporte, setErrorReporte] = useState('');
 
   useEffect(() => {
@@ -137,6 +138,43 @@ const UserHistoryPage = () => {
             </div>
             {datos && <span className="nb-dash-clase-codigo" title="Código para entrar a la clase">{datos.clase.codigo}</span>}
           </div>
+
+          {/* Modo guiado: la clase recorre la Ruta en orden. Mismo conmutador Sí/No del resto del sitio. */}
+          {datos && (
+            <div className="nb-doc-guiada">
+              <div className="nb-ex-idioma is-bar" role="group" aria-label="Ruta guiada para esta clase">
+                <span className="nb-ex-idioma-label">Ruta guiada</span>
+                {[true, false].map((valor) => (
+                  <button
+                    key={String(valor)}
+                    type="button"
+                    className={`nb-ex-idioma-btn${Boolean(datos.clase.ruta_guiada) === valor ? ' is-active' : ''}`}
+                    aria-pressed={Boolean(datos.clase.ruta_guiada) === valor}
+                    disabled={cambiandoGuiada}
+                    onClick={async () => {
+                      if (Boolean(datos.clase.ruta_guiada) === valor) return;
+                      setCambiandoGuiada(true);
+                      try {
+                        const r = await cambiarRutaGuiada(user, datos.clase.id, valor);
+                        setPanel((p) => ({ ...p, clase: { ...p.clase, ruta_guiada: r.rutaGuiada } }));
+                      } catch (e) {
+                        setError(e.message);
+                      } finally {
+                        setCambiandoGuiada(false);
+                      }
+                    }}
+                  >
+                    {valor ? 'Sí' : 'No'}
+                  </button>
+                ))}
+              </div>
+              <p className="nb-doc-guiada-texto">
+                {datos.clase.ruta_guiada
+                  ? 'Activa: tus estudiantes abren cada tema de la Ruta al dominar el anterior (5 resueltos). Pueden leer todas las lecciones.'
+                  : 'Apagada: tus estudiantes eligen libremente qué tema practicar; la Ruta solo les recomienda el orden.'}
+              </p>
+            </div>
+          )}
 
           {!datos && !error && <EsqFilas n={5} aviso="Cargando la clase…" />}
 

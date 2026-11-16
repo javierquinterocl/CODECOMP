@@ -13,6 +13,7 @@ import { getProblem } from '../scripts/problemsApi';
 import { pedirIdeaClave, pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
 import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
+import { useBloqueoGuiado } from '../scripts/useBloqueoGuiado';
 import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
 import useConfirmar from '../scripts/useConfirmar';
 import useReinicios from '../scripts/useReinicios';
@@ -31,6 +32,7 @@ const Detalle = () => {
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
   const escalon = useEscalon(user);
+  const { bloqueoDe } = useBloqueoGuiado(user);
   const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
@@ -199,6 +201,8 @@ const Detalle = () => {
     }
   };
 
+  const cerradoGuiado = bloqueoDe(temaDelProblema?.slug ?? problema.categoria);
+
   // Lo esencial del tema en el panel del gato, sacado de su lección de la Ruta.
   const leccion = LECCIONES[temaDelProblema?.slug ?? problema.categoria];
   const mensajesGato = leccion
@@ -271,6 +275,13 @@ const Detalle = () => {
               <span className="nb-ex-meta-value">{problema.memoriaLimite} MB</span>
             </div>
           </div>
+          {/* Modo guiado de la clase: se puede leer el problema, pero no enviar hasta dominar el tema anterior. */}
+          {cerradoGuiado && (
+            <p className="nb-ex-escalon is-cerrado">
+              <span className="nb-pb-escalon">Tema cerrado</span>
+              Tu docente activó la ruta guiada: domina {cerradoGuiado.requiere.titulo} ({cerradoGuiado.requiere.hechos} de {cerradoGuiado.requiere.meta}) para enviar problemas de {cerradoGuiado.titulo}. <Link to={`/dashboard/ruta/${cerradoGuiado.requiere.slug}`}>Ir a la lección →</Link>
+            </p>
+          )}
           {/* Bloqueo suave (S4): se puede enviar igual, solo se avisa. */}
           {escalon && problema.nivel > escalon.actual && (
             <p className="nb-ex-escalon">
@@ -313,7 +324,7 @@ const Detalle = () => {
               options={LENGUAJES.map((l) => ({ value: l.id, label: l.nombre }))}
             />
 
-            <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando}>
+            <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando || Boolean(cerradoGuiado)} title={cerradoGuiado ? `Domina ${cerradoGuiado.requiere.titulo} para enviar` : undefined}>
               {evaluando ? 'Evaluando…' : 'Enviar'}
             </button>
           </div>
