@@ -20,6 +20,7 @@ import { TEXTOS_LOGROS } from '../scripts/logros';
 import { NIVELES } from '../scripts/problemsData';
 import { IdiomaSwitch } from '../components/ProblemBits';
 import FotoPerfil from '../components/FotoPerfil';
+import VitrinaLogros from '../components/VitrinaLogros';
 import ConfirmarDialogo from '../components/ConfirmarDialogo';
 import useConfirmar from '../scripts/useConfirmar';
 import { pedirVerificacion } from '../scripts/accesoApi';
@@ -293,21 +294,21 @@ const MiCuentaPage = () => {
 
         {/* ── Logros ── */}
         {!isAdmin && (
-          <Seccion titulo="Logros" sub={cuenta ? `${conseguidos} de ${logros.length} conseguidos` : 'Cargando…'}>
-            <ul className="nb-cuenta-logros">
-              {logros.map((l) => {
-                const t = TEXTOS_LOGROS[l.id] ?? { nombre: l.id, descripcion: '' };
-                return (
-                  <li key={l.id} className={`nb-cuenta-logro${l.conseguido ? ' is-ok' : ''}`}>
-                    <strong>{t.nombre}</strong>
-                    <small>{t.descripcion}</small>
-                    <span className="nb-cuenta-logro-barra" aria-hidden="true"><span style={{ '--avance': `${(l.actual / l.meta) * 100}%` }} /></span>
-                    <small className="nb-cuenta-logro-cifra">{l.conseguido ? 'Conseguido' : `${l.actual} de ${l.meta}`}</small>
-                  </li>
-                );
-              })}
-            </ul>
-          </Seccion>
+          <VitrinaLogros
+            titulo="Logros"
+            conseguidos={conseguidos}
+            vacio={cuenta ? 'Aún no hay logros.' : 'Cargando tus logros…'}
+            logros={logros.map((l) => {
+              const t = TEXTOS_LOGROS[l.id] ?? { nombre: l.id, descripcion: '' };
+              return {
+                id: l.id,
+                titulo: t.nombre,
+                texto: t.descripcion,
+                conseguido: l.conseguido,
+                avance: l.conseguido ? 'Conseguido' : `${l.actual} de ${l.meta}`,
+              };
+            })}
+          />
         )}
 
         {/* ── Seguridad ── */}

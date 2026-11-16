@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { HomeIcon, BookIcon, CpuIcon, TrophyIcon, UsersIcon, ChartIcon, FlagIcon, CollapseIcon, ExpandIcon, RouteIcon } from './AppIcons';
+import { HomeIcon, BookIcon, CpuIcon, PlayIcon, UsersIcon, ChartIcon, FlagIcon, CollapseIcon, ExpandIcon, RouteIcon } from './AppIcons';
 
 /* Cada entrada repite el icono de su módulo en el tablero. El `title` deja
    identificar la entrada cuando el sidebar está plegado a solo iconos. */
@@ -16,18 +16,6 @@ const NavItem = ({ label, to, icono, end = false }) => (
     <span className="nb-dash-navicon" aria-hidden="true">{icono}</span>
     <span className="nb-dash-navlabel">{label}</span>
   </NavLink>
-);
-
-/**
- * Ítem sin ruta todavía. Va como <span> a propósito: un NavLink con to="#"
- * resuelve a la ruta actual y se marca como activo.
- */
-const NavItemSoon = ({ label, icono }) => (
-  <span className="nb-dash-navitem is-soon" aria-disabled="true" title={`${label} (pronto)`}>
-    <span className="nb-dash-navicon" aria-hidden="true">{icono}</span>
-    <span className="nb-dash-navlabel">{label}</span>
-    <span className="nb-dash-soon">Pronto</span>
-  </span>
 );
 
 /* Vistas de resolver un ejercicio: ahí el sidebar cede el ancho al editor. */
@@ -71,7 +59,7 @@ const AppSidebar = () => {
         <NavItem label="Competencias" to="/dashboard/competencias" icono={<FlagIcon />} />
         {/* Mi progreso es del estudiante; el docente tiene su vista en Estudiantes. */}
         {!isAdmin && <NavItem label="Mi progreso" to="/dashboard/progreso" icono={<ChartIcon />} />}
-        <NavItemSoon label="Rankings" icono={<TrophyIcon />} />
+        <NavItem label="Material" to="/dashboard/material" icono={<PlayIcon />} />
         {/* Estudiantes queda restringido a administradores, como estaba antes */}
         {isAdmin && <NavItem label="Estudiantes" to="/historial-usuarios" icono={<UsersIcon />} />}
       </div>

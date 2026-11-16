@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getProgress } from '../scripts/progressApi';
 import { getRecommendations } from '../scripts/recommendationApi';
 import { NIVELES, buscarCategoria, categoriaDeProblema, nivelDeRating } from '../scripts/problemsData';
-import { PencilIcon, CpuIcon, FlagIcon, BookIcon, ReloadIcon } from '../components/AppIcons';
+import { PencilIcon, CpuIcon, FlagIcon, ReloadIcon, RouteIcon } from '../components/AppIcons';
 import ClaseCard from '../components/ClaseCard';
 import RepasoHoy from '../components/RepasoHoy';
 import { getClases } from '../scripts/registroApi';
@@ -20,11 +20,12 @@ const RPC_EVENTS = [
     detalle: 'Maratón con ~12 retos para continuar el ciclo de entrenamiento latino.' },
 ];
 
+// Textos borrador: los decide el equipo.
 const RECURSOS = [
-  { titulo: 'Guías', icono: <BookIcon />, oscuro: false,
-    texto: 'Rutas de estudio paso a paso: estructuras de datos, grafos, programación dinámica y más.',
-    chips: ['18 guías', 'Básico a avanzado'] },
-  { titulo: 'Videos', icono: '▶', oscuro: true,
+  { titulo: 'Ruta', icono: <RouteIcon />, oscuro: false, to: '/dashboard/ruta',
+    texto: 'Un tema a la vez, de lo básico a grafos: lecciones interactivas y problemas a tu altura.',
+    chips: ['8 temas', 'Básico a avanzado'] },
+  { titulo: 'Material', icono: '▶', oscuro: true, to: '/dashboard/material',
     texto: 'Sesiones grabadas del grupo estable y explicaciones de problemas resueltos en vivo.',
     chips: ['42 videos', 'UFPSO'] },
 ];
@@ -121,7 +122,7 @@ const MemberRow = ({ pos, nombre, desde, resueltos, envios, nivel, me = false })
 );
 
 const DashboardPage = () => {
-  const { user, isAdmin, displayName, firstName, storedPhotoURL, handleLogout, isLoggingOut } = useAuth();
+  const { user, isAdmin, displayName, firstName, storedPhotoURL, fotoPropia, handleLogout, isLoggingOut } = useAuth();
   const [photoError, setPhotoError] = useState(false);
   const [progress, setProgress] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
@@ -162,7 +163,9 @@ const DashboardPage = () => {
     ? recommendations.filter((r) => nivelDeRating(r.difficulty_rating) <= escalonActual)
     : recommendations;
 
-  const photo = storedPhotoURL || user?.photoURL || null;
+  // Foto de CODECOMP, luego la de Google; sin ninguna, la inicial del nombre.
+  const photo = fotoPropia || storedPhotoURL || user?.photoURL || null;
+  const inicial = (displayName || firstName || user?.email || '?').trim()[0]?.toUpperCase() || '?';
 
   return (
     <div className="nb-dash-inner">
@@ -205,7 +208,7 @@ const DashboardPage = () => {
               <div className="nb-dash-photo">
                 {photo && !photoError
                   ? <img src={photo} alt="Foto de perfil" onError={() => setPhotoError(true)} />
-                  : <img src="/cat-pixel.png" alt="Foto de perfil" width="512" height="512" className="is-pixel" />}
+                  : <span className="nb-dash-photo-inicial" role="img" aria-label="Foto de perfil">{inicial}</span>}
               </div>
               <div className="nb-dash-metrics">
                 <div className="nb-dash-metric">
@@ -238,7 +241,7 @@ const DashboardPage = () => {
                   <span>★</span><span>★</span><span>★</span><span>★</span>
                 </div>
                 <div className="nb-dash-title-label">Título</div>
-                <div className="nb-dash-title-value">&quot;Programador más rápido&quot;</div>
+                <div className="nb-dash-title-value">&quot;Principiante&quot;</div>
               </div>
             </div>
 
@@ -337,9 +340,9 @@ const DashboardPage = () => {
                   </div>
                   <div className="nb-dash-grow">
                     <div className="nb-dash-kicker">Recursos</div>
-                    <h3 className="nb-dash-h3">{r.titulo}</h3>
+                    {/* El enlace del título se estira sobre toda la tarjeta. */}
+                    <h3 className="nb-dash-h3"><Link to={r.to} className="nb-dash-resource-link">{r.titulo}</Link></h3>
                   </div>
-                  <span className="nb-dash-tag">Pronto</span>
                 </div>
                 <p className="nb-dash-body-text">{r.texto}</p>
                 <div className="nb-dash-chips">
