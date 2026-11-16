@@ -314,6 +314,8 @@
 .nb-ex-tutor-pista .nb-ex-feedback-text { margin-top: 5px; color: #fff; }
 
 .nb-ex-feedback-output pre { margin: 5px 0 0; max-height: 180px; overflow: auto; padding: 10px 12px; background: #080A12; border: 1px solid rgba(255,255,255,0.35); color: #F5F7FF; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Mensaje del compilador o del error de ejecución, tal cual lo da el juez. */
+.nb-ex-mensaje-juez { margin: 0; max-height: 160px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); }
 /* Dónde empieza a diferir la salida (Respuesta incorrecta). */
 .nb-ex-diferencia { font-family: 'JetBrains Mono', monospace; font-weight: 700; border-left: 4px solid #fff; padding-left: 10px; }
 

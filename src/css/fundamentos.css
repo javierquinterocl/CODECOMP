@@ -203,6 +203,8 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-burbuja.is-error p + p { margin-top: 6px; }
 .nb-fd-error-envio { display: block; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #B00A26; }
 .nb-fd-error-dif { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-fd-error-oficial { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); background: var(--nb-hover); padding: 4px 6px; overflow-wrap: anywhere; }
+.nb-fd-burbuja-enlace { display: inline-block; margin-top: 6px; font-weight: 700; color: var(--nb-blue); }
 
 /* Sin sitio para dos columnas y un panel: el gato baja y ocupa todo el ancho. */
 @media (max-width: 1024px) {
