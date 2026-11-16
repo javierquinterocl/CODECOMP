@@ -203,6 +203,8 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-burbuja.is-error p + p { margin-top: 6px; }
 .nb-fd-error-envio { display: block; margin-bottom: 4px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #B00A26; }
 .nb-fd-error-dif { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+.nb-fd-error-oficial { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); background: var(--nb-hover); padding: 4px 6px; overflow-wrap: anywhere; }
+.nb-fd-burbuja-enlace { display: inline-block; margin-top: 6px; font-weight: 700; color: var(--nb-blue); }
 
 /* Sin sitio para dos columnas y un panel: el gato baja y ocupa todo el ancho. */
 @media (max-width: 1024px) {
@@ -251,3 +253,12 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
   .nb-fd-estrella { animation: none; opacity: 0.4; }
   .nb-fd-logro:hover .nb-fd-logro-icono svg { transform: none; }
 }
+
+/* Nivel o tema cerrado: candado, motivo y cuánto falta. */
+.nb-bloqueo { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+.nb-bloqueo-icono { width: 56px; height: 56px; display: grid; place-items: center; background: #000; color: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px var(--nb-blue); }
+.nb-bloqueo-icono svg { width: 26px; height: 26px; }
+.nb-bloqueo-avance { display: flex; align-items: center; gap: 10px; width: min(100%, 320px); }
+.nb-bloqueo-avance span { position: relative; flex: 1 1 auto; height: 12px; border: 2px solid #000; background: #fff; }
+.nb-bloqueo-avance span::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--avance, 0%); background: var(--nb-blue); }
+.nb-bloqueo-avance small { font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: var(--fs-xs); }

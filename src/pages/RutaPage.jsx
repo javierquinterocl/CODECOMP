@@ -13,7 +13,7 @@ const RutaPage = () => {
   const { idioma } = useIdioma();
   const { datos, catalogo, error } = useEntrenamiento(user);
   const ruta = useMemo(
-    () => (datos && catalogo ? rutaDeTemas(catalogo, datos.resueltos, datos.nivel) : null),
+    () => (datos && catalogo ? rutaDeTemas(catalogo, datos.resueltos, datos.nivel, { guiada: datos.rutaGuiada }) : null),
     [datos, catalogo],
   );
 
@@ -27,7 +27,7 @@ const RutaPage = () => {
 
   return (
     <div className="nb-dash-inner">
-      <div className="nb-dash-card nb-fd-hero nb-ruta-hero">
+      <div className="nb-dash-card nb-fd-hero nb-ruta-hero" data-tour="ruta-hero">
         <div className="nb-fd-hero-main">
           <div className="nb-fd-kicker">Ruta de entrenamiento</div>
           <h1 className="nb-fd-title">Un tema a la vez, de lo básico a grafos</h1>

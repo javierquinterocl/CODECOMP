@@ -2,34 +2,38 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getClases } from '../scripts/registroApi';
-import { getPanelClase } from '../scripts/docenteApi';
+import { cambiarRutaGuiada, getPanelClase } from '../scripts/docenteApi';
 import {
-  ALERTAS, CATEGORIAS_TEMA, duracion, haceCuanto, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria,
+  CATEGORIAS_TEMA, etiquetaAlerta, sugerenciaAlerta, duracion, haceCuanto, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria,
 } from '../scripts/docenteData';
 import NbSelect from '../components/NbSelect';
 import HistorialSesiones from '../components/HistorialSesiones';
 import AvisarClase from '../components/AvisarClase';
 import { Plegable } from '../components/ExerciseBits';
 import { DownloadIcon, SearchIcon } from '../components/AppIcons';
-import { archivoDeClase, csvDeClase } from '../scripts/reporteClase';
+import { archivoDelReporte, datosDelReporte } from '../scripts/reporteClaseDatos';
 import { EsqFilas } from '../components/Esqueleto';
 
 const Alertas = ({ lista }) => (lista.length ? (
   <span className="nb-doc-alertas">
-    {lista.map((a) => <span key={a} className="nb-dash-chip nb-doc-alerta">{ALERTAS[a] || a}</span>)}
+    {lista.map((a) => <span key={a} className="nb-dash-chip nb-doc-alerta" title={sugerenciaAlerta(a)}>{etiquetaAlerta(a)}</span>)}
   </span>
 ) : null);
 
 /** Panel docente: la clase de un vistazo, cada estudiante y el historial de sesiones. */
-// Todos los estudiantes de la clase, no solo los que deja ver la búsqueda.
-const descargarReporte = (clase, estudiantes) => {
-  const csv = csvDeClase(estudiantes, { nombre: nombreVisible, alerta: (a) => ALERTAS[a] || a });
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+// Reporte de toda la clase (no solo lo que deja ver la búsqueda). Las librerías se cargan al pulsar.
+const descargarReporte = async (panel, docente, formato) => {
+  const datos = datosDelReporte(panel, { nombre: nombreVisible, alerta: etiquetaAlerta, sugerencia: sugerenciaAlerta, docente });
+  const { generarPdf } = formato === 'pdf' ? await import('../scripts/reportePdf') : {};
+  const { generarExcel } = formato === 'xlsx' ? await import('../scripts/reporteExcel') : {};
+  const archivo = formato === 'pdf' ? await generarPdf(datos) : await generarExcel(datos);
+  const url = URL.createObjectURL(archivo);
   const enlace = document.createElement('a');
   enlace.href = url;
-  enlace.download = archivoDeClase(clase?.nombre);
+  enlace.download = archivoDelReporte(panel.clase?.nombre, formato);
   enlace.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // Unos segundos antes de soltarlo: algunos navegadores cortan la descarga si se revoca enseguida.
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 };
 
 const UserHistoryPage = () => {
@@ -40,6 +44,9 @@ const UserHistoryPage = () => {
   const [panel, setPanel] = useState(null);
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [generando, setGenerando] = useState('');
+  const [cambiandoGuiada, setCambiandoGuiada] = useState(false);
+  const [errorReporte, setErrorReporte] = useState('');
 
   useEffect(() => {
     if (user && !isAdmin) navigate('/dashboard', { replace: true });
@@ -132,6 +139,43 @@ const UserHistoryPage = () => {
             {datos && <span className="nb-dash-clase-codigo" title="Código para entrar a la clase">{datos.clase.codigo}</span>}
           </div>
 
+          {/* Modo guiado: la clase recorre la Ruta en orden. Mismo conmutador Sí/No del resto del sitio. */}
+          {datos && (
+            <div className="nb-doc-guiada">
+              <div className="nb-ex-idioma is-bar" role="group" aria-label="Ruta guiada para esta clase">
+                <span className="nb-ex-idioma-label">Ruta guiada</span>
+                {[true, false].map((valor) => (
+                  <button
+                    key={String(valor)}
+                    type="button"
+                    className={`nb-ex-idioma-btn${Boolean(datos.clase.ruta_guiada) === valor ? ' is-active' : ''}`}
+                    aria-pressed={Boolean(datos.clase.ruta_guiada) === valor}
+                    disabled={cambiandoGuiada}
+                    onClick={async () => {
+                      if (Boolean(datos.clase.ruta_guiada) === valor) return;
+                      setCambiandoGuiada(true);
+                      try {
+                        const r = await cambiarRutaGuiada(user, datos.clase.id, valor);
+                        setPanel((p) => ({ ...p, clase: { ...p.clase, ruta_guiada: r.rutaGuiada } }));
+                      } catch (e) {
+                        setError(e.message);
+                      } finally {
+                        setCambiandoGuiada(false);
+                      }
+                    }}
+                  >
+                    {valor ? 'Sí' : 'No'}
+                  </button>
+                ))}
+              </div>
+              <p className="nb-doc-guiada-texto">
+                {datos.clase.ruta_guiada
+                  ? 'Activa: tus estudiantes abren cada tema de la Ruta al dominar el anterior (5 resueltos). Pueden leer todas las lecciones.'
+                  : 'Apagada: tus estudiantes eligen libremente qué tema practicar; la Ruta solo les recomienda el orden.'}
+              </p>
+            </div>
+          )}
+
           {!datos && !error && <EsqFilas n={5} aviso="Cargando la clase…" />}
 
           {datos && !estudiantes.length && (
@@ -155,11 +199,30 @@ const UserHistoryPage = () => {
                       <SearchIcon />
                       <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o correo" aria-label="Buscar estudiante" />
                     </div>
-                    <button type="button" className="nb-dash-btn-claro nb-doc-csv" onClick={() => descargarReporte(datos.clase, estudiantes)}>
-                      <DownloadIcon /> Descargar CSV
-                    </button>
+                    {['pdf', 'xlsx'].map((formato) => (
+                      <button
+                        key={formato}
+                        type="button"
+                        className={`${formato === 'pdf' ? 'nb-ex-send' : 'nb-dash-btn-claro'} nb-doc-csv`}
+                        disabled={Boolean(generando)}
+                        onClick={async () => {
+                          setGenerando(formato);
+                          setErrorReporte('');
+                          try {
+                            await descargarReporte(datos, user?.displayName || '', formato);
+                          } catch {
+                            setErrorReporte('No se pudo generar el reporte. Inténtalo de nuevo.');
+                          } finally {
+                            setGenerando('');
+                          }
+                        }}
+                      >
+                        <DownloadIcon /> {generando === formato ? 'Generando…' : formato === 'pdf' ? 'Reporte PDF' : 'Excel'}
+                      </button>
+                    ))}
                   </div>
                 </div>
+                {errorReporte && <p className="nb-error" role="alert">{errorReporte}</p>}
                 <ul className="nb-doc-lista">
                   {filtrados.map((e, i) => (
                     <li key={e.id} className="nb-pb-row nb-doc-estudiante">

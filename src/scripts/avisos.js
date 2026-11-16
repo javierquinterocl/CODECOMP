@@ -1,5 +1,6 @@
 import { rutaApi } from './apiBase';
 import { NIVELES } from './problemsData';
+import { etiquetaAlerta, nombreVisible } from './docenteData';
 
 // Avisos de la campana: el servidor manda tipo y datos; aquí se arma el texto.
 // Los avisos y su estado de leído viven en la cuenta (tabla notificaciones).
@@ -64,9 +65,15 @@ const TEXTOS = {
     texto: `Empieza a las ${new Date(inicio).toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' })}. Revisa tu equipo.`,
     enlace: '/dashboard/competencias',
   }),
-  alertas: ({ cantidad, clase }) => ({
-    titulo: `${plural(cantidad, 'estudiante', 'estudiantes')} con alertas`,
-    texto: `En ${clase}: revisa quién está atascado o lleva días sin entrar.`,
+  alertas: ({ cantidad, clase, ejemplos = [] }) => ({
+    titulo: `${plural(cantidad, 'estudiante', 'estudiantes')} con alertas en ${clase}`,
+    texto: ejemplos.length
+      ? [
+        ...ejemplos.map((e) => `${nombreVisible(e.nombre)}: ${etiquetaAlerta(e.alerta).toLowerCase()}`),
+        ...(cantidad > ejemplos.length ? [`y ${cantidad - ejemplos.length} más.`] : []),
+        'En su ficha verás qué hacer con cada uno.',
+      ].join('\n')
+      : `En ${clase}: revisa quién está atascado o lleva días sin entrar.`,
     enlace: '/historial-usuarios',
   }),
   nuevos: ({ cantidad, clase }) => ({

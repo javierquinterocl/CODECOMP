@@ -13,10 +13,15 @@ import { getProblem } from '../scripts/problemsApi';
 import { pedirIdeaClave, pedirPista } from '../scripts/tutorApi';
 import { registrarApertura } from '../scripts/registroApi';
 import useEscalon, { olvidarEscalon } from '../scripts/useEscalon';
+import { useBloqueoGuiado } from '../scripts/useBloqueoGuiado';
 import { primeraDiferencia, textoDeDiferencia } from '../scripts/diferencia';
 import useConfirmar from '../scripts/useConfirmar';
 import useReinicios from '../scripts/useReinicios';
 import ConfirmarDialogo from '../components/ConfirmarDialogo';
+import PanelGato from '../components/PanelGato';
+import { useChatErrores } from '../scripts/useChatErrores';
+import { explicarEnvio, mensajeDelJuez } from '../scripts/erroresJuez';
+import { LECCIONES } from '../scripts/lecciones/contenido';
 
 // Espera entre pistas. El backend la impone de verdad (database/009); aqui
 // solo se muestra la cuenta atras para no dejar el boton mintiendo.
@@ -27,6 +32,7 @@ const Detalle = () => {
   const { esFavorito, alternar } = useFavoritos();
   const { user } = useAuth();
   const escalon = useEscalon(user);
+  const { bloqueoDe } = useBloqueoGuiado(user);
   const { idioma: idiomaElegido, cambiar: cambiarIdioma } = useIdioma();
 
   const ejercicio = buscarEjercicio(numero);
@@ -74,6 +80,8 @@ const Detalle = () => {
 
   const codigo = borradores[lenguaje.id] ?? lenguaje.plantilla;
   const { pedido, confirmar, responder } = useConfirmar();
+  // Panel del gato y chat de errores de esta sesión, como en Fundamentos.
+  const chat = useChatErrores();
   // Reinicios por lenguaje: no tocan veredicto ni pista (solo los quita un envío nuevo).
   const reinicios = useReinicios({
     clave: lenguaje.id,
@@ -123,7 +131,10 @@ const Detalle = () => {
 
   // Veredicto y pista siguen a la vista al teclear, reiniciar o cambiar de lenguaje:
   // solo los quita un envío nuevo.
-  const { reiniciar } = reinicios;
+  // Reiniciar también vacía el chat de errores (si de verdad reinició).
+  const reiniciar = async () => {
+    if (await reinicios.reiniciar()) chat.vaciar();
+  };
 
   /* La pista se pide aparte del envio: no todos la quieren y cada llamada
      cuesta, asi que sale solo cuando el estudiante la pulsa. */
@@ -141,7 +152,7 @@ const Detalle = () => {
         problemNumber: Number(problema.numero),
         sourceCode: codigo,
         verdict: resultado?.verdict,
-        judgeOutput: resultado?.errorDetails || resultado?.stdout || '',
+        judgeOutput: mensajeDelJuez(resultado) || resultado?.stdout || '',
         language: lenguaje.nombre,
         nivel,
       });
@@ -176,6 +187,11 @@ const Detalle = () => {
         ? await evaluarCodigoAdaptativo(codigo, lenguajeId, problema.numero, user)
         : await evaluarCodigo(codigo, lenguajeId, problema.ejemplos[0]?.entrada, problema.ejemplos[0]?.salida);
       setResultado(resultadoJudge0);
+      const explicacion = explicarEnvio(resultadoJudge0);
+      chat.registrar(explicacion && {
+        ...explicacion,
+        diferencia: resultadoJudge0.esperada !== undefined ? textoDeDiferencia(primeraDiferencia(resultadoJudge0.esperada, resultadoJudge0.stdout)) : null,
+      });
       setEnviado(true);
       olvidarEscalon();
     } catch (error) {
@@ -185,8 +201,25 @@ const Detalle = () => {
     }
   };
 
+  const cerradoGuiado = bloqueoDe(temaDelProblema?.slug ?? problema.categoria);
+
+  // Lo esencial del tema en el panel del gato, sacado de su lección de la Ruta.
+  const leccion = LECCIONES[temaDelProblema?.slug ?? problema.categoria];
+  const mensajesGato = leccion
+    ? [
+      { texto: `Técnica clave del tema: ${leccion.tecnica}. ${leccion.resumen}` },
+      ...leccion.cuando.slice(0, 2).map((c) => ({ texto: `Úsala cuando: ${c}` })),
+      { texto: 'Si te atascas, repasa la lección con ejemplos interactivos.', enlace: { a: `/dashboard/ruta/${temaDelProblema?.slug ?? problema.categoria}`, texto: 'Repasar la lección →' } },
+    ]
+    : [
+      { texto: 'Lee las restricciones antes de programar: te dicen qué tan rápida debe ser tu idea.' },
+      { texto: 'Prueba tu código con los ejemplos y con casos borde: n = 1, ceros, negativos y valores máximos.' },
+      { texto: 'La Ruta tiene lecciones de cada tema con ejemplos interactivos.', enlace: { a: '/dashboard/ruta', texto: 'Ir a la Ruta →' } },
+    ];
+
   return (
-    <div className="nb-dash-inner is-wide">
+    <div className="nb-fd-vista">
+    <div className="nb-fd-vista-main">
       <Link to={`/dashboard/problemas/${slug}`} className="nb-pb-back">
         ← Volver a {volverA}
       </Link>
@@ -242,6 +275,13 @@ const Detalle = () => {
               <span className="nb-ex-meta-value">{problema.memoriaLimite} MB</span>
             </div>
           </div>
+          {/* Modo guiado de la clase: se puede leer el problema, pero no enviar hasta dominar el tema anterior. */}
+          {cerradoGuiado && (
+            <p className="nb-ex-escalon is-cerrado">
+              <span className="nb-pb-escalon">Tema cerrado</span>
+              Tu docente activó la ruta guiada: domina {cerradoGuiado.requiere.titulo} ({cerradoGuiado.requiere.hechos} de {cerradoGuiado.requiere.meta}) para enviar problemas de {cerradoGuiado.titulo}. <Link to={`/dashboard/ruta/${cerradoGuiado.requiere.slug}`}>Ir a la lección →</Link>
+            </p>
+          )}
           {/* Bloqueo suave (S4): se puede enviar igual, solo se avisa. */}
           {escalon && problema.nivel > escalon.actual && (
             <p className="nb-ex-escalon">
@@ -284,7 +324,7 @@ const Detalle = () => {
               options={LENGUAJES.map((l) => ({ value: l.id, label: l.nombre }))}
             />
 
-            <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando}>
+            <button type="button" className="nb-ex-send" onClick={enviarCodigo} disabled={evaluando || Boolean(cerradoGuiado)} title={cerradoGuiado ? `Domina ${cerradoGuiado.requiere.titulo} para enviar` : undefined}>
               {evaluando ? 'Evaluando…' : 'Enviar'}
             </button>
           </div>
@@ -364,7 +404,8 @@ const Detalle = () => {
                       <pre>{resultado.stdout || '(sin salida)'}</pre>
                     </div>
                   )}
-                  {resultado.errorDetails && <p className="nb-ex-feedback-text nb-ex-feedback-error">{resultado.errorDetails}</p>}
+                  {/* Mensaje del compilador o del error de ejecución (también en el modo adaptativo). */}
+                  {mensajeDelJuez(resultado) && <pre className="nb-ex-feedback-text nb-ex-feedback-error nb-ex-mensaje-juez">{mensajeDelJuez(resultado)}</pre>}
 
                   {/* El tutor solo entra cuando hay algo que orientar. */}
                   {resultado.verdict && resultado.verdict !== 'ACCEPTED' && (
@@ -419,6 +460,8 @@ const Detalle = () => {
           </div>
         </div>
       </div>
+    </div>
+    <PanelGato titulo={temaDelProblema?.titulo ?? categoria?.titulo ?? 'Problema'} mensajes={mensajesGato} {...chat.panel} />
     </div>
   );
 };

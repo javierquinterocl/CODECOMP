@@ -40,13 +40,15 @@ const nivelValido = (nivel) => (Number.isFinite(nivel) && nivel > 0 ? nivel : 80
 
 /**
  * Temas en orden con su avance. Cada tema propone 5 problemas sin resolver desde un poco por
- * debajo del nivel del estudiante hacia arriba. Ninguno se bloquea: el primero sin dominar es el
- * recomendado.
+ * debajo del nivel del estudiante hacia arriba. El primero sin dominar es el recomendado. En modo
+ * guiado (`guiada`, lo activa el docente para su clase) los temas posteriores sin dominar quedan
+ * bloqueados; lo ya dominado nunca se cierra. Un tema con menos de 5 problemas se domina con todos.
  */
-export const rutaDeTemas = (catalogo, resueltos, nivel) => {
+export const rutaDeTemas = (catalogo, resueltos, nivel, { guiada = false } = {}) => {
   const hechos = resueltos instanceof Set ? resueltos : new Set(resueltos);
   const desde = nivelValido(nivel) - 200;
   let recomendadoPuesto = false;
+  let requiere = null; // el tema que hay que dominar para abrir los siguientes
   return ORDEN_RUTA.map(({ slug, idea }) => {
     const delTema = catalogo.filter((p) => p.categoria === slug)
       .sort((a, b) => a.dificultadRating - b.dificultadRating);
@@ -55,13 +57,20 @@ export const rutaDeTemas = (catalogo, resueltos, nivel) => {
     const pendientes = delTema.filter((p) => !hechos.has(p.numero));
     const aLaAltura = pendientes.filter((p) => p.dificultadRating >= desde);
     const propuestos = (aLaAltura.length >= META_TEMA ? aLaAltura : pendientes).slice(0, META_TEMA);
-    let estado = resueltosTema >= META_TEMA ? 'dominado' : resueltosTema > 0 ? 'en-curso' : 'por-empezar';
+    const meta = Math.min(META_TEMA, delTema.length);
+    let estado = resueltosTema >= meta ? 'dominado' : resueltosTema > 0 ? 'en-curso' : 'por-empezar';
+    const bloqueado = guiada && estado !== 'dominado' && Boolean(requiere);
     const recomendado = estado !== 'dominado' && !recomendadoPuesto;
-    if (recomendado) recomendadoPuesto = true;
-    if (recomendado && estado === 'por-empezar') estado = 'recomendado';
+    if (recomendado) {
+      recomendadoPuesto = true;
+      requiere = { slug, titulo: tituloDe(slug), hechos: Math.min(resueltosTema, meta), meta };
+    }
+    if (bloqueado) estado = 'bloqueado';
+    else if (recomendado && estado === 'por-empezar') estado = 'recomendado';
     return {
-      slug, titulo: tituloDe(slug), idea, total: delTema.length,
-      resueltos: Math.min(resueltosTema, META_TEMA), estado, recomendado, propuestos,
+      slug, titulo: tituloDe(slug), idea, total: delTema.length, meta,
+      resueltos: Math.min(resueltosTema, meta), estado, recomendado, propuestos,
+      bloqueado, requiere: bloqueado ? requiere : null,
     };
   }).filter(Boolean);
 };
@@ -70,7 +79,7 @@ export const rutaDeTemas = (catalogo, resueltos, nivel) => {
  * Hasta 3 problemas para hoy en los temas donde más falla o que tocan repasar: un tema bien
  * resuelto vuelve a los 1, 3, 7, 14 y 30 días según sus aciertos. Cada uno dice por qué.
  */
-export const repasoDeHoy = (porTag, resueltos, catalogo, nivel, hoy = new Date()) => {
+export const repasoDeHoy = (porTag, resueltos, catalogo, nivel, hoy = new Date(), bloqueados = new Set()) => {
   const hechos = resueltos instanceof Set ? resueltos : new Set(resueltos);
   const objetivo = nivelValido(nivel);
   const temas = Object.entries(temasConFecha(porTag ?? []))
@@ -83,7 +92,8 @@ export const repasoDeHoy = (porTag, resueltos, catalogo, nivel, hoy = new Date()
       const vencido = dias >= intervalo;
       return { slug, d, tasa, dias, debil, vencido, prioridad: (1 - tasa) * 2 + Math.min(dias / intervalo, 3) };
     })
-    .filter((t) => t.debil || t.vencido)
+    // En modo guiado no se recomienda lo que todavía no se puede enviar.
+    .filter((t) => (t.debil || t.vencido) && !bloqueados.has(t.slug))
     .sort((a, b) => b.prioridad - a.prioridad);
 
   const repaso = [];

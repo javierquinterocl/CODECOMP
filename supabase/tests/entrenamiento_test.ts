@@ -47,3 +47,19 @@ Deno.test('repasoDeHoy: un tema bien resuelto vuelve cuando vence su intervalo; 
   assertEquals(repasoDeHoy([], [], CATALOGO, 1000, HOY), []);
   assertEquals(repasoDeHoy([{ tag: 'strings', intentos: 2, aciertos: 1, ultimo: null }], [], CATALOGO, 0, HOY).length, 1);
 });
+
+Deno.test('rutaDeTemas en modo guiado: bloquea lo posterior al primer tema sin dominar', () => {
+  const ruta = rutaDeTemas(CATALOGO, [100, 101, 102, 103, 104, 300], 1000, { guiada: true });
+  assertEquals(ruta.map((t: { slug: string; estado: string }) => [t.slug, t.estado]), [['principiante', 'dominado'], ['cadenas', 'en-curso'], ['grafos', 'bloqueado']]);
+  assertEquals(ruta[2].requiere, { slug: 'cadenas', titulo: 'Cadenas', hechos: 1, meta: 3 });
+  // Cadenas tiene solo 3 problemas: se domina con los 3 y abre el siguiente.
+  const abierta = rutaDeTemas(CATALOGO, [100, 101, 102, 103, 104, 300, 301, 302], 1000, { guiada: true });
+  assertEquals(abierta.map((t: { estado: string }) => t.estado), ['dominado', 'dominado', 'recomendado']);
+  // Sin modo guiado nada se bloquea.
+  assertEquals(rutaDeTemas(CATALOGO, [], 1000).some((t: { bloqueado: boolean }) => t.bloqueado), false);
+});
+
+Deno.test('repasoDeHoy no recomienda temas bloqueados', () => {
+  const porTag = [{ tag: 'graphs', intentos: 4, aciertos: 1, ultimo: '2026-11-09T12:00:00Z' }];
+  assertEquals(repasoDeHoy(porTag, [], CATALOGO, 1000, HOY, new Set(['grafos'])), []);
+});

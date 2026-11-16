@@ -4,7 +4,7 @@
 
 import type { Contexto } from '../contexto.ts';
 import { esDocente } from '../auth.ts';
-import { alertasDe, parecido, UMBRAL_PARECIDO } from '../docente.ts';
+import { alertasDe, ETIQUETAS_GENERICAS, parecido, TEMA_ENVIOS, TEMA_PROBLEMAS, TEMA_TASA, UMBRAL_PARECIDO } from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
@@ -24,7 +24,7 @@ const FALLOS = ['WRONG_ANSWER', 'RUNTIME_ERROR', 'TIME_LIMIT_EXCEEDED'];
 const auditar = (
   sql: Contexto['sql'],
   docenteId: string,
-  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon' | 'avisar_clase',
+  accion: 'ver_clase' | 'ver_estudiante' | 'cambiar_escalon' | 'avisar_clase' | 'ruta_guiada',
   claseId: string | null,
   estudianteId: string | null,
 ) =>
@@ -58,9 +58,41 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
           AND NOT EXISTS (SELECT 1 FROM submissions a WHERE a.user_id = u.id
             AND a.problem_id = s.problem_id AND a.verdict = 'ACCEPTED')
         GROUP BY s.problem_id) x) AS fallos_sin_aceptar,
-      coalesce((SELECT r.nivel_despues FROM resultados_problema r
+      -- Sin historial de hace 14 o 21 dias no hay base: NULL, no el 1000 inicial (evita falsas alertas).
+      (SELECT r.nivel_despues FROM resultados_problema r
         WHERE r.user_id = u.id AND r.cerrado_en <= now() - INTERVAL '14 days'
-        ORDER BY r.cerrado_en DESC LIMIT 1), 1000) AS nivel_hace_14
+        ORDER BY r.cerrado_en DESC LIMIT 1) AS nivel_hace_14,
+      -- Estancamiento: meseta de 3 semanas, tema donde no avanza, dependencia de pistas y Fundamentos.
+      (SELECT count(*)::int FROM submissions s WHERE s.user_id = u.id
+        AND s.created_at > now() - INTERVAL '21 days' AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS envios_21,
+      coalesce((SELECT min(s.created_at) FROM submissions s WHERE s.user_id = u.id) <= now() - INTERVAL '21 days', false) AS practica_desde_antes,
+      (SELECT r.nivel_despues FROM resultados_problema r
+        WHERE r.user_id = u.id AND r.cerrado_en <= now() - INTERVAL '21 days'
+        ORDER BY r.cerrado_en DESC LIMIT 1) AS nivel_hace_21,
+      (SELECT t.name FROM submissions s
+        JOIN problem_tags pt ON pt.problem_id = s.problem_id JOIN tags t ON t.id = pt.tag_id
+        WHERE s.user_id = u.id AND s.created_at > now() - INTERVAL '14 days'
+          AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ') AND t.name <> ALL(${ETIQUETAS_GENERICAS}::text[])
+        GROUP BY t.name
+        HAVING count(DISTINCT s.problem_id) >= ${TEMA_PROBLEMAS} AND count(*) >= ${TEMA_ENVIOS}
+          AND avg(CASE WHEN s.verdict = 'ACCEPTED' THEN 1 ELSE 0 END) < ${TEMA_TASA}
+        ORDER BY avg(CASE WHEN s.verdict = 'ACCEPTED' THEN 1 ELSE 0 END), count(*) DESC LIMIT 1) AS tema_atascado,
+      (SELECT count(*)::int FROM (
+        SELECT s.problem_id FROM submissions s WHERE s.user_id = u.id AND s.verdict = 'ACCEPTED'
+        GROUP BY s.problem_id HAVING min(s.created_at) > now() - INTERVAL '30 days') x) AS resueltos_30,
+      (SELECT count(*)::int FROM (
+        SELECT s.problem_id, min(s.created_at) AS primero FROM submissions s
+        WHERE s.user_id = u.id AND s.verdict = 'ACCEPTED'
+        GROUP BY s.problem_id HAVING min(s.created_at) > now() - INTERVAL '30 days') x
+        WHERE EXISTS (SELECT 1 FROM pistas h WHERE h.user_id = u.id AND h.problem_id = x.problem_id
+          AND h.nivel >= 2 AND h.creado_en < x.primero)) AS con_ayuda_30,
+      (SELECT coalesce(max(c), 0)::int FROM (
+        SELECT count(*) AS c FROM fundamentos_envios f
+        WHERE f.user_id = u.id AND f.creado_en > now() - INTERVAL '7 days'
+          AND f.veredicto NOT IN ('ACEPTADO', 'FALLO')
+          AND NOT EXISTS (SELECT 1 FROM fundamentos_envios a WHERE a.user_id = u.id
+            AND a.ejercicio_id = f.ejercicio_id AND a.veredicto = 'ACEPTADO')
+        GROUP BY f.ejercicio_id) x) AS fallos_fundamentos
     FROM clase_miembros m JOIN users u ON u.id = m.user_id
     WHERE m.clase_id = ${claseId}
     ORDER BY u.nivel DESC
@@ -84,7 +116,15 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
       ultimaActividad: e.ultima_actividad as Date | null,
       fallosSinAceptar: Number(e.fallos_sin_aceptar),
       nivelActual: Number(e.nivel),
-      nivelHace14Dias: Number(e.nivel_hace_14),
+      nivelHace14Dias: e.nivel_hace_14 === null ? null : Number(e.nivel_hace_14),
+      diasEnClase: (ahora.getTime() - new Date(e.unido_en as Date).getTime()) / 86_400_000,
+      enviosMeseta: Number(e.envios_21),
+      practicaDesdeAntes: e.practica_desde_antes === true,
+      nivelHaceMeseta: e.nivel_hace_21 === null ? undefined : Number(e.nivel_hace_21),
+      temaAtascado: (e.tema_atascado as string | null) ?? null,
+      resueltos30: Number(e.resueltos_30),
+      conAyuda30: Number(e.con_ayuda_30),
+      fallosFundamentos: Number(e.fallos_fundamentos),
     }),
   }));
 };
@@ -92,7 +132,7 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
 const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
   const { sql, cors } = ctx;
   const [clase] = await sql`
-    SELECT id, nombre, codigo FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
+    SELECT id, nombre, codigo, ruta_guiada FROM clases WHERE id = ${claseId} AND docente_id = ${docenteId}
   `;
   if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
   await auditar(sql, docenteId, 'ver_clase', claseId, null);
@@ -226,12 +266,15 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     tiempoPorEjercicio(sql, estudianteId),
     fundamentosResueltos(sql, estudianteId),
   ]);
+  // Las mismas alertas que el panel de la clase (incluido el estancamiento).
+  const alertas = (await estudiantesDeClase(sql, clase.id as string)).find((e) => e.id === estudianteId)?.alertas ?? [];
   return responder({
     status: 200,
     cuerpo: {
       clase,
       usuario: { ...usuario, fundamentos_resueltos: fundamentosHechos },
       escalon,
+      alertas,
       evolucion,
       envios,
       pistas,
@@ -312,6 +355,21 @@ export const validarAviso = (cuerpo: unknown) => {
   return { titulo, texto };
 };
 
+// POST /docente/clase/:id/ruta-guiada { activa }: la clase recorre la Ruta en orden (solo el dueño).
+const cambiarRutaGuiada = async (ctx: Contexto, docenteId: string, claseId: string) => {
+  const { req, sql, cors } = ctx;
+  const cuerpo = await req.json().catch(() => ({})) as { activa?: unknown };
+  if (typeof cuerpo.activa !== 'boolean') return responder(rechazo(400, 'datos', 'Indica si el modo guiado queda activo.'), cors);
+  const [clase] = await sql`
+    UPDATE clases SET ruta_guiada = ${cuerpo.activa}
+    WHERE id = ${claseId} AND docente_id = ${docenteId}
+    RETURNING ruta_guiada
+  `;
+  if (!clase) return responder(rechazo(404, 'clase', 'Esa clase no existe o no es tuya.'), cors);
+  await auditar(sql, docenteId, 'ruta_guiada', claseId, null);
+  return responder({ status: 200, cuerpo: { rutaGuiada: clase.ruta_guiada } }, cors);
+};
+
 // POST /docente/clase/:id/aviso { titulo, texto }: aviso a todos los estudiantes de la clase.
 const avisarClase = async (ctx: Contexto, docenteId: string, claseId: string) => {
   const { req, sql, config, cors } = ctx;
@@ -357,7 +415,8 @@ export const docente = async (
   const { req, sql, config, cors, identidad } = ctx;
   const cambio = recurso === 'estudiante' && accion === 'escalon';
   const aviso = recurso === 'clase' && accion === 'aviso';
-  const escritura = cambio || aviso;
+  const guiada = recurso === 'clase' && accion === 'ruta-guiada';
+  const escritura = cambio || aviso || guiada;
   const verDia = recurso === 'estudiante' && accion === 'dia';
   if (req.method !== (escritura ? 'POST' : 'GET') || (accion && !escritura && !verDia)) {
     return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
@@ -375,6 +434,7 @@ export const docente = async (
     const docenteId = await idDeUsuario(sql, identidad);
     if (cambio) return await cambiarEscalon(ctx, docenteId, id);
     if (aviso) return await avisarClase(ctx, docenteId, id);
+    if (guiada) return await cambiarRutaGuiada(ctx, docenteId, id);
     if (verDia) return await diaDeEstudiante(ctx, docenteId, id);
     return recurso === 'clase'
       ? await panelDeClase(ctx, docenteId, id)

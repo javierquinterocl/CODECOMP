@@ -53,6 +53,26 @@ const SECCIONES = [
       <>
         <p>Problemas de programación competitiva por categoría y dificultad, en inglés o español (lo eliges con el botón ES / EN). Escribe tu solución en Python, C++, Java u otro lenguaje disponible y envíala: el juez la prueba con todos los casos.</p>
         <p>Veredictos: <strong>Aceptado</strong>, <strong>Respuesta incorrecta</strong>, <strong>Tiempo excedido</strong> (tu solución es lenta), <strong>Error de ejecución</strong> y <strong>Error de compilación</strong>.</p>
+        <ul>
+          <li><strong>Pistas en tres niveles:</strong> la primera te orienta con una pregunta, la segunda nombra la técnica y la tercera da un esquema en palabras. Nunca te dan el código. Hay que esperar un minuto entre pistas.</li>
+          <li><strong>Idea clave:</strong> al resolver un problema puedes ver la observación principal que lo resuelve, para afianzar lo aprendido.</li>
+          <li><strong>Panel del gato:</strong> a la derecha resume el tema del problema y, si fallas, guarda tus errores de la sesión explicados con palabras sencillas.</li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    id: 'ruta',
+    titulo: 'Ruta de entrenamiento',
+    cuerpo: (
+      <>
+        <p>La <Link to="/dashboard/ruta">Ruta</Link> te guía tema por tema, de lo básico a grafos: Principiante, Ad-Hoc, Cadenas, Matemáticas, Estructuras de datos, Paradigmas, Grafos y Geometría. Dominas un tema al resolver 5 de sus problemas.</p>
+        <ul>
+          <li><strong>Lección de cada tema:</strong> lo básico de la categoría con ejemplos que puedes probar, la técnica clave, un ejemplo resuelto con código en C++ y Python, una visualización paso a paso con tus propios datos y preguntas para comprobar que entendiste.</li>
+          <li><strong>Práctica:</strong> al final de cada lección, problemas del tema a tu altura.</li>
+          <li><strong>Tu repaso de hoy:</strong> en el Inicio te proponemos problemas de los temas donde más fallas o que hace días no practicas.</li>
+          <li><strong>Resueltos por tu cuenta:</strong> los problemas que aceptaste sin pedir ninguna pista.</li>
+        </ul>
       </>
     ),
   },

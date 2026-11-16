@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { buscarNivel, temasDe } from '../scripts/fundamentosData';
 import { useFundamentos } from '../scripts/useFundamentos';
 import FundamentosCarga from '../components/FundamentosCarga';
+import NivelBloqueado from '../components/NivelBloqueado';
 import { NIVELES, normalizarTexto } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 
@@ -39,7 +40,7 @@ const FundamentosListPage = () => {
   const { nivel: nivelSlug } = useParams();
   const nivel = buscarNivel(nivelSlug);
   const [busqueda, setBusqueda] = useState('');
-  const { ejercicios, resueltos, cargando, error } = useFundamentos({ conVisitas: true });
+  const { ejercicios, resueltos, bloqueo, cargando, error } = useFundamentos({ conVisitas: true });
   const delNivel = useMemo(() => (nivel && ejercicios?.[nivel.slug]) || [], [nivel, ejercicios]);
 
   const temas = useMemo(() => temasDe(delNivel), [delNivel]);
@@ -56,6 +57,10 @@ const FundamentosListPage = () => {
   }, [delNivel, temas, busqueda]);
 
   if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA="/dashboard/fundamentos" forma="lista" />;
+  const b = nivel && bloqueo[nivel.slug];
+  if (b && !b.abierta) {
+    return <NivelBloqueado titulo={`${nivel.titulo} todavía está cerrado`} motivo={`Para abrir ${nivel.titulo} resuelve ${b.meta} ejercicios de Fundamentos: así llegas con la base que necesitas.`} hechos={b.hechos} meta={b.meta} volverA="/dashboard/fundamentos" textoVolver="← Volver a Fundamentos" />;
+  }
 
   if (!nivel || delNivel.length === 0) {
     return (

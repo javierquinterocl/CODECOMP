@@ -80,7 +80,7 @@ const PieNivel = ({ nivel, ejercicios, numero, resueltos, temporizador, onTempor
 
 /* Tres franjas: el nivel arriba, la presentación al centro (texto a la
    izquierda, ventana de código a la derecha) y el avance abajo. */
-const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTemporizador }) => (
+const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, bloqueo, temporizador, onTemporizador }) => (
   <div
     className={`nb-fd-card${nivel.pronto ? ' is-soon' : ''}`}
     style={{ '--cat-bg': nivel.color.bg, '--cat-ink': nivel.color.ink, '--cat-soft': nivel.color.franja }}
@@ -99,6 +99,11 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTe
 
         {nivel.pronto ? (
           <span className="nb-fd-play is-locked"><LockIcon /> Pronto</span>
+        ) : bloqueo && !bloqueo.abierta ? (
+          // Cerrado hasta dominar Fundamentos: el motivo va en texto, no solo en el candado.
+          <span className="nb-fd-play is-locked" aria-disabled="true">
+            <LockIcon /> Resuelve {bloqueo.meta} de Fundamentos para abrirlo · llevas {bloqueo.hechos}
+          </span>
         ) : (
           // El enlace se estira sobre toda la tarjeta con ::after.
           <Link to={`/dashboard/fundamentos/${nivel.slug}`} className="nb-fd-play" data-tour={`nivel-${nivel.slug}`}>
@@ -115,7 +120,7 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTe
     </div>
 
     <PieNivel
-      nivel={nivel}
+      nivel={bloqueo && !bloqueo.abierta ? { ...nivel, pronto: true } : nivel}
       ejercicios={ejercicios}
       numero={visita}
       resueltos={resueltos}
@@ -128,7 +133,7 @@ const TarjetaNivel = ({ nivel, ejercicios, visita, resueltos, temporizador, onTe
 const FundamentosPage = () => {
   const [actual, setActual] = useState(0);
   // Se piden al entrar: al volver de un ejercicio la página se monta de nuevo.
-  const { ejercicios, visitas, resueltos, cargando, error } = useFundamentos({ conVisitas: true });
+  const { ejercicios, visitas, resueltos, bloqueo, cargando, error } = useFundamentos({ conVisitas: true });
   // Una sola preferencia para todos los niveles; el editor la lee al abrir un ejercicio.
   const [temporizador, setTemporizador] = useState(temporizadorActivo);
   const alternarTemporizador = () => setTemporizador((v) => {
@@ -196,6 +201,7 @@ const FundamentosPage = () => {
                     ejercicios={delNivel}
                     visita={visitas[nivel.slug]}
                     resueltos={resueltos[nivel.slug]}
+                    bloqueo={bloqueo[nivel.slug]}
                     temporizador={temporizador}
                     onTemporizador={alternarTemporizador}
                   />

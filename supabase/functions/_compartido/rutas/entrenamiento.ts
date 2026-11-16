@@ -13,7 +13,7 @@ export const entrenamiento = async (ctx: Contexto): Promise<Response> => {
   try {
     const userId = await idDeUsuario(sql, identidad);
     // Toda consulta lleva el usuario como parametro (regla del pooler en paralelo).
-    const [resueltos, porTag, [usuario], [propios]] = await Promise.all([
+    const [resueltos, porTag, [usuario], [propios], [guiada]] = await Promise.all([
       sql`
         SELECT DISTINCT p.problem_number AS numero
         FROM submissions s JOIN problems p ON p.id = s.problem_id
@@ -44,6 +44,11 @@ export const entrenamiento = async (ctx: Contexto): Promise<Response> => {
           WHERE h.user_id = ${userId} AND h.problem_id = a.problem_id AND h.creado_en < a.primero
         )
       `,
+      // Modo guiado: basta con que una de sus clases lo tenga activo.
+      sql`
+        SELECT EXISTS (SELECT 1 FROM clase_miembros m JOIN clases c ON c.id = m.clase_id
+          WHERE m.user_id = ${userId} AND c.ruta_guiada) AS activa
+      `,
     ]);
     return responder({
       status: 200,
@@ -52,6 +57,7 @@ export const entrenamiento = async (ctx: Contexto): Promise<Response> => {
         porTag,
         nivel: Number(usuario?.nivel ?? 0),
         resueltosSinPista: propios?.n ?? 0,
+        rutaGuiada: guiada?.activa === true,
       },
     }, cors);
   } catch (error) {

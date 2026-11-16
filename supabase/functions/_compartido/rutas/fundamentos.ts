@@ -17,6 +17,7 @@ import {
   paraNavegador,
 } from '../pseint.ts';
 import { idDeUsuario } from '../usuarios.ts';
+import { esDocente } from '../auth.ts';
 import { validarBorrador, validarEjercicio } from '../validacion.ts';
 
 const listarEjercicios = async (ctx: Contexto): Promise<Response> => {
@@ -52,6 +53,25 @@ const leerCuerpo = async (req: Request): Promise<Record<string, unknown> | null>
   }
 };
 
+// Práctica se abre al resolver 35 de los 50 ejercicios de Fundamentos (decidido por Andres el
+// 2026-11-16). Quien ya habia enviado algo en Practica antes del cambio la conserva.
+export const NIVEL_BLOQUEADO = 'practica';
+export const NIVEL_PREVIO = 'fundamentos';
+export const META_PRACTICA = 35;
+
+export const bloqueoPractica = async (sql: Contexto['sql'], userId: string) => {
+  const [fila] = await sql`
+    SELECT
+      (SELECT count(DISTINCT e.numero)::int FROM fundamentos_envios f
+        JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
+        WHERE f.user_id = ${userId} AND f.veredicto = 'ACEPTADO' AND e.nivel = ${NIVEL_PREVIO}) AS hechos,
+      EXISTS (SELECT 1 FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
+        WHERE f.user_id = ${userId} AND e.nivel = ${NIVEL_BLOQUEADO}) AS previos
+  `;
+  const hechos = Number(fila?.hechos ?? 0);
+  return { abierta: hechos >= META_PRACTICA || fila?.previos === true, hechos, meta: META_PRACTICA };
+};
+
 const progreso = async (ctx: Contexto): Promise<Response> => {
   const { req, sql, cors, identidad } = ctx;
   if (req.method !== 'GET' && req.method !== 'POST') {
@@ -77,7 +97,10 @@ const progreso = async (ctx: Contexto): Promise<Response> => {
         FROM fundamentos_envios f JOIN fundamentos_ejercicios e ON e.id = f.ejercicio_id
         WHERE f.user_id = ${userId} AND f.veredicto = 'ACEPTADO' AND e.is_active
       `;
-      return responder({ status: 200, cuerpo: { progreso: filas, resueltos } }, cors);
+      const practica = esDocente(identidad, ctx.config.docentes)
+        ? { abierta: true, hechos: 0, meta: META_PRACTICA }
+        : await bloqueoPractica(sql, userId);
+      return responder({ status: 200, cuerpo: { progreso: filas, resueltos, bloqueo: { [NIVEL_BLOQUEADO]: practica } } }, cors);
     } catch (error) {
       console.error('Fundamentos progress error:', error);
       return responder(rechazo(500, 'consulta', 'No se pudo consultar tu avance.'), cors);
@@ -183,6 +206,12 @@ export const envio = async (ctx: Contexto, invocar?: Invocador): Promise<Respons
   }
   if (!ejercicio) {
     return responder(rechazo(404, 'no-encontrado', 'Ejercicio no encontrado.'), cors);
+  }
+  if (nivel === NIVEL_BLOQUEADO && !esDocente(identidad, config.docentes)) {
+    const practica = await bloqueoPractica(sql, userId).catch(() => ({ abierta: true, hechos: 0, meta: META_PRACTICA }));
+    if (!practica.abierta) {
+      return responder(rechazo(403, 'nivel-bloqueado', `Practica se abre al resolver ${META_PRACTICA} ejercicios de Fundamentos (llevas ${practica.hechos}).`), cors);
+    }
   }
   const hoy = dia(config.zonaHoraria);
   // Si falla la revision del estudiante se deja pasar: el tope global sigue protegiendo.

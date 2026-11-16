@@ -44,9 +44,20 @@ export const PASOS_ESTUDIANTE = [
     texto: 'Pulsa «Enviar». El juez prueba tu algoritmo con los ejemplos y con casos ocultos.',
   },
   {
-    ruta: /^\/dashboard\/fundamentos\/fundamentos\/1$/, ir: '/dashboard/fundamentos/fundamentos/1', ancla: 'veredicto', avanza: 'fin',
+    ruta: /^\/dashboard\/fundamentos\/fundamentos\/1$/, ir: '/dashboard/fundamentos/fundamentos/1', ancla: 'veredicto', avanza: 'boton',
     titulo: 'Mira el veredicto',
     texto: 'Aquí ves si quedó Aceptado o qué falló. Si algo sale mal, «Pedir retroalimentación» te da una pista del tutor de IA (hay que esperar un minuto entre pistas). ¡Ya hiciste tu primer envío!',
+  },
+  {
+    ruta: /^\/dashboard\/fundamentos\/fundamentos\/1$/, ir: '/dashboard/fundamentos/fundamentos/1', ancla: 'menu-dashboard-ruta', avanza: 'ruta', boton: 'Ir a la Ruta',
+    titulo: 'Tu ruta de entrenamiento',
+    texto: 'Cuando pases a Problemas, la Ruta te guía tema por tema, de lo básico a grafos: cada tema tiene una lección con ejemplos interactivos y problemas a tu altura.',
+    respaldo: 'Abre el menú y entra a Ruta.',
+  },
+  {
+    ruta: /^\/dashboard\/ruta\/?$/, ir: '/dashboard/ruta', ancla: 'ruta-hero', avanza: 'fin',
+    titulo: '¡Listo para entrenar!',
+    texto: 'Arriba ves cuántos temas dominas y cuántos problemas resolviste sin pistas. Toca un tema para abrir su lección: lo básico, la técnica clave, una visualización paso a paso, preguntas y práctica. Tu repaso de hoy aparece en el Inicio.',
   },
 ];
 

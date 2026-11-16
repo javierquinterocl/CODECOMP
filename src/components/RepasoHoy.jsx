@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useEntrenamiento } from '../scripts/useEntrenamiento';
-import { repasoDeHoy } from '../scripts/entrenamiento';
+import { repasoDeHoy, rutaDeTemas } from '../scripts/entrenamiento';
 import { useIdioma } from '../scripts/useIdioma';
 import { EsqFilas } from './Esqueleto';
 
@@ -10,7 +10,13 @@ const RepasoHoy = ({ user }) => {
   const { idioma } = useIdioma();
   const { datos, catalogo, error } = useEntrenamiento(user);
   const repaso = useMemo(
-    () => (datos && catalogo ? repasoDeHoy(datos.porTag, datos.resueltos, catalogo, datos.nivel) : null),
+    () => {
+      if (!datos || !catalogo) return null;
+      const cerrados = new Set(datos.rutaGuiada
+        ? rutaDeTemas(catalogo, datos.resueltos, datos.nivel, { guiada: true }).filter((t) => t.bloqueado).map((t) => t.slug)
+        : []);
+      return repasoDeHoy(datos.porTag, datos.resueltos, catalogo, datos.nivel, new Date(), cerrados);
+    },
     [datos, catalogo],
   );
   if (error) return null;
