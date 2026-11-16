@@ -472,6 +472,159 @@ a.nb-brand:hover { color: var(--nb-blue); }
   .nb-info-indice, .nb-info-sec { box-shadow: 3px 3px 0 #000; }
   .nb-info-gato { display: none; }
 }
+/* ============================================================
+   Guía de uso: índice de alto completo a la izquierda (se pliega a
+   una tira de números; en móvil es un panel encima) y dos secciones
+   por página. Las medidas crecen hasta pantallas de 2560 px.
+   ============================================================ */
+.nb-guia {
+  --guia-side: clamp(250px, 15vw, 360px);
+  --guia-tira: 66px;
+  --guia-fs: clamp(16px, 0.45vw + 11px, 22px);
+  --guia-fs-sm: clamp(14px, 0.3vw + 10px, 19px);
+  --guia-fs-xs: clamp(11px, 0.18vw + 8.5px, 14px);
+  --guia-pad: clamp(16px, 2.2vw, 56px);
+  --guia-head: clamp(58px, 1.5vw + 50px, 84px); /* el mismo alto de la cabecera del tablero */
+  display: flex; flex-wrap: wrap; align-items: flex-start;
+}
+.nb-guia-franja { flex: 0 0 100%; position: sticky; top: 0; z-index: 50; height: var(--guia-head); background: #fff; border-bottom: 3px solid #000; }
+.nb-guia-barra, .nb-guia-velo { display: none; }
+
+.nb-guia-side {
+  position: sticky; top: var(--guia-head); z-index: 40; width: var(--guia-side); flex: 0 0 var(--guia-side);
+  height: calc(100vh - var(--guia-head)); height: calc(100dvh - var(--guia-head)); display: flex; flex-direction: column; overflow: hidden;
+  background: #fff; border-right: 3px solid #000; transition: width 0.2s, flex-basis 0.2s;
+}
+.nb-guia-side:focus { outline: none; }
+/* El contenido conserva su ancho: al plegar, el panel lo recorta y nada salta. */
+.nb-guia-side > * { flex: 0 0 auto; width: var(--guia-side); }
+.nb-guia-side-top { display: flex; align-items: center; gap: 14px; padding: 13px; border-bottom: 3px solid #000; }
+.nb-guia-plegar {
+  flex: 0 0 auto; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center;
+  border: 2px solid #000; background: #fff; color: #000; box-shadow: 3px 3px 0 #000; cursor: pointer; transition: var(--nb-tr);
+}
+.nb-guia-plegar svg { width: 22px; height: 22px; }
+.nb-guia-plegar:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #000; background: var(--nb-blue); color: #fff; }
+.nb-guia-marca {
+  font-family: 'Press Start 2P', monospace; font-size: clamp(12px, 0.35vw + 7px, 17px); line-height: 1.5;
+  color: #000; text-decoration: none; letter-spacing: 1px; white-space: nowrap; transition: opacity 0.2s, visibility 0.2s;
+}
+.nb-guia-h1 {
+  margin: 0; padding: 16px 13px 10px; font-family: 'JetBrains Mono', monospace; font-size: var(--guia-fs-xs); font-weight: 700;
+  line-height: 1.4; text-transform: uppercase; letter-spacing: 0.14em; color: var(--nb-blue); white-space: nowrap; transition: opacity 0.2s;
+}
+.nb-guia-indice { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; border-top: 1px solid #000; }
+.nb-guia-indice ol { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; min-height: 100%; }
+/* Los ítems se reparten todo el alto del índice: sin hueco blanco debajo. */
+.nb-guia-indice li { flex: 1 0 auto; display: flex; }
+.nb-guia-indice a {
+  flex: 1 1 auto; display: flex; align-items: center; gap: 14px; padding: clamp(10px, 0.65vw, 16px) 13px; border-bottom: 1px solid #000;
+  color: #000; text-decoration: none; font-weight: 600; font-size: var(--guia-fs-sm); line-height: 1.3; transition: var(--nb-tr);
+}
+.nb-guia-indice a:focus-visible { outline-offset: -3px; }
+.nb-guia-indice a:hover { background: var(--nb-hover); color: var(--nb-blue); }
+.nb-guia-num {
+  flex: 0 0 auto; width: 36px; padding: 3px 0; text-align: center; font-family: 'JetBrains Mono', monospace;
+  font-size: var(--guia-fs-xs); font-weight: 700; color: #fff; background: var(--nb-blue); border: 2px solid #000;
+}
+.nb-guia-indice-titulo { min-width: 0; transition: opacity 0.2s; }
+.nb-guia-indice a[aria-current="true"] { background: var(--nb-blue); color: #fff; box-shadow: inset 5px 0 0 #000; }
+.nb-guia-indice a[aria-current="true"] .nb-guia-num { background: #fff; color: #000; }
+.nb-guia-indice a[aria-current="true"]:focus-visible { outline-color: #000; }
+.nb-guia-side-foot { display: flex; flex-direction: column; gap: 12px; padding: 14px 13px 18px; border-top: 3px solid #000; transition: opacity 0.2s, visibility 0.2s; }
+.nb-guia-side-foot button { width: 100%; text-align: center; font-size: clamp(13px, 0.25vw + 9px, 17px); padding: clamp(10px, 0.7vw, 16px) 12px; }
+
+/* Plegado: queda la tira con el botón y los números; lo demás se desvanece y sale del orden de Tab. */
+.nb-guia.is-plegado .nb-guia-side { width: var(--guia-tira); flex-basis: var(--guia-tira); }
+.nb-guia.is-plegado .nb-guia-h1,
+.nb-guia.is-plegado .nb-guia-indice-titulo { opacity: 0; }
+.nb-guia.is-plegado .nb-guia-side .nb-guia-marca,
+.nb-guia.is-plegado .nb-guia-side-foot { opacity: 0; visibility: hidden; }
+
+.nb-guia-main { flex: 1 1 0; min-width: 0; min-height: calc(100vh - var(--guia-head)); min-height: calc(100dvh - var(--guia-head)); display: flex; flex-direction: column; }
+/* Las secciones de la página se reparten el alto que queda sobre la paginación. */
+.nb-guia-pagina { flex: 1 0 auto; display: flex; flex-direction: column; gap: clamp(18px, 1.6vw, 40px); padding: var(--guia-pad); }
+.nb-guia-pagina > * { flex: 1 0 auto; }
+.nb-guia .nb-info-sec { margin: 0; scroll-margin-top: 0; padding: clamp(20px, 2.2vw, 52px); }
+.nb-guia .nb-info-sec h2 { font-size: clamp(20px, 1.1vw + 9px, 34px); gap: clamp(12px, 0.8vw, 20px); margin-bottom: clamp(14px, 1vw, 26px); }
+.nb-guia .nb-info-sec h2::before { content: attr(data-num); font-size: clamp(13px, 0.45vw + 7px, 20px); padding: 4px clamp(8px, 0.5vw, 14px); }
+.nb-guia .nb-info-sec h2:focus { outline: none; }
+.nb-guia .nb-info-sec p,
+.nb-guia .nb-info-sec li { font-size: var(--guia-fs); line-height: 1.65; max-width: 120ch; }
+.nb-guia .nb-info-sec kbd { font-size: 0.9em; }
+
+/* Página 6: la última sección va con la invitación al recorrido guiado. */
+.nb-guia-oferta {
+  display: flex; align-items: center; gap: clamp(16px, 2vw, 40px); padding: clamp(20px, 2.2vw, 52px);
+  background: var(--nb-blue); color: #fff; border: 2px solid #000; box-shadow: 5px 5px 0 #000;
+}
+.nb-guia-oferta-gato { flex: 0 0 auto; width: clamp(56px, 5vw, 110px); height: auto; image-rendering: pixelated; }
+.nb-guia-oferta-titulo { margin: 0 0 8px; font-size: clamp(20px, 1.1vw + 9px, 34px); font-weight: 700; }
+.nb-guia-oferta-texto { margin: 0 0 18px; font-size: var(--guia-fs); line-height: 1.6; }
+.nb-guia-oferta .nb-btn-white { font-size: var(--guia-fs-xs); padding: clamp(9px, 0.6vw, 14px) clamp(14px, 1vw, 24px); }
+.nb-guia-oferta .nb-btn-white:focus-visible { outline-color: #000; }
+
+.nb-guia-paginas { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 0 var(--guia-pad) var(--guia-pad); }
+.nb-guia-pag {
+  display: flex; flex-direction: column; gap: 4px; max-width: 42%; min-width: 0; text-align: left; cursor: pointer;
+  border: 2px solid #000; background: #fff; color: #000; font-family: inherit; font-weight: 700; font-size: var(--guia-fs-sm);
+  padding: clamp(10px, 0.75vw, 18px) clamp(14px, 1.1vw, 26px); box-shadow: 4px 4px 0 #000; transition: var(--nb-tr);
+}
+.nb-guia-pag small { font-family: 'JetBrains Mono', monospace; font-size: var(--guia-fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
+.nb-guia-pag.is-sig { text-align: right; align-items: flex-end; background: var(--nb-blue); color: #fff; }
+.nb-guia-pag.is-sig small { color: #fff; }
+.nb-guia-pag.is-sig:focus-visible { outline-color: #000; }
+.nb-guia-pag:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 #000; }
+.nb-guia-pag-hueco { flex: 0 1 42%; }
+.nb-guia-pag-cuenta { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--guia-fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-ink-soft); }
+
+/* Escritorio: cada página cabe exacta en la pantalla. Los espacios verticales se calculan con el
+   alto disponible; si aun así el texto no cabe, la tarjeta se desplaza por dentro. */
+@media (min-width: 901px) {
+  .nb-guia { --guia-fs: clamp(15px, min(0.45vw + 11px, 1.1vh + 8px), 22px); --guia-fs-sm: clamp(13px, min(0.3vw + 10px, 0.8vh + 8px), 19px); }
+  .nb-guia .nb-info-hero { padding-top: clamp(16px, 3vh, 64px); padding-bottom: clamp(16px, 3vh, 64px); }
+  .nb-guia .nb-info-hero .nb-info-titulo { font-size: clamp(18px, min(3.4vw, 4vh), 40px); }
+  .nb-guia .nb-info-hero .nb-info-intro { max-width: 960px; }
+  .nb-guia .nb-info-titulo { margin: clamp(8px, 1.6vh, 18px) 0 clamp(6px, 1.2vh, 14px); }
+  .nb-guia .nb-info-hero .nb-info-intro { font-size: clamp(14px, 0.6vw + 0.5vh + 4px, 19px); }
+  .nb-guia-main { height: calc(100vh - var(--guia-head)); height: calc(100dvh - var(--guia-head)); min-height: 0; }
+  .nb-guia-pagina { flex: 1 1 0; min-height: 0; gap: clamp(12px, 2vh, 36px); padding: clamp(12px, 2.6vh, 48px) var(--guia-pad); }
+  .nb-guia-pagina > * { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+  .nb-guia .nb-info-sec { padding: clamp(12px, 2.6vh, 48px) clamp(20px, 2.2vw, 52px); }
+  .nb-guia .nb-info-sec h2 { font-size: clamp(19px, min(1.1vw + 9px, 1.6vh + 10px), 34px); margin-bottom: clamp(8px, 1.4vh, 26px); }
+  .nb-guia-paginas { flex: 0 0 auto; padding-bottom: clamp(12px, 2.4vh, 48px); }
+}
+@media (max-width: 900px) {
+  .nb-guia { display: block; }
+  .nb-guia-franja { display: none; }
+  .nb-guia-barra {
+    position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; background: #fff; border-bottom: 3px solid #000;
+  }
+  .nb-guia-barra-volver { margin-left: auto; font-size: 12px; padding: 7px 12px; }
+  .nb-guia-velo { display: block; position: fixed; inset: 0; z-index: 55; background: rgba(0, 7, 43, 0.55); }
+  .nb-guia-side {
+    position: fixed; top: 0; left: 0; bottom: 0; z-index: 60; height: auto; width: min(320px, 86vw); flex: none;
+    visibility: hidden; transform: translateX(-100%); box-shadow: 5px 0 0 #000; transition: transform 0.2s, visibility 0.2s;
+  }
+  .nb-guia-side > * { width: auto; }
+  /* Al abrir se vuelve visible al instante (para recibir el foco); al cerrar espera a la animación. */
+  .nb-guia.is-abierto .nb-guia-side { visibility: visible; transform: none; transition: transform 0.2s, visibility 0s; }
+  .nb-guia-main { min-height: 0; }
+  .nb-guia-pagina > * { flex: 0 0 auto; }
+  .nb-guia-pag { max-width: 48%; }
+  .nb-guia-pag-hueco { flex-basis: 48%; }
+}
+@media (max-width: 640px) {
+  .nb-guia .nb-info-sec, .nb-guia-oferta { box-shadow: 3px 3px 0 #000; }
+  .nb-guia-pag { box-shadow: 3px 3px 0 #000; }
+  .nb-guia-paginas { flex-wrap: wrap; }
+  .nb-guia-pag-cuenta { order: -1; width: 100%; text-align: center; }
+  .nb-guia-oferta { flex-direction: column; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nb-guia-side { transition: none; }
+}
 /* Página 404: la banda viva de las páginas públicas ocupa toda la pantalla. */
 .nb-404 { display: flex; flex-direction: column; }
 .nb-404-hero { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; border-bottom: none; }

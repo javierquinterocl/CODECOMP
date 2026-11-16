@@ -442,6 +442,9 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 .nb-dash-aviso-mas { border: none; background: none; padding: 0; font: inherit; font-weight: 700; color: var(--nb-blue); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .nb-dash-aviso-mas:hover { color: #000; }
 .nb-dash-aviso-acciones { display: flex; flex-wrap: wrap; gap: 12px; }
+/* Botones del aviso al ancho de su texto: con base fija se partían en dos líneas en pantallas grandes. */
+.nb-dash-aviso-acciones > .nb-ex-send { flex: 1 1 auto; }
+.nb-dash-aviso-acciones > .nb-dash-btn-claro { flex: 0 0 auto; }
 
 /* Mi cuenta: la acción de retirar la autorización es pequeña y roja para no tocarla por accidente. */
 .nb-cuenta-revocar { border: none; background: none; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-danger); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
@@ -552,6 +555,12 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-celda small { color: var(--nb-ink-soft); overflow-wrap: anywhere; }
 .nb-doc-estado { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; border: 2px solid #000; background: #fff; padding: 3px 8px; }
 .nb-doc-estado.is-on { background: #0AB05D; color: #000; }
+/* Historial de sesiones: estados del mismo ancho, en blanco sobre verde o rojo, y método como icono. */
+.nb-doc-estado.is-sesion { width: 15ch; text-align: center; }
+.nb-doc-estado.is-sesion.is-on { color: #fff; }
+.nb-doc-estado.is-sesion.is-fin { background: #B00A26; color: #fff; }
+.nb-doc-metodo { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; width: clamp(32px, 2vw, 40px); height: clamp(32px, 2vw, 40px); border: 2px solid #000; background: #fff; box-shadow: 2px 2px 0px #000; }
+.nb-doc-metodo svg { width: 58%; height: 58%; }
 .nb-doc-pista { margin: 0; font-size: var(--fs-sm); line-height: 1.55; border-left: 4px solid var(--nb-blue); padding-left: 12px; }
 
 /* Mapa de calor: 0 sin práctica, 1 bajo, 2 medio, 3 alto. */

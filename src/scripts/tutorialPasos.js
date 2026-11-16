@@ -1,6 +1,7 @@
 // Pasos del recorrido guiado. `ruta`: dónde se muestra (expresión regular). `ancla`: el
 // `data-tour` del elemento a resaltar. `avanza`: 'boton', 'ruta' (al llegar a la ruta del paso
 // siguiente) o el nombre de un evento. `ir`: a dónde lleva "Volver al paso" si se sale.
+// `boton`: texto del botón que hace la acción por el usuario (lleva a la ruta o pulsa el ancla).
 // Textos borrador: los decide el equipo.
 
 const TABLERO = /^\/dashboard\/?$/;
@@ -12,18 +13,18 @@ export const PASOS_ESTUDIANTE = [
     texto: 'Te mostramos cómo hacer tu primer envío en unos pocos pasos. Puedes salir cuando quieras y repetirlo desde la Guía.',
   },
   {
-    ruta: TABLERO, ir: '/dashboard', ancla: 'menu-dashboard-fundamentos', avanza: 'ruta',
+    ruta: TABLERO, ir: '/dashboard', ancla: 'menu-dashboard-fundamentos', avanza: 'ruta', boton: 'Ir a Fundamentos',
     titulo: 'Abre Fundamentos',
     texto: 'En el menú, entra a Fundamentos: ejercicios para aprender a programar en PSeInt.',
     respaldo: 'Abre el menú y entra a Fundamentos.',
   },
   {
-    ruta: /^\/dashboard\/fundamentos\/?$/, ir: '/dashboard/fundamentos', ancla: 'nivel-fundamentos', avanza: 'ruta',
+    ruta: /^\/dashboard\/fundamentos\/?$/, ir: '/dashboard/fundamentos', ancla: 'nivel-fundamentos', avanza: 'ruta', boton: 'Ver los ejercicios',
     titulo: 'Elige el primer nivel',
     texto: 'Pulsa «Ver los ejercicios» en la tarjeta del nivel Fundamentos.',
   },
   {
-    ruta: /^\/dashboard\/fundamentos\/fundamentos\/?$/, ir: '/dashboard/fundamentos/fundamentos', ancla: 'ejercicio-1', avanza: 'ruta',
+    ruta: /^\/dashboard\/fundamentos\/fundamentos\/?$/, ir: '/dashboard/fundamentos/fundamentos', ancla: 'ejercicio-1', avanza: 'ruta', boton: 'Abrir el ejercicio 1',
     titulo: 'Abre el ejercicio 1',
     texto: 'Cada fila es un ejercicio, con su tema y su dificultad. Abre el primero: «Hola Mundo».',
   },
@@ -38,7 +39,7 @@ export const PASOS_ESTUDIANTE = [
     texto: 'En el editor, dentro de Algoritmo, escribe la instrucción que muestra el saludo, por ejemplo: Escribir "Hola Mundo". Si ya había código, revísalo.',
   },
   {
-    ruta: /^\/dashboard\/fundamentos\/fundamentos\/1$/, ir: '/dashboard/fundamentos/fundamentos/1', ancla: 'enviar', avanza: 'codecomp:veredicto',
+    ruta: /^\/dashboard\/fundamentos\/fundamentos\/1$/, ir: '/dashboard/fundamentos/fundamentos/1', ancla: 'enviar', avanza: 'codecomp:veredicto', boton: 'Enviar al juez',
     titulo: 'Envíalo al juez',
     texto: 'Pulsa «Enviar». El juez prueba tu algoritmo con los ejemplos y con casos ocultos.',
   },
@@ -62,7 +63,7 @@ export const PASOS_DOCENTE = [
     respaldo: 'En el tablero tienes la tarjeta de clases: ahí creas una y obtienes su código para compartir.',
   },
   {
-    ruta: TABLERO, ir: '/dashboard', ancla: 'menu-historial-usuarios', avanza: 'ruta',
+    ruta: TABLERO, ir: '/dashboard', ancla: 'menu-historial-usuarios', avanza: 'ruta', boton: 'Ir a Estudiantes',
     titulo: 'Mira a tus estudiantes',
     texto: 'En el menú, entra a Estudiantes: verás quién practica, qué le cuesta y quién lleva días sin entrar.',
     respaldo: 'Abre el menú y entra a Estudiantes.',
