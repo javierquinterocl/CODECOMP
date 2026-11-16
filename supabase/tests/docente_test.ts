@@ -1,5 +1,35 @@
 import { assert, assertEquals } from '@std/assert';
-import { alertasDe, parecido, UMBRAL_PARECIDO } from '../functions/_compartido/docente.ts';
+import { alertasDe, motivosDePegado, parecido, UMBRAL_PARECIDO } from '../functions/_compartido/docente.ts';
+
+const aceptado = {
+  caracteresPegados: 400,
+  largoCodigo: 500,
+  primerIntento: true,
+  rating: 1600,
+  nivel: 1200,
+  segundosActivos: 60,
+};
+
+Deno.test('motivosDePegado exige un pegado grande y una senal mas', () => {
+  assertEquals(motivosDePegado(aceptado), ['sobre-nivel', 'poco-tiempo']);
+  // Sin pegado grande no hay sospecha aunque sea rapido y por encima del nivel.
+  assertEquals(motivosDePegado({ ...aceptado, caracteresPegados: 150 }), []);
+  assertEquals(motivosDePegado({ ...aceptado, caracteresPegados: 250 }), []);
+  // Pego mucho, pero con varios intentos, a su nivel y con tiempo: no.
+  assertEquals(motivosDePegado({ ...aceptado, primerIntento: false, segundosActivos: 900 }), []);
+  assertEquals(motivosDePegado({ ...aceptado, rating: 1300, segundosActivos: 900 }), []);
+});
+
+Deno.test('motivosDePegado nunca cuenta un dato ausente como cumplido', () => {
+  assertEquals(motivosDePegado({ ...aceptado, caracteresPegados: null }), []);
+  assertEquals(motivosDePegado({ ...aceptado, rating: 1200, segundosActivos: null }), []);
+});
+
+Deno.test('dos resueltos con pegado en 14 dias dan la alerta, incluso a un recien llegado', () => {
+  const datos = { ...{ ahora: new Date(), ultimaActividad: new Date(), fallosSinAceptar: 0, nivelActual: 1000, nivelHace14Dias: null } };
+  assert(alertasDe({ ...datos, resueltosConPegado: 2, diasEnClase: 1 }).includes('pegado'));
+  assert(!alertasDe({ ...datos, resueltosConPegado: 1 }).includes('pegado'));
+});
 
 const AHORA = new Date('2026-11-07T12:00:00Z');
 const dias = (n: number) => new Date(AHORA.getTime() - n * 86_400_000);

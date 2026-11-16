@@ -3,7 +3,9 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { EVENTO_ACTIVIDAD_ENVIADA, EVENTO_VACIAR_ACTIVIDAD, getDiaActividad, getMiProgreso } from '../scripts/registroApi';
 import { buscarNivel } from '../scripts/fundamentosData';
-import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias } from '../scripts/docenteData';
+import {
+  CATEGORIAS_TEMA, consejoAlerta, duracion, enlaceConsejo, etiquetaPropia, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias,
+} from '../scripts/docenteData';
 import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
@@ -142,6 +144,22 @@ const MiProgresoPage = () => {
               </p>
             </div>
             <Link className="nb-doc-filtro" to="/dashboard/problemas">Ver problemas</Link>
+          </Seccion>
+        )}
+
+        {datos.alertas?.length > 0 && (
+          <Seccion titulo="Qué te conviene ahora" sub="Lo que vemos en tu práctica y qué hacer">
+            <ul className="nb-doc-tabla">
+              {datos.alertas.map((a) => (
+                <li key={a} className="nb-doc-fila is-col">
+                  <span className="nb-dash-chip nb-doc-alerta">{etiquetaPropia(a)}</span>
+                  <p className="nb-doc-sugerencia">
+                    {consejoAlerta(a)}
+                    {enlaceConsejo(a) && <> <Link to={enlaceConsejo(a)}>Ir a la lección →</Link></>}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </Seccion>
         )}
 

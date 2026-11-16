@@ -17,11 +17,47 @@ export const ETIQUETAS_GENERICAS = ['implementation', 'brute force', 'constructi
 export const DIAS_NUEVO = 14;
 export const PISTAS_RESUELTOS = 3;
 export const PISTAS_PROPORCION = 0.7;
+// Resuelto con pegado (aprobado por Andres el 2026-11-16): senal orientativa, nunca castigo.
+export const PEGADO_MIN_CARACTERES = 200;
+export const PEGADO_PROPORCION = 0.6;
+export const PEGADO_SOBRE_NIVEL = 300;
+export const PEGADO_SEGUNDOS = 120;
+export const PEGADO_DIAS = 14;
+export const PEGADO_ALERTA = 2;
 const MS_DIA = 86_400_000;
 
 export type Alerta =
   | 'sin-actividad' | 'inactivo' | 'atascado' | 'en-caida'
-  | 'meseta' | 'pistas' | 'atascado-fundamentos' | `tema:${string}`;
+  | 'meseta' | 'pistas' | 'atascado-fundamentos' | 'pegado' | `tema:${string}`;
+
+export interface AceptadoConActividad {
+  /** Caracteres pegados en ese problema hasta el dia del aceptado; null si no hay registro. */
+  caracteresPegados: number | null;
+  /** Tamano del codigo aceptado. */
+  largoCodigo: number;
+  primerIntento: boolean;
+  rating: number;
+  nivel: number;
+  /** Segundos activos en el problema hasta el dia del aceptado; null si no hay registro. */
+  segundosActivos: number | null;
+}
+
+export type MotivoPegado = 'sobre-nivel' | 'poco-tiempo';
+
+/**
+ * Motivos por los que un primer aceptado parece resuelto con pegado, o [] si no lo parece.
+ * El pegado grande es obligatorio; ademas, primer intento muy por encima del nivel o poco tiempo.
+ * Un dato que falta nunca cuenta como cumplido.
+ */
+export const motivosDePegado = (a: AceptadoConActividad): MotivoPegado[] => {
+  const pegado = a.caracteresPegados;
+  if (pegado === null || pegado < PEGADO_MIN_CARACTERES || a.largoCodigo <= 0) return [];
+  if (pegado < PEGADO_PROPORCION * a.largoCodigo) return [];
+  const motivos: MotivoPegado[] = [];
+  if (a.primerIntento && a.rating >= a.nivel + PEGADO_SOBRE_NIVEL) motivos.push('sobre-nivel');
+  if (a.segundosActivos !== null && a.segundosActivos < PEGADO_SEGUNDOS) motivos.push('poco-tiempo');
+  return motivos;
+};
 
 export interface DatosAlerta {
   ahora: Date;
@@ -45,6 +81,8 @@ export interface DatosAlerta {
   conAyuda30?: number;
   /** Mayor número de envíos fallidos en un mismo ejercicio de Fundamentos en 7 días, sin aceptar. */
   fallosFundamentos?: number;
+  /** Primeros aceptados de los ultimos 14 dias que parecen resueltos con pegado. */
+  resueltosConPegado?: number;
 }
 
 export const alertasDe = (d: DatosAlerta): Alerta[] => {
@@ -55,6 +93,7 @@ export const alertasDe = (d: DatosAlerta): Alerta[] => {
   }
   if (d.fallosSinAceptar >= FALLOS_ATASCADO) alertas.push('atascado');
   if (d.nivelHace14Dias !== null && d.nivelActual <= d.nivelHace14Dias - CAIDA_NIVEL) alertas.push('en-caida');
+  if ((d.resueltosConPegado ?? 0) >= PEGADO_ALERTA) alertas.push('pegado');
   // El estancamiento solo se mide con algo de recorrido en la clase.
   if ((d.diasEnClase ?? Infinity) < DIAS_NUEVO) {
     if ((d.fallosFundamentos ?? 0) >= FALLOS_ATASCADO) alertas.push('atascado-fundamentos');

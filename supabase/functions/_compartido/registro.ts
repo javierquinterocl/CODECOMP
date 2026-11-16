@@ -7,9 +7,16 @@ export const MAX_CARACTERES_POR_RESUMEN = 500_000;
 export const MAX_EJERCICIOS_POR_RESUMEN = 20;
 export const NIVELES_FUNDAMENTOS = ['fundamentos', 'practica', 'avanzado'] as const;
 
+interface PorEjercicio {
+  numero: number;
+  segundos: number;
+  pegados: number;
+  caracteres: number;
+}
+
 export type TiempoEjercicio =
-  | { tipo: 'problema'; numero: number; segundos: number }
-  | { tipo: 'fundamentos'; nivel: string; numero: number; segundos: number };
+  | (PorEjercicio & { tipo: 'problema' })
+  | (PorEjercicio & { tipo: 'fundamentos'; nivel: string });
 
 export interface Resumen {
   segundos: number;
@@ -23,29 +30,44 @@ const entero = (valor: unknown, max: number): number | null =>
     ? valor as number
     : null;
 
-/** Tiempo por ejercicio: cada entrada valida o el resumen entero se rechaza. */
-const validarEjercicios = (valor: unknown, segundosTotales: number): TiempoEjercicio[] | null => {
+/** Tiempo y pegados por ejercicio: cada entrada valida o el resumen entero se rechaza. */
+const validarEjercicios = (
+  valor: unknown,
+  totales: { segundos: number; pegados: number; caracteres: number },
+): TiempoEjercicio[] | null => {
   if (valor === undefined) return [];
   if (!Array.isArray(valor) || valor.length > MAX_EJERCICIOS_POR_RESUMEN) return null;
   const salida: TiempoEjercicio[] = [];
-  let suma = 0;
+  const suma = { segundos: 0, pegados: 0, caracteres: 0 };
   for (const e of valor) {
     if (!e || typeof e !== 'object') return null;
-    const { tipo, nivel } = e as Record<string, unknown>;
-    const numero = entero((e as Record<string, unknown>).numero, 10_000_000);
-    const segundos = entero((e as Record<string, unknown>).segundos, MAX_SEGUNDOS_POR_RESUMEN);
-    if (numero === null || numero === 0 || segundos === null || segundos === 0) return null;
-    suma += segundos;
+    const campos = e as Record<string, unknown>;
+    const { tipo, nivel } = campos;
+    const numero = entero(campos.numero, 10_000_000);
+    const segundos = entero(campos.segundos, MAX_SEGUNDOS_POR_RESUMEN);
+    const pegados = entero(campos.pegados ?? 0, MAX_PEGADOS_POR_RESUMEN);
+    const caracteres = entero(campos.caracteres ?? 0, MAX_CARACTERES_POR_RESUMEN);
+    if (numero === null || numero === 0 || segundos === null || pegados === null || caracteres === null) {
+      return null;
+    }
+    // Una entrada vacia no aporta nada: o tuvo tiempo o tuvo un pegado.
+    if (segundos === 0 && pegados === 0) return null;
+    suma.segundos += segundos;
+    suma.pegados += pegados;
+    suma.caracteres += caracteres;
+    const datos = { numero, segundos, pegados, caracteres };
     if (tipo === 'problema') {
-      salida.push({ tipo, numero, segundos });
+      salida.push({ tipo, ...datos });
     } else if (tipo === 'fundamentos' && NIVELES_FUNDAMENTOS.includes(nivel as typeof NIVELES_FUNDAMENTOS[number])) {
-      salida.push({ tipo, nivel: nivel as string, numero, segundos });
+      salida.push({ tipo, nivel: nivel as string, ...datos });
     } else {
       return null;
     }
   }
-  // El tiempo en ejercicios es parte del tiempo activo, nunca mas.
-  return suma <= segundosTotales ? salida : null;
+  // Lo de los ejercicios es parte del total del resumen, nunca mas.
+  const cabe = suma.segundos <= totales.segundos && suma.pegados <= totales.pegados &&
+    suma.caracteres <= totales.caracteres;
+  return cabe ? salida : null;
 };
 
 export const validarResumen = (cuerpo: Record<string, unknown> | null): Resumen | null => {
@@ -54,7 +76,7 @@ export const validarResumen = (cuerpo: Record<string, unknown> | null): Resumen 
   const pegados = entero(cuerpo.pegados ?? 0, MAX_PEGADOS_POR_RESUMEN);
   const caracteres = entero(cuerpo.caracteres_pegados ?? 0, MAX_CARACTERES_POR_RESUMEN);
   if (segundos === null || pegados === null || caracteres === null) return null;
-  const ejercicios = validarEjercicios(cuerpo.ejercicios, segundos);
+  const ejercicios = validarEjercicios(cuerpo.ejercicios, { segundos, pegados, caracteres });
   if (ejercicios === null) return null;
   return { segundos, pegados, caracteres, ejercicios };
 };

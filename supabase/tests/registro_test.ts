@@ -38,6 +38,20 @@ Deno.test('validarResumen acepta enteros en rango y rechaza lo demas', () => {
   assertEquals(validarResumen(null), null);
 });
 
+Deno.test('validarResumen acepta pegados por ejercicio dentro del total', () => {
+  const ejercicio = { tipo: 'problema', numero: 7, segundos: 0, pegados: 1, caracteres: 300 };
+  assertEquals(
+    validarResumen({ segundos: 15, pegados: 1, caracteres_pegados: 300, ejercicios: [ejercicio] })?.ejercicios,
+    [ejercicio],
+  );
+  // Mas caracteres en el ejercicio que en el total, o una entrada sin tiempo ni pegado.
+  assertEquals(validarResumen({ segundos: 15, pegados: 1, caracteres_pegados: 100, ejercicios: [ejercicio] }), null);
+  assertEquals(
+    validarResumen({ segundos: 15, ejercicios: [{ tipo: 'problema', numero: 7, segundos: 0 }] }),
+    null,
+  );
+});
+
 Deno.test('los codigos de clase tienen 6 caracteres sin letras confusas', () => {
   for (let i = 0; i < 200; i++) assertMatch(nuevoCodigoClase(), /^[A-HJ-NP-Z2-9]{6}$/);
 });

@@ -5,7 +5,7 @@ import { cambiarEscalon, getDiaEstudiante, getFichaEstudiante } from '../scripts
 import { NIVELES } from '../scripts/problemsData';
 import NbSelect from '../components/NbSelect';
 import {
-  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs, etiquetaAlerta, sugerenciaAlerta,
+  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs, etiquetaAlerta, sugerenciaAlerta, motivoPegado,
 } from '../scripts/docenteData';
 import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
@@ -157,6 +157,22 @@ const EstudianteFichaPage = () => {
                 </li>
               ))}
             </ul>
+            {ficha.conPegado?.length > 0 && (
+              <>
+                <h3 className="nb-doc-subtitulo">Resueltos con pegado (últimos 14 días)</h3>
+                <ul className="nb-doc-tabla">
+                  {ficha.conPegado.map((p) => (
+                    <li key={p.numero} className="nb-doc-fila">
+                      <span className="nb-doc-celda is-grande">#{p.numero} {p.titulo}</span>
+                      <span className="nb-doc-dato">{fecha(p.aceptadoEn)}</span>
+                      <span className="nb-doc-dato">Pegó {p.caracteresPegados} de {p.largoCodigo} caracteres</span>
+                      <span className="nb-doc-dato">{p.motivos.map(motivoPegado).join(' · ')}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="nb-doc-nota">Señal orientativa, no prueba: pudo pegar su propio código. Se evade escribiendo a mano.</p>
+              </>
+            )}
           </Seccion>
         )}
         {ficha.escalon && (

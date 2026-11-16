@@ -38,7 +38,7 @@ const PrivacidadPage = () => (
       <ul>
         <li><strong>De tu cuenta:</strong> nombre, apellido, correo, código estudiantil, cómo inicias sesión y cuándo.</li>
         <li><strong>De tu práctica:</strong> el código que envías, los veredictos del juez, las pistas que pides al tutor de IA, tu nivel, tu escalón, tus logros y tu avance en Fundamentos.</li>
-        <li><strong>De tu actividad</strong>, solo si lo autorizas en el aviso de cookies: el tiempo activo en la plataforma y en cada ejercicio, cuándo abres cada problema y cuántas veces pegas código (solo la cantidad, nunca el contenido).</li>
+        <li><strong>De tu actividad</strong>, solo si lo autorizas en el aviso de cookies: el tiempo activo en la plataforma y en cada ejercicio, cuándo abres cada problema y cuántas veces pegas código en cada ejercicio (solo la cantidad y el tamaño, nunca el contenido).</li>
         <li><strong>Tu foto de perfil</strong>, solo si decides subirla. Es opcional: no tienes que darla para usar CODECOMP.</li>
         <li><strong>De las competencias:</strong> tu equipo, tus envíos y tus preguntas al jurado.</li>
       </ul>
@@ -50,6 +50,7 @@ const PrivacidadPage = () => (
         <li>Darte acceso a la plataforma y calificar tus soluciones.</li>
         <li>Calcular tu nivel, recomendarte ejercicios y mostrarte tu progreso.</li>
         <li>Que tu docente vea el avance de su clase y pueda acompañarte.</li>
+        <li>Si autorizaste el registro de actividad: mostrarle a tu docente una señal orientativa cuando un problema parece resuelto pegando mucho código (por ejemplo, al primer intento y muy por encima de tu nivel), para que lo converse contigo. Es una señal, no una prueba: no cambia tu nivel ni te sanciona.</li>
         <li>Enviarte avisos en la plataforma y, si lo permites, por correo.</li>
         <li>Organizar competencias y su marcador.</li>
         <li>Fines académicos del proyecto de grado, con datos agregados y sin identificarte.</li>

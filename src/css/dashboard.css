@@ -1113,6 +1113,8 @@ a.nb-ruta-aprende:focus-visible { outline: 3px solid #000; outline-offset: 3px; 
 /* Alertas en la ficha del estudiante: la alerta y qué puede hacer el docente. */
 .nb-doc-sugerencia { margin: 6px 0 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--nb-ink-soft); }
 .nb-doc-alertas-ficha { border-left: 6px solid #000; }
+.nb-doc-subtitulo { margin: 18px 0 8px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--nb-blue); }
+.nb-doc-alertas-ficha .nb-doc-nota { margin: 10px 0 0; }
 
 /* Modo guiado: conmutador del docente y avisos de tema cerrado para el estudiante. */
 .nb-doc-guiada { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 0 var(--sp-gap); }

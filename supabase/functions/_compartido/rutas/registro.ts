@@ -99,30 +99,42 @@ const guardarTiempoPorEjercicio = async (
   const fundamentos = resumen.ejercicios.filter((e) => e.tipo === 'fundamentos');
   if (problemas.length) {
     await sql`
-      INSERT INTO actividad_ejercicio (user_id, dia, problem_id, segundos)
-      SELECT ${userId}::uuid, ${hoy}::date, p.id, sum(t.segundos)::int
-      FROM unnest(${problemas.map((e) => e.numero)}::int[], ${problemas.map((e) => e.segundos)}::int[])
-        AS t(numero, segundos)
+      INSERT INTO actividad_ejercicio (user_id, dia, problem_id, segundos, pegados, caracteres_pegados)
+      SELECT ${userId}::uuid, ${hoy}::date, p.id, sum(t.segundos)::int, sum(t.pegados)::int,
+        sum(t.caracteres)::int
+      FROM unnest(
+        ${problemas.map((e) => e.numero)}::int[],
+        ${problemas.map((e) => e.segundos)}::int[],
+        ${problemas.map((e) => e.pegados)}::int[],
+        ${problemas.map((e) => e.caracteres)}::int[]
+      ) AS t(numero, segundos, pegados, caracteres)
       JOIN problems p ON p.problem_number = t.numero
       GROUP BY p.id
       ON CONFLICT (user_id, dia, problem_id) WHERE problem_id IS NOT NULL DO UPDATE SET
         segundos = LEAST(actividad_ejercicio.segundos + EXCLUDED.segundos, 86400),
+        pegados = actividad_ejercicio.pegados + EXCLUDED.pegados,
+        caracteres_pegados = actividad_ejercicio.caracteres_pegados + EXCLUDED.caracteres_pegados,
         actualizado_en = now()
     `;
   }
   if (fundamentos.length) {
     await sql`
-      INSERT INTO actividad_ejercicio (user_id, dia, ejercicio_id, segundos)
-      SELECT ${userId}::uuid, ${hoy}::date, f.id, sum(t.segundos)::int
+      INSERT INTO actividad_ejercicio (user_id, dia, ejercicio_id, segundos, pegados, caracteres_pegados)
+      SELECT ${userId}::uuid, ${hoy}::date, f.id, sum(t.segundos)::int, sum(t.pegados)::int,
+        sum(t.caracteres)::int
       FROM unnest(
         ${fundamentos.map((e) => (e as { nivel: string }).nivel)}::text[],
         ${fundamentos.map((e) => e.numero)}::int[],
-        ${fundamentos.map((e) => e.segundos)}::int[]
-      ) AS t(nivel, numero, segundos)
+        ${fundamentos.map((e) => e.segundos)}::int[],
+        ${fundamentos.map((e) => e.pegados)}::int[],
+        ${fundamentos.map((e) => e.caracteres)}::int[]
+      ) AS t(nivel, numero, segundos, pegados, caracteres)
       JOIN fundamentos_ejercicios f ON f.nivel = t.nivel AND f.numero = t.numero
       GROUP BY f.id
       ON CONFLICT (user_id, dia, ejercicio_id) WHERE ejercicio_id IS NOT NULL DO UPDATE SET
         segundos = LEAST(actividad_ejercicio.segundos + EXCLUDED.segundos, 86400),
+        pegados = actividad_ejercicio.pegados + EXCLUDED.pegados,
+        caracteres_pegados = actividad_ejercicio.caracteres_pegados + EXCLUDED.caracteres_pegados,
         actualizado_en = now()
     `;
   }
