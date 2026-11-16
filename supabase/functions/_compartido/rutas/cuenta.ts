@@ -107,7 +107,8 @@ const verFoto = async (ctx: Contexto, userId: string, pedido: string | undefined
       SELECT 1 FROM clase_miembros m JOIN clases c ON c.id = m.clase_id
       WHERE m.user_id = f.user_id AND c.docente_id = ${userId}))
   `;
-  if (!fila) return no(ctx, 404, 'sin-foto', 'Sin foto.');
+  // Sin foto (o sin permiso para verla) no es un error: 204 evita el aviso rojo en la consola.
+  if (!fila) return new Response(null, { status: 204, headers: ctx.cors });
   return new Response(new Uint8Array(fila.datos as Uint8Array), {
     status: 200,
     headers: {
