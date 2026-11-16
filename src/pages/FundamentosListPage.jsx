@@ -59,7 +59,7 @@ const FundamentosListPage = () => {
   if (nivel && (cargando || error)) return <FundamentosCarga error={error} volverA="/dashboard/fundamentos" forma="lista" />;
   const b = nivel && bloqueo[nivel.slug];
   if (b && !b.abierta) {
-    return <NivelBloqueado titulo={`${nivel.titulo} todavía está cerrado`} motivo={`Para abrir ${nivel.titulo} resuelve ${b.meta} ejercicios de Fundamentos: así llegas con la base que necesitas.`} hechos={b.hechos} meta={b.meta} volverA="/dashboard/fundamentos" textoVolver="← Volver a Fundamentos" />;
+    return <NivelBloqueado titulo="Este nivel todavía está cerrado" motivo={`Para abrir ${nivel.titulo} resuelve ${b.meta} ejercicios de Fundamentos: así llegas con la base que necesitas.`} hechos={b.hechos} meta={b.meta} volverA="/dashboard/fundamentos" textoVolver="← Volver a Fundamentos" />;
   }
 
   if (!nivel || delNivel.length === 0) {
