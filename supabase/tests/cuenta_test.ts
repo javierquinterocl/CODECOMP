@@ -131,7 +131,8 @@ Deno.test('subir foto exige consentimiento, tamano y formato', async () => {
 
 Deno.test('la foto la ven el propio usuario y su docente, con cabeceras seguras', async () => {
   const sinPermiso = conUsuario([[/FROM foto_usuario f/, () => []]]);
-  assertEquals((await llamar(sinPermiso.sql, 'GET', `cuenta/foto/${OTRO}`)).s, 404);
+  // Sin foto o sin permiso: 204 sin cuerpo (no un error que ensucie la consola).
+  assertEquals((await llamar(sinPermiso.sql, 'GET', `cuenta/foto/${OTRO}`)).s, 204);
   const consulta = sinPermiso.consultas.find((c) => c.texto.includes('FROM foto_usuario f'))!.texto;
   assertEquals(consulta.includes('c.docente_id = ?'), true);
   assertEquals((await llamar(sinPermiso.sql, 'GET', 'cuenta/foto/no-es-uuid')).s, 400);

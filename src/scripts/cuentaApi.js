@@ -48,7 +48,8 @@ export const urlDeFoto = (user, userId, version = '') => {
   if (!fotos.has(clave)) {
     fotos.set(clave, (async () => {
       const r = await pedir(user, `cuenta/foto/${userId}?v=${encodeURIComponent(version)}`);
-      return r.ok ? URL.createObjectURL(await r.blob()) : null;
+      // 204 (y el 404 de la función anterior) = no tiene foto.
+      return r.status === 200 ? URL.createObjectURL(await r.blob()) : null;
     })().catch(() => null));
   }
   return fotos.get(clave);

@@ -5,19 +5,8 @@ import { guardarTemporizador, temporizadorActivo } from '../scripts/fundamentosP
 import { useFundamentos } from '../scripts/useFundamentos';
 import FundamentosCarga from '../components/FundamentosCarga';
 import { Plegable } from '../components/ExerciseBits';
-import { StarIcon } from '../components/ProblemBits';
+import VitrinaLogros from '../components/VitrinaLogros';
 import { ArrowLeftIcon, ArrowRightIcon, PlayIcon, LockIcon, ClockIcon } from '../components/AppIcons';
-
-// Estrellas de fondo del cuadro de logros: posición, tamaño y desfase.
-const ESTRELLAS = [
-  { left: '4%', top: '18%', size: 18, delay: '0s' },
-  { left: '22%', top: '72%', size: 12, delay: '0.9s' },
-  { left: '41%', top: '12%', size: 14, delay: '1.7s' },
-  { left: '58%', top: '80%', size: 20, delay: '0.4s' },
-  { left: '73%', top: '22%', size: 12, delay: '2.2s' },
-  { left: '88%', top: '64%', size: 16, delay: '1.2s' },
-  { left: '95%', top: '10%', size: 22, delay: '0.6s' },
-];
 
 const ListaTemas = ({ temas }) => (
   <ol className="nb-fd-temas">
@@ -32,51 +21,6 @@ const ListaTemas = ({ temas }) => (
       </li>
     ))}
   </ol>
-);
-
-const Cielo = () => (
-  <div className="nb-fd-logros-cielo" aria-hidden="true">
-    {ESTRELLAS.map((e) => (
-      <span
-        key={e.left}
-        className="nb-fd-estrella"
-        style={{ left: e.left, top: e.top, width: e.size, height: e.size, animationDelay: e.delay }}
-      >
-        <StarIcon relleno />
-      </span>
-    ))}
-  </div>
-);
-
-/* Vitrina de logros. Todos salen bloqueados: todavía no hay juez que diga
-   qué resolvió cada estudiante. */
-const Logros = ({ logros }) => (
-  <Plegable
-    className="nb-fd-logros"
-    adorno={<Cielo />}
-    titulo={(
-      <>
-        Logros desbloqueables
-        {logros.length > 0 && <span className="nb-fd-logros-cuenta">0 de {logros.length}</span>}
-      </>
-    )}
-  >
-    {logros.length === 0 ? (
-      <p className="nb-fd-logros-vacio">Los logros de este nivel llegarán junto con sus ejercicios.</p>
-    ) : (
-      <ul className="nb-fd-logros-grid">
-        {logros.map((l) => (
-          <li key={l.slug} className="nb-fd-logro">
-            <span className="nb-fd-logro-icono" aria-hidden="true"><StarIcon /></span>
-            <div className="nb-fd-logro-main">
-              <div className="nb-fd-logro-titulo">{l.titulo}</div>
-              <div className="nb-fd-logro-texto">{l.condicion}</div>
-            </div>
-          </li>
-        ))}
-      </ul>
-    )}
-  </Plegable>
 );
 
 /* Pie de la tarjeta: cuántos resolvió (barra), dónde quedó (último abierto), el
@@ -256,7 +200,12 @@ const FundamentosPage = () => {
                     onTemporizador={alternarTemporizador}
                   />
 
-                  <Logros logros={nivel.logros} />
+                  {/* Vitrina: todos salen bloqueados porque aún no se cuentan los logros de Fundamentos. */}
+                  <VitrinaLogros
+                    titulo="Logros desbloqueables"
+                    logros={nivel.logros.map((l) => ({ id: l.slug, titulo: l.titulo, texto: l.condicion }))}
+                    vacio="Los logros de este nivel llegarán junto con sus ejercicios."
+                  />
 
                   <Plegable titulo="Temas recomendados o bases" abiertoInicial>
                     <ListaTemas temas={nivel.temasFuturos || temasDe(delNivel)} />

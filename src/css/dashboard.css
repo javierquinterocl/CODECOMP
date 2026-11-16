@@ -185,6 +185,13 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 /* Tarjeta de recurso */
 .nb-dash-resource { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--sp-gap); }
 .nb-dash-resource-head { display: flex; align-items: center; gap: var(--sp-gap); }
+/* Tarjeta enlazada: el enlace del título cubre toda la tarjeta y esta se hunde al pasar el cursor. */
+.nb-dash-resource { position: relative; transition: var(--nb-tr); }
+.nb-dash-resource:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+.nb-dash-resource:has(.nb-dash-resource-link:focus-visible) { outline: 3px solid var(--nb-blue); outline-offset: 3px; }
+.nb-dash-resource-link { color: inherit; text-decoration: none; }
+.nb-dash-resource-link::after { content: ''; position: absolute; inset: 0; }
+.nb-dash-resource-link:focus-visible { outline: none; }
 .nb-dash-stat { border: 2px solid #000; padding: clamp(7px,0.5vw,14px) clamp(10px,0.8vw,18px); }
 .nb-dash-stat-label { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--nb-blue); }
 .nb-dash-stat-value { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-lg); margin-top: 5px; }
@@ -205,6 +212,8 @@ a.nb-dash-user:hover .nb-dash-username { color: var(--nb-blue); }
 .nb-dash-photo { flex: 0 0 clamp(96px, 7vw + 40px, 190px); border: 2px solid #000; display: flex; align-items: center; justify-content: center; padding: 8px; background: #425CCA; }
 .nb-dash-photo img { width: 100%; height: auto; }
 .nb-dash-photo img.is-pixel { image-rendering: pixelated; }
+/* Sin foto: la inicial del nombre, grande y en letra de videojuego. */
+.nb-dash-photo-inicial { display: grid; place-items: center; width: 100%; aspect-ratio: 1; font-family: 'Press Start 2P', monospace; font-size: clamp(36px, 3vw + 14px, 84px); line-height: 1; color: #fff; }
 .nb-dash-name { font-weight: 700; letter-spacing: -0.01em; font-size: var(--fs-base); line-height: 1.3; margin: 0 0 6px; }
 .nb-dash-email { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: #000; word-break: break-word; }
 .nb-dash-edit { flex: 0 0 clamp(48px,3.4vw,74px); border-left: 2px solid #000; display: flex; align-items: center; justify-content: center; color: #000; }
@@ -478,16 +487,6 @@ label.nb-dash-btn-claro:focus-within { outline: 3px solid var(--nb-blue); outlin
 .nb-cuenta-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* Logros: rejilla de tarjetas; los conseguidos en azul. */
-.nb-cuenta-logros { list-style: none; margin: var(--sp-gap) 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-gap); }
-.nb-cuenta-logro { display: flex; flex-direction: column; gap: 6px; border: 2px solid #000; box-shadow: 3px 3px 0px #000; padding: 14px; background: #fff; min-width: 0; }
-.nb-cuenta-logro strong { font-size: var(--fs-base); }
-.nb-cuenta-logro small { font-size: var(--fs-xs); color: var(--nb-ink-soft); line-height: 1.4; }
-.nb-cuenta-logro-barra { height: 12px; padding: 2px; background: #fff; border: 2px solid #000; margin-top: auto; }
-.nb-cuenta-logro-barra > span { display: block; height: 100%; width: var(--avance, 0%); background: var(--nb-blue); }
-.nb-cuenta-logro-cifra { font-family: 'JetBrains Mono', monospace; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
-.nb-cuenta-logro.is-ok { background: var(--nb-blue); color: #fff; }
-.nb-cuenta-logro.is-ok small { color: #fff; }
-.nb-cuenta-logro.is-ok .nb-cuenta-logro-barra > span { background: #000; }
 @media (max-width: 760px) {
   .nb-cuenta-perfil { grid-template-columns: minmax(0, 1fr); }
   .nb-cuenta-perfil-foto { width: min(200px, 100%); }
@@ -825,38 +824,55 @@ button.nb-doc-calor-celda:focus-visible { outline: 2px solid var(--nb-blue); out
 
 /* ── Ruta de entrenamiento: camino de temas con su avance ── */
 .nb-fd-hero.nb-ruta-hero { margin-bottom: var(--sp-gap); margin-right: 0; } /* sin el margen del carrusel de Fundamentos: comparte bordes con el lienzo */
-/* Lienzo blanco con los temas como nodos unidos por curvas. Al abrir caben dos nodos: el ancho sale
-   del lienzo (unidades cqw). */
+/* Lienzo oscuro (colores de Javier) con los temas como nodos unidos por curvas. Al abrir caben dos
+   nodos: el ancho sale del lienzo (unidades cqw). */
 .nb-ruta-lienzo {
   --ruta-hueco: clamp(72px, 9cqw, 220px);
   --ruta-nodo: max(300px, calc((100cqw - var(--ruta-hueco)) / 2 - 10px));
   --ruta-desfase: clamp(90px, 9vw, 180px);
   --ruta-puerto: 32px;
+  --grafo-arriba: clamp(20px, 2vw, 40px);
+  --grafo-lado: var(--sp-card);
+  --grafo-abajo: clamp(24px, 2.4vw, 44px);
   min-width: 0; background: #fff; color: #000; border: 2px solid #000; box-shadow: 5px 5px 0px #000;
 }
-.nb-ruta-lienzo-cabeza { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; padding: clamp(14px, 1.1vw, 22px) var(--sp-card); background: #010170; border-bottom: 2px solid #000; } /* franja elegida por Javier */
+.nb-ruta-lienzo-cabeza { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 20px; padding: clamp(14px, 1.1vw, 22px) var(--sp-card); background: #2E2EFF; border-bottom: 2px solid #000; } /* franja elegida por Javier */
 .nb-ruta-lienzo-titulo { margin: 0; font-family: 'Press Start 2P', monospace; font-size: clamp(16px, 0.8vw + 9px, 26px); line-height: 1.5; color: #fff; }
 .nb-ruta-lienzo-ayuda { margin: 0; font-size: var(--fs-sm); color: #fff; }
 /* Solo el lienzo se desplaza en horizontal; el relleno deja ver sombras y focos. */
-.nb-ruta-grafo { container-type: inline-size; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: clamp(20px, 2vw, 40px) var(--sp-card) clamp(24px, 2.4vw, 44px); scrollbar-color: #000 #fff; }
-.nb-ruta-grafo:focus-visible { outline: 3px solid var(--nb-blue); outline-offset: -3px; }
+.nb-ruta-grafo { container-type: inline-size; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: var(--grafo-arriba) var(--grafo-lado) var(--grafo-abajo); scrollbar-color: #fff #000;
+  /* Fondo de #010035 a negro a lo largo de todo el camino, que se desplaza con los nodos (degradado pedido por Javier). */
+  background-image: linear-gradient(to right, #010035, #000); background-attachment: local; }
+.nb-ruta-grafo:focus-visible { outline: 3px solid #fff; outline-offset: -3px; }
 .nb-ruta-grafo::-webkit-scrollbar { height: 14px; }
-.nb-ruta-grafo::-webkit-scrollbar-track { background: #fff; border-top: 2px solid #000; }
-.nb-ruta-grafo::-webkit-scrollbar-thumb { background: #000; border: 3px solid #fff; }
-.nb-ruta-nodos { position: relative; list-style: none; margin: 0; padding: 0 8px 8px 0; width: max-content; display: flex; align-items: flex-start; gap: var(--ruta-hueco); }
+.nb-ruta-grafo::-webkit-scrollbar-track { background: #000; border-top: 2px solid #fff; }
+.nb-ruta-grafo::-webkit-scrollbar-thumb { background: #fff; border: 3px solid #000; }
+.nb-ruta-nodos { position: relative; isolation: isolate; list-style: none; margin: 0; padding: 0 8px 8px 0; width: max-content; display: flex; align-items: flex-start; gap: var(--ruta-hueco); }
+/* Puntillismo blanco en dos capas corridas que titilan a distinto ritmo, detrás de los nodos y
+   cubriendo también el relleno del lienzo. Quietas con movimiento reducido. */
+.nb-ruta-nodos::before,
+.nb-ruta-nodos::after {
+  content: ''; position: absolute; z-index: -1; pointer-events: none;
+  inset: calc(var(--grafo-arriba) * -1) calc(var(--grafo-lado) * -1) calc(var(--grafo-abajo) * -1);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22'%3E%3Ccircle cx='11' cy='11' r='1.3' fill='%23fff' fill-opacity='0.6'/%3E%3C/svg%3E");
+  background-size: 22px 22px; animation: nb-ruta-titila 3.2s ease-in-out infinite;
+}
+.nb-ruta-nodos::after { background-position: 11px 11px; opacity: 0.6; animation-duration: 4.6s; animation-delay: -2s; }
+@keyframes nb-ruta-titila { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.15; } }
+@media (prefers-reduced-motion: reduce) { .nb-ruta-nodos::before, .nb-ruta-nodos::after { animation: none; } }
 .nb-ruta-paso { position: relative; flex: 0 0 var(--ruta-nodo); width: var(--ruta-nodo); }
 .nb-ruta-paso.is-abajo { margin-top: var(--ruta-desfase); }
 
-/* Curva hacia el siguiente: del puerto de salida al de entrada; negra punteada hasta dominar el tema. */
+/* Curva hacia el siguiente: del puerto de salida al de entrada; blanca punteada hasta dominar el tema. */
 .nb-ruta-curva { position: absolute; left: 100%; width: var(--ruta-hueco); height: var(--ruta-desfase); overflow: visible; pointer-events: none; }
 .nb-ruta-curva.is-baja { top: var(--ruta-puerto); }
 .nb-ruta-curva.is-sube { top: calc(var(--ruta-puerto) - var(--ruta-desfase)); transform: scaleY(-1); }
-.nb-ruta-curva path { fill: none; stroke: #000; stroke-width: 3px; stroke-dasharray: 8 6; }
+.nb-ruta-curva path { fill: none; stroke: #fff; stroke-width: 3px; stroke-dasharray: 8 6; }
 .nb-ruta-curva.is-hecha path { stroke: var(--cat-bg); stroke-width: 4px; stroke-dasharray: none; }
 
 /* Nodo en tres tonos del tema, como las tarjetas de Fundamentos: franja oscura, base y cuadro claro. */
-.nb-ruta-nodo { position: relative; color: #fff; background: var(--cat-bg); border: 2px solid #000; box-shadow: 5px 5px 0px #000; }
-.nb-ruta-paso.is-recomendado .nb-ruta-nodo { box-shadow: 8px 8px 0px #000; }
+.nb-ruta-nodo { position: relative; color: #fff; background: var(--cat-bg); border: 2px solid #000; box-shadow: 5px 5px 0px #fff; }
+.nb-ruta-paso.is-recomendado .nb-ruta-nodo { box-shadow: 8px 8px 0px #fff; }
 .nb-ruta-puerto { position: absolute; z-index: 1; top: calc(var(--ruta-puerto) - 8px); width: 16px; height: 16px; background: var(--cat-bg); border: 2px solid #000; }
 .nb-ruta-puerto.is-entrada { left: -9px; }
 .nb-ruta-puerto.is-salida { right: -9px; }
@@ -904,14 +920,15 @@ a.nb-ruta-aprende:focus-visible { outline: 3px solid #000; outline-offset: 3px; 
 
 /* Celular: los nodos en columna y una línea vertical entre ellos. */
 @media (max-width: 760px) {
-  .nb-ruta-grafo { overflow: visible; }
+  .nb-ruta-grafo { overflow: visible; background-image: linear-gradient(to bottom, #010035, #000); }
   .nb-ruta-nodos { width: auto; flex-direction: column; align-items: stretch; gap: 44px; padding: 0; }
   .nb-ruta-paso, .nb-ruta-paso.is-abajo { flex: 0 0 auto; width: auto; margin-top: 0; }
   .nb-ruta-curva, .nb-ruta-puerto { display: none; }
-  .nb-ruta-paso:not(:last-child)::after { content: ''; position: absolute; left: 50%; top: 100%; height: 44px; border-left: 3px dashed #000; }
+  .nb-ruta-paso:not(:last-child)::after { content: ''; position: absolute; left: 50%; top: 100%; height: 44px; border-left: 3px dashed #fff; }
   .nb-ruta-paso.is-dominado:not(:last-child)::after { border-left: 4px solid var(--cat-bg); }
   .nb-ruta-nodo-cabeza { flex-wrap: wrap; }
-  .nb-ruta-nodo, .nb-ruta-paso.is-recomendado .nb-ruta-nodo, .nb-ruta-lienzo { box-shadow: 3px 3px 0px #000; }
+  .nb-ruta-nodo, .nb-ruta-paso.is-recomendado .nb-ruta-nodo { box-shadow: 3px 3px 0px #fff; }
+  .nb-ruta-lienzo { box-shadow: 3px 3px 0px #000; }
 }
 
 /* ── Tu repaso de hoy (Inicio) ── */

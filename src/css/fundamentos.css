@@ -124,6 +124,9 @@ a.nb-fd-play:focus-visible { outline: 3px solid #000; outline-offset: 3px; }
 .nb-fd-logro-main { min-width: 0; }
 .nb-fd-logro-titulo { font-weight: 700; font-size: var(--fs-sm); line-height: 1.3; }
 .nb-fd-logro-texto { font-size: var(--fs-xs); font-weight: 500; line-height: 1.45; color: rgba(255,255,255,0.8); margin-top: 3px; }
+/* Avance del logro (Mi cuenta) y logro conseguido: estrella rellena y borde blanco. */
+.nb-fd-logro-avance { margin-top: 6px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
+.nb-fd-logro.is-ok { border-color: #fff; }
 
 /* ---------- Inicio: temas ---------- */
 .nb-fd-temas { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
