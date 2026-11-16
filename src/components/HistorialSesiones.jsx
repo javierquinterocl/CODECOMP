@@ -2,12 +2,26 @@ import { useEffect, useMemo, useState } from 'react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { getSessionsHistory } from '../scripts/registerService';
-import { SearchIcon } from './AppIcons';
+import { MailIcon, SearchIcon } from './AppIcons';
+import { FacebookIcon, GithubIcon, GoogleIcon } from './BrandIcons';
 import { EsqFilas } from './Esqueleto';
 
 const POR_PAGINA = 8;
 const METODOS = ['facebook', 'github', 'google', 'password'];
 const nombreMetodo = (m) => (m === 'password' ? 'Email / Password' : m ? m.charAt(0).toUpperCase() + m.slice(1) : 'N/D');
+
+const ICONOS_METODO = { google: GoogleIcon, github: GithubIcon, facebook: FacebookIcon, password: MailIcon };
+
+/** Método de entrada como icono en un cuadro; el nombre queda para lectores de pantalla y al pasar el cursor. */
+const MetodoIcono = ({ metodo }) => {
+  const Icono = ICONOS_METODO[metodo];
+  if (!Icono) return <span className="nb-doc-celda">{nombreMetodo(metodo)}</span>;
+  return (
+    <span className="nb-doc-metodo" role="img" aria-label={nombreMetodo(metodo)} title={nombreMetodo(metodo)}>
+      <Icono className="" />
+    </span>
+  );
+};
 
 const formatDateTime = (timestamp) => {
   if (!timestamp) return 'En curso';
@@ -164,12 +178,12 @@ const HistorialSesiones = () => {
         <ul className="nb-doc-tabla">
           {visibles.map((s) => (
             <li key={s.id} className="nb-doc-fila">
-              <span className={`nb-doc-estado${s.status === 'activo' ? ' is-on' : ''}`}>{s.status || 'N/D'}</span>
+              <span className={`nb-doc-estado is-sesion${s.status === 'activo' ? ' is-on' : s.status === 'finalizado' ? ' is-fin' : ''}`}>{s.status || 'N/D'}</span>
               <span className="nb-doc-celda is-grande">
                 <strong>{`${s.nombre || ''} ${s.apellido || ''}`.trim() || 'Sin nombre'}</strong>
                 <small>{s.email} · Código {s.codigo || '—'}</small>
               </span>
-              <span className="nb-doc-celda">{nombreMetodo(s.method)}</span>
+              <MetodoIcono metodo={s.method} />
               <span className="nb-doc-celda">
                 <small>Entrada {formatDateTime(s.entryTime)}</small>
                 <small>Salida {formatDateTime(s.exitTime)}</small>

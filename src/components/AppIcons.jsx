@@ -38,3 +38,5 @@ export const ArrowRightIcon = () => <Stroke><path d="M4 12h16" /><path d="M14 6l
 /* Dos galones: plegar y desplegar paneles laterales. */
 export const CollapseIcon = () => <Stroke><path d="M11 6l-6 6 6 6" /><path d="M19 6l-6 6 6 6" /></Stroke>;
 export const ExpandIcon   = () => <Stroke><path d="M5 6l6 6-6 6" /><path d="M13 6l6 6-6 6" /></Stroke>;
+/* Sobre: inicio de sesión con correo y contraseña. */
+export const MailIcon = () => <Stroke><rect x="3" y="5" width="18" height="14" /><path d="m3 6 9 7 9-7" /></Stroke>;
