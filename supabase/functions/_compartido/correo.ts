@@ -218,7 +218,7 @@ export const enviarPendientes = async (
   // Lo que quedo a medias hace mas de 10 minutos vuelve a la cola.
   await sql`
     UPDATE notificaciones SET correo = 'pendiente'
-    WHERE correo = 'enviando' AND correo_reclamado_en < now() - INTERVAL '10 minutes'
+    WHERE correo = 'enviando' AND correo_reclamado_en < now() - ${'10 minutes'}::interval
   `;
   // Sin permiso, sin verificar, de prueba o vencido: no se envia.
   const omitidos = await sql`

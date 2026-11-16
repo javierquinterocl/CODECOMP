@@ -118,8 +118,8 @@ export const resumenesSemanales = async (sql: Sql, config: Config, fecha: string
 const purgar = (sql: Sql) =>
   sql`
     DELETE FROM notificaciones
-    WHERE (leida_en IS NOT NULL AND creada_en < now() - INTERVAL '90 days')
-      OR creada_en < now() - INTERVAL '180 days'
+    WHERE (leida_en IS NOT NULL AND creada_en < now() - ${'90 days'}::interval)
+      OR creada_en < now() - ${'180 days'}::interval
   `;
 
 export const cronAvisos = async (

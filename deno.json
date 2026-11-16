@@ -2,7 +2,7 @@
   "lock": false,
   "nodeModulesDir": "none",
   "tasks": {
-    "test": "deno test --allow-env supabase/tests/",
+    "test": "deno test --allow-env --allow-read=supabase/functions supabase/tests/",
     "check": "deno check supabase/functions/**/*.ts"
   },
   "imports": {
