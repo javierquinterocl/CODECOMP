@@ -1,20 +1,12 @@
 import { useMemo } from 'react';
-import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useEntrenamiento } from '../scripts/useEntrenamiento';
 import { META_TEMA, rutaDeTemas } from '../scripts/entrenamiento';
 import { useIdioma } from '../scripts/useIdioma';
 import { EsqPagina } from '../components/Esqueleto';
-import { LECCIONES } from '../scripts/lecciones/contenido';
+import GrafoRuta from '../components/GrafoRuta';
 
 // Ruta de entrenamiento por temas. Textos borrador: los decide el equipo.
-
-const ESTADOS = {
-  dominado: 'Dominado',
-  'en-curso': 'En curso',
-  recomendado: 'Empieza aquí',
-  'por-empezar': 'Por empezar',
-};
 
 const RutaPage = () => {
   const { user } = useAuth();
@@ -61,49 +53,7 @@ const RutaPage = () => {
         </div>
       </div>
 
-      <ol className="nb-ruta">
-        {ruta.map((t, i) => (
-          <li key={t.slug} className={`nb-ruta-paso is-${t.estado}${t.recomendado ? ' is-recomendado' : ''}`}>
-            <span className="nb-ruta-num" aria-hidden="true">{t.estado === 'dominado' ? '✓' : String(i + 1).padStart(2, '0')}</span>
-            <section className="nb-dash-card nb-ruta-tarjeta" aria-labelledby={`ruta-${t.slug}`}>
-              <div className="nb-ruta-cabeza">
-                <div className="nb-ruta-titulos">
-                  <h2 id={`ruta-${t.slug}`} className="nb-ruta-titulo">{t.titulo}</h2>
-                  <p className="nb-ruta-idea">{t.idea}</p>
-                </div>
-                <span className="nb-ruta-estado">{t.recomendado && t.estado === 'en-curso' ? 'Sigue aquí' : ESTADOS[t.estado]}</span>
-              </div>
-              {LECCIONES[t.slug] ? (
-                <Link to={`/dashboard/ruta/${t.slug}`} className="nb-ex-send nb-ruta-leccion">
-                  Aprende {t.titulo}: lo básico y {LECCIONES[t.slug].tecnica.toLowerCase()} →
-                </Link>
-              ) : (
-                <span className="nb-ruta-pronto">Lección interactiva en preparación</span>
-              )}
-              <div className="nb-ruta-avance">
-                <span className="nb-ruta-barra" style={{ '--avance': `${(t.resueltos / META_TEMA) * 100}%` }} aria-hidden="true" />
-                <span className="nb-ruta-cifra">{t.resueltos}/{META_TEMA} resueltos · {t.total} en el tema</span>
-              </div>
-              {t.estado !== 'dominado' && t.propuestos.length > 0 && (
-                <ul className="nb-ruta-problemas">
-                  {t.propuestos.map((p) => (
-                    <li key={p.numero}>
-                      <Link to={`/dashboard/problemas/${t.slug}/${p.numero}`} className="nb-ruta-problema">
-                        <span className="nb-ruta-problema-num">#{p.numero}</span>
-                        <span className="nb-ruta-problema-titulo">{titulo(p)}</span>
-                        <span className="nb-ruta-problema-nivel">{p.dificultadRating}</span>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {t.estado === 'dominado' && (
-                <Link to={`/dashboard/problemas/${t.slug}`} className="nb-ruta-mas">Seguir practicando {t.titulo} →</Link>
-              )}
-            </section>
-          </li>
-        ))}
-      </ol>
+      <GrafoRuta ruta={ruta} titulo={titulo} />
     </div>
   );
 };
