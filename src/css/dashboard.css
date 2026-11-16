@@ -503,6 +503,16 @@ label.nb-dash-btn-claro:focus-within { outline: 3px solid var(--nb-blue); outlin
 .nb-dash-clase-form .nb-ex-send:disabled:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 .nb-dash-clase-msg { margin: 12px 0 0; font-size: var(--fs-sm); font-weight: 600; }
 .nb-dash-clase-msg.is-error { color: var(--nb-danger); }
+/* Sin clase: sube bajo el banner con borde y sombra azules para que se vea. */
+.nb-dash-clase-destacada { border-left: 8px solid var(--nb-blue); box-shadow: 5px 5px 0px var(--nb-blue); }
+.nb-dash-clase-intro { margin: 0 0 14px; }
+.nb-dash-clase-saltar {
+  margin-top: 12px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 600 var(--fs-sm) 'Space Grotesk', sans-serif; color: var(--nb-ink-soft); text-decoration: underline;
+  transition: var(--nb-tr);
+}
+.nb-dash-clase-saltar:hover { color: var(--nb-blue); }
+@media (max-width: 640px) { .nb-dash-clase-destacada { box-shadow: 3px 3px 0px var(--nb-blue); } }
 
 @media (max-width: 640px) {
   .nb-dash-avisos { left: 16px; right: 16px; bottom: 16px; width: auto; }

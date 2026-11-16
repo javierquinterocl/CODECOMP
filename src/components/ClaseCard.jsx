@@ -6,7 +6,7 @@ import { crearClase, unirseAClase } from '../scripts/registroApi';
  * El estudiante entra a su clase con el código; el docente crea clases y ve sus códigos.
  * `estado` es la respuesta de getClases y `onCambio` la vuelve a pedir tras entrar o crear.
  */
-const ClaseCard = ({ estado, onCambio }) => {
+const ClaseCard = ({ estado, onCambio, destacada = false, onPorMiCuenta }) => {
   const { user } = useAuth();
   const [texto, setTexto] = useState('');
   const [mensaje, setMensaje] = useState(null);
@@ -47,11 +47,16 @@ const ClaseCard = ({ estado, onCambio }) => {
   };
 
   return (
-    <div className="nb-dash-card nb-dash-pad" data-tour="clase">
+    <div className={`nb-dash-card nb-dash-pad${destacada ? ' nb-dash-clase-destacada' : ''}`} data-tour="clase">
       <div className="nb-dash-kicker">{docente ? 'Docente' : 'Tu clase'}</div>
       <h3 className="nb-dash-section-title">
         {docente ? 'Tus clases' : clases.length ? clases.map((c) => c.nombre).join(' · ') : 'Únete a tu clase'}
       </h3>
+      {destacada && (
+        <p className="nb-dash-body-text nb-dash-clase-intro">
+          Si tu docente te dio un código, ponlo aquí: así podrá ver tu avance y acompañarte.
+        </p>
+      )}
 
       {docente && clases.length > 0 && (
         <ul className="nb-dash-clases">
@@ -83,6 +88,11 @@ const ClaseCard = ({ estado, onCambio }) => {
       <p id="clase-ayuda" className="nb-ayuda">
         {docente ? 'Al crearla verás un código de 6 letras para compartir con tus estudiantes.' : 'Tu docente te da un código de 6 letras o números.'}
       </p>
+      {destacada && onPorMiCuenta && (
+        <button type="button" className="nb-dash-clase-saltar" onClick={onPorMiCuenta}>
+          Practico por mi cuenta
+        </button>
+      )}
       {mensaje && (
         <p className={`nb-dash-clase-msg${mensaje.ok ? '' : ' is-error'}`} role="status">{mensaje.texto}</p>
       )}

@@ -149,6 +149,16 @@ const DashboardPage = () => {
   // Clase del estudiante (o del docente): la tarjeta de clase y el grupo comparten estos datos.
   const [clase, setClase] = useState(null);
   const [recargaClase, setRecargaClase] = useState(0);
+  // Quien practica solo puede bajar la invitación; se recuerda en este navegador.
+  const clavePorMiCuenta = user ? `codecomp:por-mi-cuenta:${user.uid}` : null;
+  const [porMiCuenta, setPorMiCuenta] = useState(() => {
+    try { return Boolean(clavePorMiCuenta && localStorage.getItem(clavePorMiCuenta)); } catch { return false; }
+  });
+  const marcarPorMiCuenta = () => {
+    try { localStorage.setItem(clavePorMiCuenta, '1'); } catch { /* sin almacenamiento: solo esta visita */ }
+    setPorMiCuenta(true);
+  };
+  const claseArriba = Boolean(clase && !clase.docente && clase.clases.length === 0 && !porMiCuenta);
   useEffect(() => {
     if (!user) return undefined;
     let vigente = true;
@@ -199,6 +209,11 @@ const DashboardPage = () => {
       </div>
 
       <div className="nb-dash-stack">
+
+        {/* ── Sin clase: la invitación va primero ── */}
+        {claseArriba && (
+          <ClaseCard estado={clase} onCambio={() => setRecargaClase((n) => n + 1)} destacada onPorMiCuenta={marcarPorMiCuenta} />
+        )}
 
         {/* ── Perfil + módulos ── */}
         <div className="nb-dash-row">
@@ -382,7 +397,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <ClaseCard estado={clase} onCambio={() => setRecargaClase((n) => n + 1)} />
+        {!claseArriba && <ClaseCard estado={clase} onCambio={() => setRecargaClase((n) => n + 1)} />}
 
         {/* ── Grupo de la clase ── */}
         {clase?.clases?.length > 0 && (
