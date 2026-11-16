@@ -1109,3 +1109,7 @@ a.nb-ruta-aprende:focus-visible { outline: 3px solid #000; outline-offset: 3px; 
 .nb-leccion-problema-nivel { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: var(--nb-ink-soft); }
 .nb-leccion-problema-ir { flex: 0 0 auto; font-weight: 700; }
 .nb-leccion-mas { align-self: flex-start; font-weight: 700; color: var(--nb-blue); }
+
+/* Alertas en la ficha del estudiante: la alerta y qué puede hacer el docente. */
+.nb-doc-sugerencia { margin: 6px 0 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--nb-ink-soft); }
+.nb-doc-alertas-ficha { border-left: 6px solid #000; }

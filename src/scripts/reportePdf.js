@@ -202,10 +202,10 @@ export const generarPdf = async (datos) => {
     tabla(['Problema', 'Envíos fallidos', 'Lo resolvieron'], datos.problemas.map((p) => [p.problema, String(p.fallos), `${p.resolvieron} de ${p.intentaron}`]), { columnStyles: { 0: { cellWidth: util * 0.6 } } });
   } else vacio('Sin datos todavía.');
 
-  seccion('A quién acompañar', 'Estudiantes en riesgo o sin actividad, con el motivo.', 30);
+  seccion('A quién acompañar', 'Estudiantes estancados, en riesgo o sin actividad, con el motivo y qué hacer.', 30);
   if (datos.acompanar.length) {
-    tabla(['Estudiante', 'Estado', 'Motivo'], datos.acompanar.map((a) => [a.nombre, SEMAFORO[a.estado], a.motivo]), {
-      columnStyles: { 0: { cellWidth: util * 0.4 }, 1: { cellWidth: 28 } },
+    tabla(['Estudiante', 'Estado', 'Motivo', 'Qué hacer'], datos.acompanar.map((a) => [a.nombre, SEMAFORO[a.estado], a.motivo, a.sugerencia]), {
+      columnStyles: { 0: { cellWidth: 38 }, 1: { cellWidth: 24 }, 2: { cellWidth: 40 } },
       didParseCell: (c) => {
         if (c.section === 'body' && c.column.index === 1) {
           const estado = datos.acompanar[c.row.index].estado;

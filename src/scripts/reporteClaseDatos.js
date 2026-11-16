@@ -28,7 +28,7 @@ const estadoDe = (e, hoy) => {
  * { clase, docente, fecha, resumen, niveles, resueltos, temas, actividad, problemas, estudiantes,
  *   acompanar } a partir de lo que devuelve GET /docente/clase/:id.
  */
-export const datosDelReporte = (panel, { nombre = (n) => n, alerta = (a) => a, docente = '', hoy = new Date() } = {}) => {
+export const datosDelReporte = (panel, { nombre = (n) => n, alerta = (a) => a, sugerencia = () => '', docente = '', hoy = new Date() } = {}) => {
   const lista = panel?.estudiantes ?? [];
   const estudiantes = lista.map((e) => {
     const estado = estadoDe(e, hoy);
@@ -44,6 +44,7 @@ export const datosDelReporte = (panel, { nombre = (n) => n, alerta = (a) => a, d
       ultimaActividad: e.ultimaActividad ? new Date(e.ultimaActividad) : null,
       diasSinEntrar: e.ultimaActividad ? Math.floor((hoy - new Date(e.ultimaActividad)) / DIA_MS) : null,
       alertas: (e.alertas ?? []).map(alerta),
+      sugerencia: (e.alertas ?? []).map(sugerencia).find(Boolean) ?? '',
       estado,
     };
   }).sort((a, b) => b.nivel - a.nivel || b.resueltos - a.resueltos);
@@ -90,7 +91,12 @@ export const datosDelReporte = (panel, { nombre = (n) => n, alerta = (a) => a, d
     estudiantes,
     acompanar: estudiantes.filter((e) => e.estado !== 'al-dia')
       .sort((a, b) => (b.diasSinEntrar ?? 999) - (a.diasSinEntrar ?? 999))
-      .map((e) => ({ nombre: e.nombre, motivo: e.alertas.length ? e.alertas.join(', ') : `${e.diasSinEntrar} días sin entrar`, estado: e.estado })),
+      .map((e) => ({
+        nombre: e.nombre,
+        motivo: e.alertas.length ? e.alertas.join(', ') : `${e.diasSinEntrar} días sin entrar`,
+        sugerencia: e.sugerencia || 'Escríbele para saber cómo va.',
+        estado: e.estado,
+      })),
   };
 };
 

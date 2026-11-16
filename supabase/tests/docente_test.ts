@@ -20,6 +20,26 @@ Deno.test('alertas: sin actividad, inactivo a los 7 dias, atascado y en caida', 
   assertEquals(alertasDe({ ...base, fallosSinAceptar: 3 }), ['atascado']);
   assertEquals(alertasDe({ ...base, nivelActual: 971 }), []);
   assertEquals(alertasDe({ ...base, nivelActual: 970 }), ['en-caida']);
+  // Sin historial de hace 14 días no hay caída que medir.
+  assertEquals(alertasDe({ ...base, nivelActual: 900, nivelHace14Dias: null }), []);
+});
+
+Deno.test('alertas de estancamiento: meseta, tema, pistas y Fundamentos', () => {
+  const activo = { ...base, diasEnClase: 30, practicaDesdeAntes: true, enviosMeseta: 12, nivelHaceMeseta: 995 };
+  assertEquals(alertasDe(activo), ['meseta']);
+  assertEquals(alertasDe({ ...activo, nivelActual: 1005 }), []); // subió 10: no es meseta
+  assertEquals(alertasDe({ ...activo, enviosMeseta: 9 }), []); // practica poco: no se mide
+  assertEquals(alertasDe({ ...activo, nivelHaceMeseta: undefined }), []); // sin historial
+  assertEquals(alertasDe({ ...activo, practicaDesdeAntes: false }), []); // empezó hace menos de 3 semanas
+  assertEquals(alertasDe({ ...base, diasEnClase: 30, temaAtascado: 'graphs' }), ['tema:graphs']);
+  assertEquals(alertasDe({ ...base, diasEnClase: 30, resueltos30: 4, conAyuda30: 3 }), ['pistas']);
+  assertEquals(alertasDe({ ...base, diasEnClase: 30, resueltos30: 4, conAyuda30: 2 }), []);
+  assertEquals(alertasDe({ ...base, diasEnClase: 30, resueltos30: 2, conAyuda30: 2 }), []);
+  assertEquals(alertasDe({ ...base, fallosFundamentos: 3 }), ['atascado-fundamentos']);
+  // Recién llegado a la clase: solo cuenta el atasco en Fundamentos.
+  assertEquals(alertasDe({ ...activo, diasEnClase: 5, temaAtascado: 'graphs', fallosFundamentos: 3 }), ['atascado-fundamentos']);
+  // Una caída no se repite como meseta.
+  assertEquals(alertasDe({ ...activo, nivelActual: 960, nivelHace14Dias: 1000 }), ['en-caida']);
 });
 
 const SOLUCION = `

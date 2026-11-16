@@ -5,8 +5,40 @@ import { JUDGE0_LANGUAGE_IDS, VEREDICTOS_ES } from './judge0Service';
 export const ALERTAS = {
   'sin-actividad': 'Sin actividad',
   inactivo: '7+ días sin entrar',
-  atascado: 'Atascado',
+  atascado: 'Atascado en un problema',
   'en-caida': 'Nivel en caída',
+  meseta: 'Estancado: 3 semanas sin subir',
+  pistas: 'Depende de pistas avanzadas',
+  'atascado-fundamentos': 'Atascado en Fundamentos',
+};
+
+// Qué puede hacer el docente con cada alerta. Textos borrador: los decide el equipo.
+const SUGERENCIAS = {
+  'sin-actividad': 'Escríbele o recuérdale entrar: todavía no ha practicado.',
+  inactivo: 'Envía un aviso a la clase o habla con él: lleva una semana sin entrar.',
+  atascado: 'Revisa su último código en la ficha y oriéntalo con una pregunta, sin darle la solución.',
+  'en-caida': 'Revisa en su ficha qué problemas falló estas dos semanas.',
+  meseta: 'Practica pero no avanza: proponle un tema nuevo de la Ruta o subirle el escalón.',
+  pistas: 'Anímalo a intentar más con la pista 1 antes de pedir las demás, y repasa con él la idea clave.',
+  'atascado-fundamentos': 'Revisa su envío de PSeInt en la ficha: falla varias veces el mismo ejercicio.',
+};
+
+const temaDeAlerta = (alerta) => {
+  const tag = alerta.slice('tema:'.length);
+  const slug = categoriaDeProblema({ tags: [tag], dificultadRating: 99999 });
+  return { slug, titulo: ['otros', 'principiante'].includes(slug) ? tag : (CATEGORIAS.find((c) => c.slug === slug)?.titulo ?? tag) };
+};
+
+/** Texto de una alerta, incluida la del tema ("tema:graphs" → "No avanza en Grafos"). */
+export const etiquetaAlerta = (alerta) => (String(alerta).startsWith('tema:') ? `No avanza en ${temaDeAlerta(alerta).titulo}` : ALERTAS[alerta] || alerta);
+
+/** Qué hacer con una alerta; la del tema recomienda su lección de la Ruta. */
+export const sugerenciaAlerta = (alerta) => {
+  if (String(alerta).startsWith('tema:')) {
+    const { slug, titulo } = temaDeAlerta(alerta);
+    return `Falla una y otra vez en ${titulo}: recomiéndale la lección del tema en la Ruta (/dashboard/ruta/${slug}).`;
+  }
+  return SUGERENCIAS[alerta] ?? '';
 };
 
 export const veredictoEs = (v) => VEREDICTOS_ES[v] || (v === 'ERROR_JUEZ' ? 'Error del juez' : v);

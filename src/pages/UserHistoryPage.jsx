@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { getClases } from '../scripts/registroApi';
 import { getPanelClase } from '../scripts/docenteApi';
 import {
-  ALERTAS, CATEGORIAS_TEMA, duracion, haceCuanto, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria,
+  CATEGORIAS_TEMA, etiquetaAlerta, sugerenciaAlerta, duracion, haceCuanto, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria,
 } from '../scripts/docenteData';
 import NbSelect from '../components/NbSelect';
 import HistorialSesiones from '../components/HistorialSesiones';
@@ -16,14 +16,14 @@ import { EsqFilas } from '../components/Esqueleto';
 
 const Alertas = ({ lista }) => (lista.length ? (
   <span className="nb-doc-alertas">
-    {lista.map((a) => <span key={a} className="nb-dash-chip nb-doc-alerta">{ALERTAS[a] || a}</span>)}
+    {lista.map((a) => <span key={a} className="nb-dash-chip nb-doc-alerta" title={sugerenciaAlerta(a)}>{etiquetaAlerta(a)}</span>)}
   </span>
 ) : null);
 
 /** Panel docente: la clase de un vistazo, cada estudiante y el historial de sesiones. */
 // Reporte de toda la clase (no solo lo que deja ver la búsqueda). Las librerías se cargan al pulsar.
 const descargarReporte = async (panel, docente, formato) => {
-  const datos = datosDelReporte(panel, { nombre: nombreVisible, alerta: (a) => ALERTAS[a] || a, docente });
+  const datos = datosDelReporte(panel, { nombre: nombreVisible, alerta: etiquetaAlerta, sugerencia: sugerenciaAlerta, docente });
   const { generarPdf } = formato === 'pdf' ? await import('../scripts/reportePdf') : {};
   const { generarExcel } = formato === 'xlsx' ? await import('../scripts/reporteExcel') : {};
   const archivo = formato === 'pdf' ? await generarPdf(datos) : await generarExcel(datos);

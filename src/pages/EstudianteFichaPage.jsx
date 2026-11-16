@@ -5,7 +5,7 @@ import { cambiarEscalon, getDiaEstudiante, getFichaEstudiante } from '../scripts
 import { NIVELES } from '../scripts/problemsData';
 import NbSelect from '../components/NbSelect';
 import {
-  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs,
+  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs, etiquetaAlerta, sugerenciaAlerta,
 } from '../scripts/docenteData';
 import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
@@ -147,6 +147,18 @@ const EstudianteFichaPage = () => {
       </div>
 
       <div className="nb-doc-stack">
+        {ficha.alertas?.length > 0 && (
+          <Seccion titulo="Alertas" sub="Lo que el sistema detectó y qué puedes hacer" className="nb-doc-alertas-ficha">
+            <ul className="nb-doc-tabla">
+              {ficha.alertas.map((a) => (
+                <li key={a} className="nb-doc-fila is-col">
+                  <span className="nb-dash-chip nb-doc-alerta">{etiquetaAlerta(a)}</span>
+                  <p className="nb-doc-sugerencia">{sugerenciaAlerta(a)}</p>
+                </li>
+              ))}
+            </ul>
+          </Seccion>
+        )}
         {ficha.escalon && (
           <EscalonDocente
             key={ficha.escalon.minimo}

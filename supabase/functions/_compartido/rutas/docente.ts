@@ -4,7 +4,7 @@
 
 import type { Contexto } from '../contexto.ts';
 import { esDocente } from '../auth.ts';
-import { alertasDe, parecido, UMBRAL_PARECIDO } from '../docente.ts';
+import { alertasDe, ETIQUETAS_GENERICAS, parecido, TEMA_ENVIOS, TEMA_PROBLEMAS, TEMA_TASA, UMBRAL_PARECIDO } from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
@@ -58,9 +58,41 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
           AND NOT EXISTS (SELECT 1 FROM submissions a WHERE a.user_id = u.id
             AND a.problem_id = s.problem_id AND a.verdict = 'ACCEPTED')
         GROUP BY s.problem_id) x) AS fallos_sin_aceptar,
-      coalesce((SELECT r.nivel_despues FROM resultados_problema r
+      -- Sin historial de hace 14 o 21 dias no hay base: NULL, no el 1000 inicial (evita falsas alertas).
+      (SELECT r.nivel_despues FROM resultados_problema r
         WHERE r.user_id = u.id AND r.cerrado_en <= now() - INTERVAL '14 days'
-        ORDER BY r.cerrado_en DESC LIMIT 1), 1000) AS nivel_hace_14
+        ORDER BY r.cerrado_en DESC LIMIT 1) AS nivel_hace_14,
+      -- Estancamiento: meseta de 3 semanas, tema donde no avanza, dependencia de pistas y Fundamentos.
+      (SELECT count(*)::int FROM submissions s WHERE s.user_id = u.id
+        AND s.created_at > now() - INTERVAL '21 days' AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS envios_21,
+      coalesce((SELECT min(s.created_at) FROM submissions s WHERE s.user_id = u.id) <= now() - INTERVAL '21 days', false) AS practica_desde_antes,
+      (SELECT r.nivel_despues FROM resultados_problema r
+        WHERE r.user_id = u.id AND r.cerrado_en <= now() - INTERVAL '21 days'
+        ORDER BY r.cerrado_en DESC LIMIT 1) AS nivel_hace_21,
+      (SELECT t.name FROM submissions s
+        JOIN problem_tags pt ON pt.problem_id = s.problem_id JOIN tags t ON t.id = pt.tag_id
+        WHERE s.user_id = u.id AND s.created_at > now() - INTERVAL '14 days'
+          AND s.verdict NOT IN ('PENDING', 'ERROR_JUEZ') AND t.name <> ALL(${ETIQUETAS_GENERICAS}::text[])
+        GROUP BY t.name
+        HAVING count(DISTINCT s.problem_id) >= ${TEMA_PROBLEMAS} AND count(*) >= ${TEMA_ENVIOS}
+          AND avg(CASE WHEN s.verdict = 'ACCEPTED' THEN 1 ELSE 0 END) < ${TEMA_TASA}
+        ORDER BY avg(CASE WHEN s.verdict = 'ACCEPTED' THEN 1 ELSE 0 END), count(*) DESC LIMIT 1) AS tema_atascado,
+      (SELECT count(*)::int FROM (
+        SELECT s.problem_id FROM submissions s WHERE s.user_id = u.id AND s.verdict = 'ACCEPTED'
+        GROUP BY s.problem_id HAVING min(s.created_at) > now() - INTERVAL '30 days') x) AS resueltos_30,
+      (SELECT count(*)::int FROM (
+        SELECT s.problem_id, min(s.created_at) AS primero FROM submissions s
+        WHERE s.user_id = u.id AND s.verdict = 'ACCEPTED'
+        GROUP BY s.problem_id HAVING min(s.created_at) > now() - INTERVAL '30 days') x
+        WHERE EXISTS (SELECT 1 FROM pistas h WHERE h.user_id = u.id AND h.problem_id = x.problem_id
+          AND h.nivel >= 2 AND h.creado_en < x.primero)) AS con_ayuda_30,
+      (SELECT coalesce(max(c), 0)::int FROM (
+        SELECT count(*) AS c FROM fundamentos_envios f
+        WHERE f.user_id = u.id AND f.creado_en > now() - INTERVAL '7 days'
+          AND f.veredicto NOT IN ('ACEPTADO', 'FALLO')
+          AND NOT EXISTS (SELECT 1 FROM fundamentos_envios a WHERE a.user_id = u.id
+            AND a.ejercicio_id = f.ejercicio_id AND a.veredicto = 'ACEPTADO')
+        GROUP BY f.ejercicio_id) x) AS fallos_fundamentos
     FROM clase_miembros m JOIN users u ON u.id = m.user_id
     WHERE m.clase_id = ${claseId}
     ORDER BY u.nivel DESC
@@ -84,7 +116,15 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
       ultimaActividad: e.ultima_actividad as Date | null,
       fallosSinAceptar: Number(e.fallos_sin_aceptar),
       nivelActual: Number(e.nivel),
-      nivelHace14Dias: Number(e.nivel_hace_14),
+      nivelHace14Dias: e.nivel_hace_14 === null ? null : Number(e.nivel_hace_14),
+      diasEnClase: (ahora.getTime() - new Date(e.unido_en as Date).getTime()) / 86_400_000,
+      enviosMeseta: Number(e.envios_21),
+      practicaDesdeAntes: e.practica_desde_antes === true,
+      nivelHaceMeseta: e.nivel_hace_21 === null ? undefined : Number(e.nivel_hace_21),
+      temaAtascado: (e.tema_atascado as string | null) ?? null,
+      resueltos30: Number(e.resueltos_30),
+      conAyuda30: Number(e.con_ayuda_30),
+      fallosFundamentos: Number(e.fallos_fundamentos),
     }),
   }));
 };
@@ -226,12 +266,15 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     tiempoPorEjercicio(sql, estudianteId),
     fundamentosResueltos(sql, estudianteId),
   ]);
+  // Las mismas alertas que el panel de la clase (incluido el estancamiento).
+  const alertas = (await estudiantesDeClase(sql, clase.id as string)).find((e) => e.id === estudianteId)?.alertas ?? [];
   return responder({
     status: 200,
     cuerpo: {
       clase,
       usuario: { ...usuario, fundamentos_resueltos: fundamentosHechos },
       escalon,
+      alertas,
       evolucion,
       envios,
       pistas,

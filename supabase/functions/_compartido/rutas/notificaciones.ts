@@ -14,6 +14,10 @@ import { idDeUsuario } from '../usuarios.ts';
 import { estudiantesDeClase } from './docente.ts';
 import { type NuevaNotificacion, notificar, semanaIso, TIPOS_CONOCIDOS } from '../notificaciones.ts';
 
+// Orden de las alertas en el aviso al docente: primero el estancamiento en el aprendizaje.
+const GRAVEDAD = ['atascado', 'tema', 'meseta', 'atascado-fundamentos', 'pistas', 'en-caida', 'inactivo', 'sin-actividad'];
+const gravedad = (alerta: string) => { const k = GRAVEDAD.indexOf(alerta.split(':')[0]); return k < 0 ? GRAVEDAD.length : k; };
+
 const MS_DIA = 86_400_000;
 // En la campana se avisa con 3 y 2 dias restantes; el ultimo dia lo avisa el cron (cierre_1d).
 export const AVISAR_CIERRE_DIAS = 3;
@@ -58,9 +62,15 @@ const materializar = async (
     const clases = await sql`SELECT id, nombre FROM clases WHERE docente_id = ${userId}`;
     for (const clase of clases) {
       const estudiantes = await estudiantesDeClase(sql, clase.id as string);
-      const conAlertas = estudiantes.filter((e) => e.alertas.length).length;
-      if (conAlertas) {
-        agregar('alertas', `alertas-${clase.id}-${hoy}`, { cantidad: conAlertas, clase: clase.nombre });
+      const conAlertas = estudiantes.filter((e) => e.alertas.length);
+      if (conAlertas.length) {
+        // Hasta 3 ejemplos con su alerta más grave; orden estable para que el aviso no cambie solo.
+        const peor = (alertas: string[]) => [...alertas].sort((x, y) => gravedad(x) - gravedad(y))[0];
+        const ejemplos = conAlertas
+          .map((e) => ({ nombre: e.username as string, alerta: peor(e.alertas) }))
+          .sort((x, y) => gravedad(x.alerta) - gravedad(y.alerta) || x.nombre.localeCompare(y.nombre))
+          .slice(0, 3);
+        agregar('alertas', `alertas-${clase.id}-${hoy}`, { cantidad: conAlertas.length, clase: clase.nombre, ejemplos });
       }
       const nuevos = estudiantes.filter((e) => Date.now() - e.unidoEn.getTime() < 7 * MS_DIA).length;
       if (nuevos) {

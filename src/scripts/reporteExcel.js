@@ -150,9 +150,10 @@ export const generarExcel = async (datos) => {
 
   /* A quién acompañar */
   const aco = libro.addWorksheet('Acompañar', { views: [{ showGridLines: false }] });
-  encabezadoHoja(aco, 'A quién acompañar', 'Estudiantes en riesgo o sin actividad, con el motivo.', 3);
-  tabla(aco, 4, [{ titulo: 'Estudiante', ancho: 30 }, { titulo: 'Estado', ancho: 15 }, { titulo: 'Motivo', ancho: 40 }],
-    datos.acompanar.map((a) => [a.nombre, SEMAFORO[a.estado], a.motivo]));
+  encabezadoHoja(aco, 'A quién acompañar', 'Estudiantes estancados, en riesgo o sin actividad, con el motivo y qué hacer.', 4);
+  tabla(aco, 4, [{ titulo: 'Estudiante', ancho: 30 }, { titulo: 'Estado', ancho: 15 }, { titulo: 'Motivo', ancho: 36 }, { titulo: 'Qué hacer', ancho: 60 }],
+    datos.acompanar.map((a) => [a.nombre, SEMAFORO[a.estado], a.motivo, a.sugerencia]));
+  for (let k = 5; k < 5 + datos.acompanar.length; k += 1) aco.getCell(k, 4).alignment = { wrapText: true, vertical: 'top' };
   datos.acompanar.forEach((a, i) => {
     const celda = aco.getCell(5 + i, 2);
     const [fondo, texto] = ESTADO[a.estado];
