@@ -61,7 +61,7 @@ const materializar = async (
   if (esDocente(identidad, config.docentes)) {
     const clases = await sql`SELECT id, nombre FROM clases WHERE docente_id = ${userId}`;
     for (const clase of clases) {
-      const estudiantes = await estudiantesDeClase(sql, clase.id as string);
+      const estudiantes = await estudiantesDeClase(sql, clase.id as string, config.zonaHoraria);
       const conAlertas = estudiantes.filter((e) => e.alertas.length);
       if (conAlertas.length) {
         // Hasta 3 ejemplos con su alerta más grave; orden estable para que el aviso no cambie solo.

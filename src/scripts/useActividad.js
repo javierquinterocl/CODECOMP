@@ -41,6 +41,18 @@ const useActividad = (user, activo, rutaRef) => {
     abrirSesionCookie(user);
     const renovar = USA_COOKIE ? setInterval(() => abrirSesionCookie(user), RENOVAR_MS) : null;
 
+    // Tiempo y pegados de un ejercicio; un pegado sin tick todavía también crea su entrada.
+    const sumarEjercicio = (ejercicio, { segundos = 0, pegados = 0, caracteres = 0 }) => {
+      const clave = claveDe(ejercicio);
+      const previo = resumen.ejercicios.get(clave) || { ...ejercicio, segundos: 0, pegados: 0, caracteres: 0 };
+      resumen.ejercicios.set(clave, {
+        ...previo,
+        segundos: previo.segundos + segundos,
+        pegados: previo.pegados + pegados,
+        caracteres: previo.caracteres + caracteres,
+      });
+    };
+
     // Se toma lo acumulado y, si el envío falla, vuelve a sumarse para el próximo.
     const vaciar = async (alCerrar = false) => {
       if (!resumen.segundos && !resumen.pegados) return;
@@ -51,10 +63,7 @@ const useActividad = (user, activo, rutaRef) => {
         resumen.segundos += enviado.segundos;
         resumen.pegados += enviado.pegados;
         resumen.caracteres += enviado.caracteres;
-        for (const [k, e] of enviado.ejercicios) {
-          const previo = resumen.ejercicios.get(k);
-          resumen.ejercicios.set(k, { ...e, segundos: e.segundos + (previo?.segundos || 0) });
-        }
+        for (const e of enviado.ejercicios.values()) sumarEjercicio(e, e);
       }
     };
 
@@ -62,8 +71,11 @@ const useActividad = (user, activo, rutaRef) => {
     // En burbuja: el editor de Fundamentos bloquea el pegado y ese no se cuenta.
     const pegar = (evento) => {
       if (evento.target?.tagName !== 'TEXTAREA' || evento.defaultPrevented) return;
+      const caracteres = evento.clipboardData?.getData('text')?.length || 0;
       resumen.pegados += 1;
-      resumen.caracteres += evento.clipboardData?.getData('text')?.length || 0;
+      resumen.caracteres += caracteres;
+      const ejercicio = ejercicioDeRuta(rutaRef?.current);
+      if (ejercicio) sumarEjercicio(ejercicio, { pegados: 1, caracteres });
     };
     const ocultar = () => { if (document.visibilityState === 'hidden') vaciar(); };
     const cerrar = () => vaciar(true);
@@ -80,10 +92,7 @@ const useActividad = (user, activo, rutaRef) => {
       if (!activa) return;
       const s = TICK_MS / 1000;
       resumen.segundos += s;
-      if (ejercicio) {
-        const previo = resumen.ejercicios.get(clave);
-        resumen.ejercicios.set(clave, { ...ejercicio, segundos: (previo?.segundos || 0) + s });
-      }
+      if (ejercicio) sumarEjercicio(ejercicio, { segundos: s });
     }, TICK_MS);
     const envio = setInterval(() => { refrescarToken(); vaciar(); }, ENVIO_MS);
 

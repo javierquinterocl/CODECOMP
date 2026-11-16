@@ -10,7 +10,45 @@ export const ALERTAS = {
   meseta: 'Estancado: 3 semanas sin subir',
   pistas: 'Depende de pistas avanzadas',
   'atascado-fundamentos': 'Atascado en Fundamentos',
+  pegado: 'Resueltos con pegado',
 };
+
+const MOTIVOS_PEGADO = {
+  'sobre-nivel': 'al primer intento y muy por encima de su nivel',
+  'poco-tiempo': 'con menos de 2 minutos en el ejercicio',
+};
+export const motivoPegado = (m) => MOTIVOS_PEGADO[m] || m;
+
+// Consejos para el propio estudiante en Mi progreso. Textos borrador: los decide el equipo.
+const CONSEJOS = {
+  atascado: 'Llevas varios fallos en un mismo problema. Pide la pista 1 o déjalo y vuelve mañana con la cabeza fresca.',
+  'en-caida': 'Tu nivel bajó estas dos semanas. Repasa en Mi progreso qué problemas se cerraron sin resolver.',
+  meseta: 'Llevas 3 semanas practicando sin subir. Prueba un tema nuevo de la Ruta o problemas un poco más difíciles.',
+  pistas: 'Casi siempre resuelves con la pista 2 o 3. Intenta un rato más con la pista 1 antes de pedir las demás.',
+  'atascado-fundamentos': 'Fallas varias veces el mismo ejercicio de Fundamentos. Lee el mensaje del gato y prueba con los ejemplos a mano.',
+};
+
+const ETIQUETAS_PROPIAS = {
+  atascado: 'Atascado en un problema',
+  'en-caida': 'Tu nivel bajó',
+  meseta: '3 semanas sin subir',
+  pistas: 'Dependes de las pistas avanzadas',
+  'atascado-fundamentos': 'Atascado en Fundamentos',
+};
+
+/** Etiqueta de una alerta dicha al estudiante ("tema:graphs" → "Te cuesta Grafos"). */
+export const etiquetaPropia = (alerta) => (String(alerta).startsWith('tema:') ? `Te cuesta ${temaDeAlerta(alerta).titulo}` : ETIQUETAS_PROPIAS[alerta] || etiquetaAlerta(alerta));
+
+/** Consejo para el estudiante; el del tema lo manda a su lección de la Ruta. */
+export const consejoAlerta = (alerta) => {
+  if (String(alerta).startsWith('tema:')) {
+    return `En ${temaDeAlerta(alerta).titulo} fallas más de lo que aciertas. Repasa la lección del tema en la Ruta antes de seguir.`;
+  }
+  return CONSEJOS[alerta] ?? '';
+};
+
+/** Enlace del consejo: la lección del tema o la Ruta. */
+export const enlaceConsejo = (alerta) => (String(alerta).startsWith('tema:') ? `/dashboard/ruta/${temaDeAlerta(alerta).slug}` : null);
 
 // Qué puede hacer el docente con cada alerta. Textos borrador: los decide el equipo.
 const SUGERENCIAS = {
@@ -21,6 +59,7 @@ const SUGERENCIAS = {
   meseta: 'Practica pero no avanza: proponle un tema nuevo de la Ruta o subirle el escalón.',
   pistas: 'Anímalo a intentar más con la pista 1 antes de pedir las demás, y repasa con él la idea clave.',
   'atascado-fundamentos': 'Revisa su envío de PSeInt en la ficha: falla varias veces el mismo ejercicio.',
+  pegado: 'Es una señal, no una prueba. Pídele que te explique su solución o que resuelva uno parecido contigo.',
 };
 
 const temaDeAlerta = (alerta) => {

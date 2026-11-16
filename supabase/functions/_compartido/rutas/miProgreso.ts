@@ -6,6 +6,10 @@ import type { Contexto } from '../contexto.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
+import { alertasPropias } from './docente.ts';
+
+// Ya se ve en la pagina o es una senal para el docente, no un consejo.
+const ALERTAS_SOLO_DOCENTE: string[] = ['sin-actividad', 'inactivo', 'pegado'];
 import { dia } from '../config.ts';
 import {
   detalleDeDia,
@@ -67,9 +71,13 @@ export const miProgreso = async (ctx: Contexto, recurso?: string): Promise<Respo
       tiempoPorEjercicio(sql, userId),
       fundamentosResueltos(sql, userId),
     ]);
+    // Las alertas del docente como consejos propios, con o sin clase; el pegado no se muestra.
+    const alertas = (await alertasPropias(sql, userId, config.zonaHoraria))
+      .filter((a) => !ALERTAS_SOLO_DOCENTE.includes(a));
     return responder({
       status: 200,
       cuerpo: {
+        alertas,
         escalon,
         fundamentos,
         usuario: { ...usuario, nivel: Number(usuario.nivel), fundamentos_resueltos: fundamentosHechos },

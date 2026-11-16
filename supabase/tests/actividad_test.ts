@@ -27,9 +27,10 @@ Deno.test('validarResumen acepta tiempo de Problemas y de Fundamentos dentro del
       { tipo: 'fundamentos', nivel: 'practica', numero: 7, segundos: 15 },
     ],
   });
+  // Sin pegados en el cuerpo, salen en cero.
   assertEquals(r?.ejercicios, [
-    { tipo: 'problema', numero: 100104, segundos: 30 },
-    { tipo: 'fundamentos', nivel: 'practica', numero: 7, segundos: 15 },
+    { tipo: 'problema', numero: 100104, segundos: 30, pegados: 0, caracteres: 0 },
+    { tipo: 'fundamentos', nivel: 'practica', numero: 7, segundos: 15, pegados: 0, caracteres: 0 },
   ]);
 });
 

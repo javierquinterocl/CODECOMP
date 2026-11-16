@@ -91,7 +91,7 @@ export const resumenesSemanales = async (sql: Sql, config: Config, fecha: string
     const clases = await sql`SELECT id, nombre FROM clases WHERE docente_id = ${d.id} ORDER BY creado_en`;
     const resumen = [];
     for (const c of clases) {
-      const estudiantes = await estudiantesDeClase(sql, c.id as string);
+      const estudiantes = await estudiantesDeClase(sql, c.id as string, config.zonaHoraria);
       // Solo conteos: el correo no lleva nombres de estudiantes.
       const [{ activos }] = await sql`
         SELECT count(DISTINCT m.user_id)::int AS activos FROM clase_miembros m

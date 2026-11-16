@@ -3,12 +3,15 @@ import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { EVENTO_ACTIVIDAD_ENVIADA, EVENTO_VACIAR_ACTIVIDAD, getDiaActividad, getMiProgreso } from '../scripts/registroApi';
 import { buscarNivel } from '../scripts/fundamentosData';
-import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias } from '../scripts/docenteData';
+import {
+  CATEGORIAS_TEMA, consejoAlerta, duracion, enlaceConsejo, etiquetaPropia, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias,
+} from '../scripts/docenteData';
 import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
 import TarjetaActividad from '../components/TarjetaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
+import ListaVerMas from '../components/VerMas';
 import { EsqPagina } from '../components/Esqueleto';
 
 const RESUELTOS_PARA_SUBIR = 5;
@@ -145,6 +148,22 @@ const MiProgresoPage = () => {
           </Seccion>
         )}
 
+        {datos.alertas?.length > 0 && (
+          <Seccion titulo="Qué te conviene ahora" sub="Lo que vemos en tu práctica y qué hacer">
+            <ul className="nb-doc-tabla">
+              {datos.alertas.map((a) => (
+                <li key={a} className="nb-doc-fila is-col">
+                  <span className="nb-dash-chip nb-doc-alerta">{etiquetaPropia(a)}</span>
+                  <p className="nb-doc-sugerencia">
+                    {consejoAlerta(a)}
+                    {enlaceConsejo(a) && <> <Link to={enlaceConsejo(a)}>Ir a la lección →</Link></>}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </Seccion>
+        )}
+
         <Seccion titulo="Evolución de tu nivel" sub="Cada punto es un problema cerrado">
           <p className="nb-doc-nota nb-doc-nota-top">
             Tu nivel sube al resolver un problema: más si es al primer intento, sin pistas y difícil para ti.
@@ -174,12 +193,12 @@ const MiProgresoPage = () => {
 
           <Seccion titulo="Qué resolver ahora" sub="Problemas que empezaste y aún no resuelves" className="nb-dash-col is-7">
             {abiertos.length ? (
-              <ul className="nb-doc-lista">{abiertos.map((p) => <PendienteFila key={p.numero} p={p} />)}</ul>
+              <ListaVerMas className="nb-doc-lista" lista={abiertos} paso={6} render={(p) => <PendienteFila key={p.numero} p={p} />} />
             ) : <p className="nb-doc-vacio">No tienes problemas a medias. Busca uno nuevo en los <Link to="/dashboard">recomendados de Inicio</Link>.</p>}
             {cerrados.length > 0 && (
               <>
                 <p className="nb-doc-nota nb-doc-nota-top">Cerrados sin resolver: ya no cambian tu nivel, pero puedes volver a intentarlos para practicar.</p>
-                <ul className="nb-doc-lista">{cerrados.map((p) => <PendienteFila key={p.numero} p={p} />)}</ul>
+                <ListaVerMas className="nb-doc-lista" lista={cerrados} paso={4} render={(p) => <PendienteFila key={p.numero} p={p} />} />
               </>
             )}
           </Seccion>

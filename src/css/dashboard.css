@@ -503,6 +503,26 @@ label.nb-dash-btn-claro:focus-within { outline: 3px solid var(--nb-blue); outlin
 .nb-dash-clase-form .nb-ex-send:disabled:hover { transform: none; box-shadow: 4px 4px 0px #000; }
 .nb-dash-clase-msg { margin: 12px 0 0; font-size: var(--fs-sm); font-weight: 600; }
 .nb-dash-clase-msg.is-error { color: var(--nb-danger); }
+/* Sin clase: sube bajo el banner con borde y sombra azules para que se vea. */
+.nb-dash-clase-destacada { border-left: 8px solid var(--nb-blue); box-shadow: 5px 5px 0px var(--nb-blue); }
+.nb-dash-clase-intro { margin: 0 0 14px; }
+.nb-dash-clase-saltar {
+  margin-top: 12px; padding: 0; border: 0; background: none; cursor: pointer;
+  font: 600 var(--fs-sm) 'Space Grotesk', sans-serif; color: var(--nb-ink-soft); text-decoration: underline;
+  transition: var(--nb-tr);
+}
+.nb-dash-clase-saltar:hover { color: var(--nb-blue); }
+@media (max-width: 640px) { .nb-dash-clase-destacada { box-shadow: 3px 3px 0px var(--nb-blue); } }
+
+/* "Ver más" bajo una lista larga (VerMas.jsx): nada se quita, solo se pliega. */
+.nb-vermas { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.nb-vermas-btn {
+  padding: 9px 16px; border: 2px solid #000; background: var(--nb-blue); color: #fff; cursor: pointer;
+  font: 700 var(--fs-sm) 'Space Grotesk', sans-serif; box-shadow: 3px 3px 0px #000; transition: var(--nb-tr);
+}
+.nb-vermas-btn small { font-weight: 500; opacity: 0.85; }
+.nb-vermas-btn.is-claro { background: #fff; color: #000; }
+.nb-vermas-btn:hover { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; }
 
 @media (max-width: 640px) {
   .nb-dash-avisos { left: 16px; right: 16px; bottom: 16px; width: auto; }
@@ -563,7 +583,10 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-pista { margin: 0; font-size: var(--fs-sm); line-height: 1.55; border-left: 4px solid var(--nb-blue); padding-left: 12px; }
 
 /* Mapa de calor: 0 sin práctica, 1 bajo, 2 medio, 3 alto. */
-.nb-doc-mapa-scroll { overflow-x: auto; margin-top: 14px; border: 2px solid #000; }
+/* Con muchos estudiantes el mapa se desplaza dentro y la cabecera y los nombres quedan fijos. */
+.nb-doc-mapa-scroll { overflow: auto; max-height: 520px; margin-top: 14px; border: 2px solid #000; }
+.nb-doc-mapa thead th { position: sticky; top: 0; z-index: 2; }
+.nb-doc-mapa tbody th { position: sticky; left: 0; z-index: 1; background: #fff; }
 .nb-doc-mapa { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .nb-doc-mapa th, .nb-doc-mapa td { border: 1px solid #000; padding: 8px 10px; text-align: center; white-space: nowrap; }
 .nb-doc-mapa thead th { font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; background: #000; color: #fff; }
@@ -1113,6 +1136,8 @@ a.nb-ruta-aprende:focus-visible { outline: 3px solid #000; outline-offset: 3px; 
 /* Alertas en la ficha del estudiante: la alerta y qué puede hacer el docente. */
 .nb-doc-sugerencia { margin: 6px 0 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--nb-ink-soft); }
 .nb-doc-alertas-ficha { border-left: 6px solid #000; }
+.nb-doc-subtitulo { margin: 18px 0 8px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--nb-blue); }
+.nb-doc-alertas-ficha .nb-doc-nota { margin: 10px 0 0; }
 
 /* Modo guiado: conmutador del docente y avisos de tema cerrado para el estudiante. */
 .nb-doc-guiada { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; margin: 0 0 var(--sp-gap); }

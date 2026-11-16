@@ -13,6 +13,7 @@ import { Plegable } from '../components/ExerciseBits';
 import { DownloadIcon, SearchIcon } from '../components/AppIcons';
 import { archivoDelReporte, datosDelReporte } from '../scripts/reporteClaseDatos';
 import { EsqFilas } from '../components/Esqueleto';
+import ListaVerMas from '../components/VerMas';
 
 const Alertas = ({ lista }) => (lista.length ? (
   <span className="nb-doc-alertas">
@@ -223,8 +224,7 @@ const UserHistoryPage = () => {
                   </div>
                 </div>
                 {errorReporte && <p className="nb-error" role="alert">{errorReporte}</p>}
-                <ul className="nb-doc-lista">
-                  {filtrados.map((e, i) => (
+                <ListaVerMas className="nb-doc-lista" lista={filtrados} paso={10} render={(e, i) => (
                     <li key={e.id} className="nb-pb-row nb-doc-estudiante">
                       <span className="nb-pb-row-num">{String(i + 1).padStart(2, '0')}</span>
                       <span className="nb-pb-row-main">
@@ -242,8 +242,7 @@ const UserHistoryPage = () => {
                       <span className="nb-doc-dato"><small>Esta semana</small><strong>{duracion(e.segundosSemana)}</strong></span>
                       <span className="nb-pb-row-go" aria-hidden="true">→</span>
                     </li>
-                  ))}
-                </ul>
+                  )} />
                 {!filtrados.length && <p className="nb-doc-vacio">Nadie coincide con «{busqueda}».</p>}
               </section>
 
@@ -284,8 +283,7 @@ const UserHistoryPage = () => {
                   <h2 className="nb-dash-section-title">Problemas que más cuestan</h2>
                   <div className="nb-dash-section-sub">Por envíos fallidos de la clase</div>
                   {datos.problemas.length ? (
-                    <ul className="nb-doc-tabla">
-                      {datos.problemas.map((p) => (
+                    <ListaVerMas className="nb-doc-tabla" lista={datos.problemas} paso={6} render={(p) => (
                         <li key={p.numero} className="nb-doc-fila">
                           <span className="nb-doc-celda is-grande">
                             <strong>#{p.numero} · {p.titulo_es || p.titulo}</strong>
@@ -294,8 +292,7 @@ const UserHistoryPage = () => {
                           <span className="nb-doc-dato"><small>Fallos</small><strong>{p.fallos}</strong></span>
                           <span className="nb-doc-dato"><small>Resolvieron</small><strong>{p.resolvieron}/{p.intentaron}</strong></span>
                         </li>
-                      ))}
-                    </ul>
+                      )} />
                   ) : <p className="nb-doc-vacio">Aún no hay envíos fallidos.</p>}
                 </section>
                 </div>

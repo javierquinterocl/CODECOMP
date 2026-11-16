@@ -4,7 +4,18 @@
 
 import type { Contexto } from '../contexto.ts';
 import { esDocente } from '../auth.ts';
-import { alertasDe, ETIQUETAS_GENERICAS, parecido, TEMA_ENVIOS, TEMA_PROBLEMAS, TEMA_TASA, UMBRAL_PARECIDO } from '../docente.ts';
+import {
+  alertasDe,
+  ETIQUETAS_GENERICAS,
+  motivosDePegado,
+  parecido,
+  PEGADO_DIAS,
+  PEGADO_MIN_CARACTERES,
+  TEMA_ENVIOS,
+  TEMA_PROBLEMAS,
+  TEMA_TASA,
+  UMBRAL_PARECIDO,
+} from '../docente.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
@@ -33,8 +44,73 @@ const auditar = (
     VALUES (${docenteId}, ${estudianteId}, ${claseId}, ${accion})
   `;
 
+/**
+ * Primeros aceptados de los ultimos 14 dias con un pegado grande en ese problema, ya filtrados por
+ * `motivosDePegado`. Sin autorizacion de datos no hay filas de actividad y no sale nada.
+ */
+export const aceptadosConPegado = async (sql: Contexto['sql'], userIds: string[], zona: string) => {
+  if (!userIds.length) return [];
+  const filas = await sql`
+    WITH primeros AS (
+      SELECT DISTINCT ON (s.user_id, s.problem_id) s.user_id, s.problem_id, s.created_at,
+        length(s.source_code) AS largo
+      FROM submissions s
+      WHERE s.user_id = ANY(${userIds}::uuid[]) AND s.verdict = 'ACCEPTED'
+      ORDER BY s.user_id, s.problem_id, s.created_at
+    )
+    SELECT pr.user_id, pr.created_at AS aceptado_en, pr.largo, u.nivel,
+      p.problem_number AS numero, p.title AS titulo, p.difficulty_rating AS rating,
+      a.caracteres, a.segundos,
+      NOT EXISTS (SELECT 1 FROM submissions o WHERE o.user_id = pr.user_id
+        AND o.problem_id = pr.problem_id AND o.created_at < pr.created_at
+        AND o.verdict NOT IN ('PENDING', 'ERROR_JUEZ')) AS primer_intento
+    FROM primeros pr
+    JOIN problems p ON p.id = pr.problem_id
+    JOIN users u ON u.id = pr.user_id
+    JOIN LATERAL (
+      SELECT sum(ae.caracteres_pegados)::int AS caracteres, sum(ae.segundos)::int AS segundos
+      FROM actividad_ejercicio ae
+      WHERE ae.user_id = pr.user_id AND ae.problem_id = pr.problem_id
+        AND ae.dia <= (pr.created_at AT TIME ZONE ${zona})::date
+    ) a ON a.caracteres >= ${PEGADO_MIN_CARACTERES}
+    WHERE pr.created_at > now() - make_interval(days => ${PEGADO_DIAS})
+    ORDER BY pr.created_at DESC
+  `;
+  return filas
+    .map((f) => ({
+      userId: f.user_id as string,
+      numero: f.numero as number,
+      titulo: f.titulo as string,
+      aceptadoEn: f.aceptado_en as Date,
+      caracteresPegados: Number(f.caracteres),
+      largoCodigo: Number(f.largo),
+      motivos: motivosDePegado({
+        caracteresPegados: Number(f.caracteres),
+        largoCodigo: Number(f.largo),
+        primerIntento: f.primer_intento === true,
+        rating: Number(f.rating),
+        nivel: Number(f.nivel),
+        segundosActivos: f.segundos === null ? null : Number(f.segundos),
+      }),
+    }))
+    .filter((f) => f.motivos.length);
+};
+
+type Origen = { claseId: string } | { userId: string };
+
 /** Estudiantes de una clase con sus datos y alertas; lo usan el panel y las notificaciones. */
-export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) => {
+export const estudiantesDeClase = (sql: Contexto['sql'], claseId: string, zona: string) =>
+  estudiantesDe(sql, { claseId }, zona);
+
+/** Las mismas alertas para un estudiante, con o sin clase (Mi progreso). */
+export const alertasPropias = async (sql: Contexto['sql'], userId: string, zona: string) =>
+  (await estudiantesDe(sql, { userId }, zona))[0]?.alertas ?? [];
+
+const estudiantesDe = async (sql: Contexto['sql'], origen: Origen, zona: string) => {
+  // Sin clase, el recorrido se cuenta desde el registro (m.unido_en = fecha de la cuenta).
+  const de = 'claseId' in origen
+    ? sql`FROM clase_miembros m JOIN users u ON u.id = m.user_id WHERE m.clase_id = ${origen.claseId}`
+    : sql`FROM users u CROSS JOIN LATERAL (SELECT u.created_at AS unido_en) m WHERE u.id = ${origen.userId}`;
   const estudiantes = await sql`
     SELECT u.id, u.firebase_uid, u.username, u.email, u.nivel, u.solved_count, m.unido_en,
       (SELECT count(*)::int FROM submissions s
@@ -93,12 +169,16 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
           AND NOT EXISTS (SELECT 1 FROM fundamentos_envios a WHERE a.user_id = u.id
             AND a.ejercicio_id = f.ejercicio_id AND a.veredicto = 'ACEPTADO')
         GROUP BY f.ejercicio_id) x) AS fallos_fundamentos
-    FROM clase_miembros m JOIN users u ON u.id = m.user_id
-    WHERE m.clase_id = ${claseId}
+    ${de}
     ORDER BY u.nivel DESC
   `;
+  // El pegado es solo para el docente: en las alertas propias no se calcula.
+  const pegados = 'claseId' in origen
+    ? await aceptadosConPegado(sql, estudiantes.map((e) => e.id as string), zona)
+    : [];
   const ahora = new Date();
   return estudiantes.map((e) => ({
+    conPegado: pegados.filter((p) => p.userId === e.id),
     id: e.id as string,
     firebaseUid: e.firebase_uid,
     username: e.username,
@@ -125,6 +205,7 @@ export const estudiantesDeClase = async (sql: Contexto['sql'], claseId: string) 
       resueltos30: Number(e.resueltos_30),
       conAyuda30: Number(e.con_ayuda_30),
       fallosFundamentos: Number(e.fallos_fundamentos),
+      resueltosConPegado: pegados.filter((p) => p.userId === e.id).length,
     }),
   }));
 };
@@ -138,7 +219,7 @@ const panelDeClase = async (ctx: Contexto, docenteId: string, claseId: string) =
   await auditar(sql, docenteId, 'ver_clase', claseId, null);
 
   const miembros = () => sql`SELECT user_id FROM clase_miembros WHERE clase_id = ${claseId}`;
-  const estudiantes = await estudiantesDeClase(sql, claseId);
+  const estudiantes = await estudiantesDeClase(sql, claseId, ctx.config.zonaHoraria);
   const temas = await sql`
     SELECT m.user_id, t.name AS tag, m.attempts AS intentos, m.successes AS aciertos
     FROM user_tag_mastery m JOIN tags t ON t.id = m.tag_id
@@ -266,8 +347,11 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
     tiempoPorEjercicio(sql, estudianteId),
     fundamentosResueltos(sql, estudianteId),
   ]);
-  // Las mismas alertas que el panel de la clase (incluido el estancamiento).
-  const alertas = (await estudiantesDeClase(sql, clase.id as string)).find((e) => e.id === estudianteId)?.alertas ?? [];
+  // Las mismas alertas que el panel de la clase (incluido el estancamiento y el pegado).
+  const propio = (await estudiantesDeClase(sql, clase.id as string, ctx.config.zonaHoraria))
+    .find((e) => e.id === estudianteId);
+  const alertas = propio?.alertas ?? [];
+  const conPegado = (propio?.conPegado ?? []).map(({ userId: _u, ...resto }) => resto);
   return responder({
     status: 200,
     cuerpo: {
@@ -275,6 +359,7 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
       usuario: { ...usuario, fundamentos_resueltos: fundamentosHechos },
       escalon,
       alertas,
+      conPegado,
       evolucion,
       envios,
       pistas,

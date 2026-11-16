@@ -5,12 +5,13 @@ import { cambiarEscalon, getDiaEstudiante, getFichaEstudiante } from '../scripts
 import { NIVELES } from '../scripts/problemsData';
 import NbSelect from '../components/NbSelect';
 import {
-  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs, etiquetaAlerta, sugerenciaAlerta,
+  CATEGORIAS_TEMA, duracion, fecha, lenguajeDe, nivelDeCelda, nombreVisible, porcentaje, temasPorCategoria, ultimosDias, veredictoEs, etiquetaAlerta, sugerenciaAlerta, motivoPegado,
 } from '../scripts/docenteData';
 import { Plegable } from '../components/ExerciseBits';
 import NivelEvolucion from '../components/NivelEvolucion';
 import TarjetaActividad from '../components/TarjetaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
+import ListaVerMas from '../components/VerMas';
 import FotoPerfil from '../components/FotoPerfil';
 import { EsqPagina } from '../components/Esqueleto';
 
@@ -157,6 +158,22 @@ const EstudianteFichaPage = () => {
                 </li>
               ))}
             </ul>
+            {ficha.conPegado?.length > 0 && (
+              <>
+                <h3 className="nb-doc-subtitulo">Resueltos con pegado (últimos 14 días)</h3>
+                <ul className="nb-doc-tabla">
+                  {ficha.conPegado.map((p) => (
+                    <li key={p.numero} className="nb-doc-fila">
+                      <span className="nb-doc-celda is-grande">#{p.numero} {p.titulo}</span>
+                      <span className="nb-doc-dato">{fecha(p.aceptadoEn)}</span>
+                      <span className="nb-doc-dato">Pegó {p.caracteresPegados} de {p.largoCodigo} caracteres</span>
+                      <span className="nb-doc-dato">{p.motivos.map(motivoPegado).join(' · ')}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="nb-doc-nota">Señal orientativa, no prueba: pudo pegar su propio código. Se evade escribiendo a mano.</p>
+              </>
+            )}
           </Seccion>
         )}
         {ficha.escalon && (
@@ -195,7 +212,7 @@ const EstudianteFichaPage = () => {
 
         <Seccion titulo="Tiempo por ejercicio" sub="Cuánto tarda de verdad en cada ejercicio · últimos 12 meses">
           {autorizado
-            ? <TiempoEjercicios ejercicios={ejercicios} totales={mapa.totales} limite={20} />
+            ? <TiempoEjercicios ejercicios={ejercicios} totales={mapa.totales} />
             : <p className="nb-doc-vacio">No autorizó el registro de actividad: no se mide su tiempo.</p>}
         </Seccion>
 
@@ -252,49 +269,43 @@ const EstudianteFichaPage = () => {
 
         <Seccion titulo="Pistas del tutor" sub="Lo que el tutor le respondió, con el veredicto que la motivó">
           {pistas.length ? (
-            <ul className="nb-doc-tabla">
-              {pistas.map((p) => (
-                <li key={`${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
-                  <div className="nb-doc-fila-top">
-                    <span className="nb-doc-estado">{veredictoEs(p.veredicto)}</span>
-                    <span className="nb-doc-celda is-grande"><strong>#{p.numero} · {p.titulo}</strong><small>{fecha(p.creado_en)} · pista {p.nivel ?? 1} de 3</small></span>
-                  </div>
-                  <p className="nb-doc-pista">{p.pista}</p>
-                </li>
-              ))}
-            </ul>
+            <ListaVerMas className="nb-doc-tabla" lista={pistas} paso={4} render={(p) => (
+              <li key={`${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
+                <div className="nb-doc-fila-top">
+                  <span className="nb-doc-estado">{veredictoEs(p.veredicto)}</span>
+                  <span className="nb-doc-celda is-grande"><strong>#{p.numero} · {p.titulo}</strong><small>{fecha(p.creado_en)} · pista {p.nivel ?? 1} de 3</small></span>
+                </div>
+                <p className="nb-doc-pista">{p.pista}</p>
+              </li>
+            )} />
           ) : <p className="nb-doc-vacio">No ha pedido pistas.</p>}
         </Seccion>
 
         <Seccion titulo="Pistas en Fundamentos" sub="Lo que el tutor le respondió en los ejercicios de PSeInt">
           {pistasFundamentos.length ? (
-            <ul className="nb-doc-tabla">
-              {pistasFundamentos.map((p) => (
-                <li key={`${p.nivel}-${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
-                  <div className="nb-doc-fila-top">
-                    <span className="nb-doc-estado">{p.veredicto}</span>
-                    <span className="nb-doc-celda is-grande"><strong>{p.titulo}</strong><small>{p.nivel} #{p.numero} · {fecha(p.creado_en)}</small></span>
-                  </div>
-                  <p className="nb-doc-pista">{p.pista}</p>
-                </li>
-              ))}
-            </ul>
+            <ListaVerMas className="nb-doc-tabla" lista={pistasFundamentos} paso={4} render={(p) => (
+              <li key={`${p.nivel}-${p.numero}-${p.creado_en}`} className="nb-doc-fila is-col">
+                <div className="nb-doc-fila-top">
+                  <span className="nb-doc-estado">{p.veredicto}</span>
+                  <span className="nb-doc-celda is-grande"><strong>{p.titulo}</strong><small>{p.nivel} #{p.numero} · {fecha(p.creado_en)}</small></span>
+                </div>
+                <p className="nb-doc-pista">{p.pista}</p>
+              </li>
+            )} />
           ) : <p className="nb-doc-vacio">No ha pedido pistas en Fundamentos.</p>}
         </Seccion>
 
         <Seccion titulo="Fundamentos (PSeInt)" sub="Últimos envíos">
           {fundamentos.length ? (
-            <ul className="nb-doc-tabla">
-              {fundamentos.map((f) => (
-                <li key={`${f.nivel}-${f.numero}-${f.creado_en}`} className="nb-doc-fila is-col">
-                  <div className="nb-doc-fila-top">
-                    <span className={`nb-doc-estado${f.veredicto === 'ACEPTADO' ? ' is-on' : ''}`}>{f.veredicto}</span>
-                    <span className="nb-doc-celda is-grande"><strong>{f.titulo}</strong><small>{f.nivel} #{f.numero} · {fecha(f.creado_en)}{f.ejemplo_fallido ? ` · falló en ${f.oculto ? 'un caso oculto' : 'el ejemplo'} ${f.ejemplo_fallido}` : ''}</small></span>
-                  </div>
-                  <details className="nb-doc-codigo"><summary>Ver código</summary><pre>{f.codigo}</pre></details>
-                </li>
-              ))}
-            </ul>
+            <ListaVerMas className="nb-doc-tabla" lista={fundamentos} paso={6} render={(f) => (
+              <li key={`${f.nivel}-${f.numero}-${f.creado_en}`} className="nb-doc-fila is-col">
+                <div className="nb-doc-fila-top">
+                  <span className={`nb-doc-estado${f.veredicto === 'ACEPTADO' ? ' is-on' : ''}`}>{f.veredicto}</span>
+                  <span className="nb-doc-celda is-grande"><strong>{f.titulo}</strong><small>{f.nivel} #{f.numero} · {fecha(f.creado_en)}{f.ejemplo_fallido ? ` · falló en ${f.oculto ? 'un caso oculto' : 'el ejemplo'} ${f.ejemplo_fallido}` : ''}</small></span>
+                </div>
+                <details className="nb-doc-codigo"><summary>Ver código</summary><pre>{f.codigo}</pre></details>
+              </li>
+            )} />
           ) : <p className="nb-doc-vacio">Sin envíos en Fundamentos.</p>}
         </Seccion>
 
