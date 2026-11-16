@@ -751,9 +751,46 @@ a.nb-doc-filtro { display: inline-block; text-decoration: none; }
 .nb-doc-calor-celda.is-futuro { border-color: transparent; background: transparent; }
 .nb-doc-calor-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
 .nb-doc-calor-leyenda { display: inline-flex; align-items: center; gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: var(--nb-ink-soft); }
+/* Días del mapa como botones: el elegido lleva marco negro y sombra azul; el foco, contorno azul. */
+button.nb-doc-calor-celda { padding: 0; margin: 0; appearance: none; cursor: pointer; font: inherit; }
+button.nb-doc-calor-celda:hover { box-shadow: 0 0 0 2px var(--nb-blue); }
+button.nb-doc-calor-celda:focus-visible { outline: 2px solid var(--nb-blue); outline-offset: 3px; }
+.nb-doc-calor-celda.is-elegido { box-shadow: 0 0 0 2px #000, 3px 3px 0 2px var(--nb-blue); position: relative; z-index: 1; }
+
+/* Tarjeta de actividad: mapa y detalle del día lado a lado si la tarjeta es ancha; si no, apilados. */
+.nb-doc-actividad { container-type: inline-size; }
+.nb-doc-actividad .nb-doc-calor { --c: clamp(12px, 0.6vw, 16px); }
+.nb-doc-actividad-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--sp-gap); }
+.nb-doc-actividad-mapa { min-width: 0; }
+.nb-doc-dia { position: relative; min-width: 0; height: clamp(280px, 42vh, 380px); background: #fff; border: 2px solid #000; box-shadow: 4px 4px 0px #000; }
+@container (min-width: 1250px) {
+  .nb-doc-actividad-grid { grid-template-columns: minmax(0, max-content) minmax(360px, 1fr); }
+  .nb-doc-dia { height: auto; min-height: 320px; }
+}
+/* El interior no estira la tarjeta: toma el alto del panel y solo la lista se desplaza. */
+.nb-doc-dia-interior { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.nb-doc-dia-cabeza { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; padding: clamp(10px, 0.8vw, 16px) clamp(12px, 1vw, 20px); border-bottom: 2px solid #000; }
+.nb-doc-dia-nav { display: flex; align-items: center; gap: 10px; }
+.nb-doc-dia-fecha { flex: 1 1 auto; min-width: 0; margin: 0; font-size: var(--fs-lg); font-weight: 700; text-align: center; }
+.nb-doc-dia-fecha::first-letter { text-transform: uppercase; }
+.nb-doc-dia-flecha { flex: 0 0 auto; width: clamp(34px, 2vw, 42px); height: clamp(34px, 2vw, 42px); border: 2px solid #000; background: #fff; color: #000; font-family: inherit; font-size: clamp(20px, 1.2vw, 26px); font-weight: 700; line-height: 1; cursor: pointer; box-shadow: 3px 3px 0px #000; transition: var(--nb-tr); }
+.nb-doc-dia-flecha:hover:not(:disabled) { transform: translate(2px, 2px); box-shadow: 1px 1px 0px #000; background: var(--nb-blue); color: #fff; }
+.nb-doc-dia-flecha:disabled { opacity: 0.6; cursor: not-allowed; }
+.nb-doc-dia-cifras { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; min-height: 26px; }
+.nb-doc-dia-lista { flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 0 clamp(12px, 1vw, 20px) 12px; }
+.nb-doc-dia-lista .nb-doc-tabla { margin-top: 0; border-top: none; }
+.nb-doc-dia-fila { flex-wrap: nowrap; }
+.nb-doc-dia-titulo { font-weight: 700; color: #000; text-decoration: none; overflow-wrap: anywhere; }
+.nb-doc-dia-titulo:hover { color: var(--nb-blue); text-decoration: underline; text-underline-offset: 3px; }
+.nb-doc-dia-estado { flex: 0 0 auto; white-space: nowrap; }
+.nb-doc-dia-vacio { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; padding: clamp(12px, 1vw, 20px); }
+.nb-doc-dia-enlaces { display: flex; flex-wrap: wrap; gap: 10px; }
+@container (max-width: 560px) {
+  .nb-doc-dia-fila { flex-wrap: wrap; }
+}
 
 @media (max-width: 640px) {
-  .nb-doc-calor { --c: 10px; --g: 2px; }
+  .nb-doc-calor, .nb-doc-actividad .nb-doc-calor { --c: 10px; --g: 2px; }
 }
 
 /* ── Esqueletos de carga: la forma de lo que llega, en bloques planos que laten ── */

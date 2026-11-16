@@ -38,3 +38,10 @@ export const avisarClase = async (user, claseId, aviso) => leer(
 /** Ficha de un estudiante de una clase del docente. */
 export const getFichaEstudiante = (user, estudianteId) =>
   pedir(user, `docente/estudiante/${estudianteId}`, 'No se pudo cargar el estudiante.');
+
+/** Tiempo y envíos de un día del estudiante, por ejercicio. Si la respuesta no es de ese día, es un error. */
+export const getDiaEstudiante = async (user, estudianteId, fecha) => {
+  const data = await pedir(user, `docente/estudiante/${estudianteId}/dia?fecha=${fecha}`, 'No se pudo cargar ese día.');
+  if (data.dia !== fecha) throw new Error('No se pudo cargar ese día.');
+  return data;
+};

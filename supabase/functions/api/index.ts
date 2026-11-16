@@ -121,7 +121,7 @@ Deno.serve(async (req: Request) => {
       case 'docente':
         return await docente(ctx, segmentos[1], segmentos[2], segmentos[3]);
       case 'mi-progreso':
-        return await miProgreso(ctx);
+        return await miProgreso(ctx, segmentos[1]);
       case 'sesion':
         return await sesion(ctx);
       case 'notificaciones':

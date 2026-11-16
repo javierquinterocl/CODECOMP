@@ -5,7 +5,16 @@ import {
   tocaPurgar,
   validarResumen,
 } from '../functions/_compartido/registro.ts';
-import { nivelDeDia, SEMANAS_MAPA, semanasDeActividad } from '../functions/_compartido/actividad.ts';
+import {
+  armarDetalleDia,
+  type EnviosEjercicioDia,
+  fechaValida,
+  nivelDeDia,
+  SEMANAS_MAPA,
+  semanasDeActividad,
+  type TiempoEjercicioDia,
+  TOPE_EJERCICIOS_DIA,
+} from '../functions/_compartido/actividad.ts';
 import { dia } from '../functions/_compartido/config.ts';
 
 // ── Tiempo por ejercicio en el resumen ──
@@ -112,4 +121,59 @@ Deno.test('el dia del registro es el de Bogota, no el UTC', () => {
   // 2026-11-14 03:00 UTC = 2026-11-13 22:00 en Bogota.
   assertEquals(dia('America/Bogota', new Date('2026-11-14T03:00:00Z')), '2026-11-13');
   assertEquals(dia('America/Bogota', new Date('2026-11-14T05:30:00Z')), '2026-11-14');
+});
+
+Deno.test('fechaValida exige una fecha real dentro de los ultimos 371 dias', () => {
+  const hoy = '2026-11-15';
+  assertEquals(fechaValida('2026-11-15', hoy), true);
+  assertEquals(fechaValida('2025-11-10', hoy), true);
+  assertEquals(fechaValida('2025-11-09', hoy), false); // 371 dias atras: fuera del mapa
+  assertEquals(fechaValida('2026-11-16', hoy), false); // futuro
+  assertEquals(fechaValida('2026-02-30', hoy), false); // no existe
+  assertEquals(fechaValida('2026-1-05', hoy), false);
+  assertEquals(fechaValida("2026-11-15' OR 1=1", hoy), false);
+  assertEquals(fechaValida(null, hoy), false);
+});
+
+const tiempoDe = (t: Partial<TiempoEjercicioDia>): TiempoEjercicioDia => ({
+  tipo: 'problema', numero: 1, nivel: null, titulo: 'P', tags: [], dificultad: 800, segundos: 0, ...t,
+});
+const enviosDe = (e: Partial<EnviosEjercicioDia>): EnviosEjercicioDia => ({
+  tipo: 'problema', numero: 1, nivel: null, titulo: 'P', tags: [], dificultad: 800,
+  envios: 1, aceptado: false, ultimoVeredicto: 'WRONG_ANSWER', ...e,
+});
+
+Deno.test('armarDetalleDia une tiempo y envios del mismo ejercicio y ordena por tiempo', () => {
+  const d = armarDetalleDia('2026-11-15', 3000, [
+    tiempoDe({ numero: 10, segundos: 600 }),
+    tiempoDe({ tipo: 'fundamentos', nivel: 'fundamentos', numero: 3, segundos: 1200 }),
+  ], [
+    enviosDe({ numero: 10, envios: 3, aceptado: true, ultimoVeredicto: 'ACCEPTED' }),
+    enviosDe({ tipo: 'fundamentos', nivel: 'practica', numero: 3, envios: 2, ultimoVeredicto: 'ERROR' }),
+  ]);
+  assertEquals(d.ejercicios.map((e) => `${e.tipo}:${e.nivel}:${e.numero}`), [
+    'fundamentos:fundamentos:3', 'problema:null:10', 'fundamentos:practica:3',
+  ]);
+  assertEquals(d.ejercicios[1], { ...tiempoDe({ numero: 10, segundos: 600 }), envios: 3, aceptado: true, ultimoVeredicto: 'ACCEPTED' });
+  // F3 de Practica no tiene tiempo registrado, pero aparece por sus envios.
+  assertEquals(d.ejercicios[2].segundos, 0);
+  assertEquals(d.ejercicios[0].ultimoVeredicto, null);
+  assertEquals({ s: d.segundos, se: d.segundosEjercicios, e: d.envios, a: d.aceptados }, { s: 3000, se: 1800, e: 5, a: 1 });
+});
+
+Deno.test('armarDetalleDia calcula los totales antes del tope de filas', () => {
+  const muchos = Array.from({ length: TOPE_EJERCICIOS_DIA + 20 }, (_, i) => enviosDe({ numero: i + 1, aceptado: i < 110 }));
+  const d = armarDetalleDia('2026-11-15', 0, [], muchos);
+  assertEquals(d.ejercicios.length, TOPE_EJERCICIOS_DIA);
+  assertEquals(d.envios, TOPE_EJERCICIOS_DIA + 20);
+  assertEquals(d.aceptados, 110);
+});
+
+Deno.test('los totales del detalle coinciden con la celda del mapa para los mismos datos', () => {
+  const tiempos = [tiempoDe({ numero: 1, segundos: 400 }), tiempoDe({ numero: 2, segundos: 200 })];
+  const envios = [enviosDe({ numero: 2, envios: 4 }), enviosDe({ numero: 5, envios: 1 })];
+  const d = armarDetalleDia('2026-11-14', 900, tiempos, envios);
+  const mapa = semanasDeActividad([{ dia: '2026-11-14', segundos: 900, segundosEjercicios: 600, envios: 5 }], '2026-11-15');
+  const celda = mapa.semanas.flat().find((c) => c?.dia === '2026-11-14')!;
+  assertEquals({ s: d.segundos, se: d.segundosEjercicios, e: d.envios }, { s: celda.segundos, se: celda.segundosEjercicios, e: celda.envios });
 });

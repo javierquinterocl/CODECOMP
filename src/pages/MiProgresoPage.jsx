@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { EVENTO_ACTIVIDAD_ENVIADA, EVENTO_VACIAR_ACTIVIDAD, getMiProgreso } from '../scripts/registroApi';
+import { EVENTO_ACTIVIDAD_ENVIADA, EVENTO_VACIAR_ACTIVIDAD, getDiaActividad, getMiProgreso } from '../scripts/registroApi';
 import { buscarNivel } from '../scripts/fundamentosData';
 import { CATEGORIAS_TEMA, duracion, fecha, nivelDeCelda, porcentaje, temasPorCategoria, ultimosDias } from '../scripts/docenteData';
 import { NIVELES, buscarCategoria, categoriaDeProblema } from '../scripts/problemsData';
 import { NivelBarra } from '../components/ProblemBits';
 import NivelEvolucion from '../components/NivelEvolucion';
-import MapaActividad from '../components/MapaActividad';
+import TarjetaActividad from '../components/TarjetaActividad';
 import TiempoEjercicios from '../components/TiempoEjercicios';
 import { EsqPagina } from '../components/Esqueleto';
 
@@ -118,6 +118,17 @@ const MiProgresoPage = () => {
       </div>
 
       <div className="nb-doc-stack">
+        <TarjetaActividad
+          titulo="Tu actividad"
+          sub={autorizado ? 'Últimos 12 meses · elige un día para ver qué hiciste' : 'Últimos 12 meses · tus envíos por día'}
+          nota={!autorizado && (
+            <p className="nb-doc-nota nb-doc-nota-top">No registramos tu tiempo porque no lo has autorizado; aquí solo ves tus envíos. Puedes cambiarlo en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>
+          )}
+          mapa={mapa}
+          conTiempo={autorizado}
+          cargarDia={(f) => getDiaActividad(user, f)}
+        />
+
         {datos.escalon && (
           <Seccion titulo={`Tu escalón: ${NIVELES[datos.escalon.actual]}`} sub={`Escalón ${datos.escalon.actual} de 5`}>
             <div className="nb-doc-escalon">
@@ -173,13 +184,6 @@ const MiProgresoPage = () => {
             )}
           </Seccion>
         </div>
-
-        <Seccion titulo="Tu actividad" sub={autorizado ? 'Últimos 12 meses · pasa el cursor por un día para ver el detalle' : 'Últimos 12 meses · tus envíos por día'}>
-          {!autorizado && (
-            <p className="nb-doc-nota nb-doc-nota-top">No registramos tu tiempo porque no lo has autorizado; aquí solo ves tus envíos. Puedes cambiarlo en <Link to="/dashboard/cuenta">Mi cuenta</Link>.</p>
-          )}
-          <MapaActividad mapa={mapa} conTiempo={autorizado} />
-        </Seccion>
 
         <div className="nb-dash-row">
           <Seccion titulo="Tiempo por ejercicio" sub="Dónde se te va el tiempo de verdad · últimos 12 meses" className="nb-dash-col is-7">

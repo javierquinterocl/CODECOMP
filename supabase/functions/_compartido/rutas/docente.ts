@@ -9,7 +9,13 @@ import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
 import { dia } from '../config.ts';
-import { fundamentosResueltos, mapaDeActividad, tiempoPorEjercicio } from '../actividad.ts';
+import {
+  detalleDeDia,
+  fechaValida,
+  fundamentosResueltos,
+  mapaDeActividad,
+  tiempoPorEjercicio,
+} from '../actividad.ts';
 import { huellaCorta, notificar, notificarSinFallar } from '../notificaciones.ts';
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -241,6 +247,26 @@ const fichaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId:
 };
 
 // POST /docente/estudiante/:id/escalon { minimo }: el docente sube (o devuelve) el piso del escalon.
+/** Detalle de un dia de un estudiante de sus clases; se audita como ver_estudiante. */
+const diaDeEstudiante = async (ctx: Contexto, docenteId: string, estudianteId: string) => {
+  const { url, sql, config, cors } = ctx;
+  const fecha = url.searchParams.get('fecha');
+  if (!fechaValida(fecha, dia(config.zonaHoraria))) {
+    return responder(rechazo(400, 'fecha', 'Elige un dia de los ultimos 12 meses.'), cors);
+  }
+  const [clase] = await sql`
+    SELECT c.id FROM clase_miembros m JOIN clases c ON c.id = m.clase_id
+    WHERE m.user_id = ${estudianteId} AND c.docente_id = ${docenteId}
+    ORDER BY m.unido_en LIMIT 1
+  `;
+  if (!clase) {
+    return responder(rechazo(404, 'estudiante', 'Ese estudiante no esta en tus clases.'), cors);
+  }
+  await auditar(sql, docenteId, 'ver_estudiante', clase.id as string, estudianteId);
+  const detalle = await detalleDeDia(sql, estudianteId, config.zonaHoraria, fecha);
+  return responder({ status: 200, cuerpo: detalle }, cors);
+};
+
 const cambiarEscalon = async (ctx: Contexto, docenteId: string, estudianteId: string) => {
   const { req, sql, cors } = ctx;
   const cuerpo = await req.json().catch(() => null);
@@ -332,7 +358,8 @@ export const docente = async (
   const cambio = recurso === 'estudiante' && accion === 'escalon';
   const aviso = recurso === 'clase' && accion === 'aviso';
   const escritura = cambio || aviso;
-  if (req.method !== (escritura ? 'POST' : 'GET') || (accion && !escritura)) {
+  const verDia = recurso === 'estudiante' && accion === 'dia';
+  if (req.method !== (escritura ? 'POST' : 'GET') || (accion && !escritura && !verDia)) {
     return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
   }
   if (!identidad) {
@@ -348,6 +375,7 @@ export const docente = async (
     const docenteId = await idDeUsuario(sql, identidad);
     if (cambio) return await cambiarEscalon(ctx, docenteId, id);
     if (aviso) return await avisarClase(ctx, docenteId, id);
+    if (verDia) return await diaDeEstudiante(ctx, docenteId, id);
     return recurso === 'clase'
       ? await panelDeClase(ctx, docenteId, id)
       : await fichaDeEstudiante(ctx, docenteId, id);

@@ -116,5 +116,12 @@ export const unirseAClase = async (user, codigo) =>
 export const getMiProgreso = async (user) =>
   leer(await pedir(user, rutaApi('mi-progreso')), 'No se pudo cargar tu progreso.');
 
+/** Tiempo y envíos de un día, por ejercicio. Si la respuesta no es de ese día, es un error. */
+export const getDiaActividad = async (user, fecha) => {
+  const data = await leer(await pedir(user, rutaApi(`mi-progreso/dia?fecha=${fecha}`)), 'No se pudo cargar ese día.');
+  if (data.dia !== fecha) throw new Error('No se pudo cargar ese día.');
+  return data;
+};
+
 export const crearClase = async (user, nombre) =>
   leer(await pedir(user, URL_CLASES, { cuerpo: { nombre } }), 'No se pudo crear la clase.');

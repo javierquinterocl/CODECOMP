@@ -1,19 +1,28 @@
 // GET /mi-progreso: lo que el estudiante necesita para saber que mejorar y que resolver.
 // Solo sus propios datos; sin codigo ni comparacion con companeros.
+// GET /mi-progreso/dia?fecha=YYYY-MM-DD: tiempo y envios de ese dia, por ejercicio.
 
 import type { Contexto } from '../contexto.ts';
 import { rechazo, responder } from '../http.ts';
 import { idDeUsuario } from '../usuarios.ts';
 import { escalonDelUsuario } from '../escalon.ts';
 import { dia } from '../config.ts';
-import { fundamentosResueltos, mapaDeActividad, tiempoPorEjercicio } from '../actividad.ts';
+import {
+  detalleDeDia,
+  fechaValida,
+  fundamentosResueltos,
+  mapaDeActividad,
+  tiempoPorEjercicio,
+} from '../actividad.ts';
 
-export const miProgreso = async (ctx: Contexto): Promise<Response> => {
+export const miProgreso = async (ctx: Contexto, recurso?: string): Promise<Response> => {
   const { req, sql, config, cors, identidad } = ctx;
+  if (recurso && recurso !== 'dia') return responder(rechazo(404, 'ruta', 'Ruta no encontrada.'), cors);
   if (req.method !== 'GET') return responder(rechazo(405, 'metodo', 'Metodo no permitido.'), cors);
   if (!identidad) {
     return responder(rechazo(401, 'sin-sesion', 'Inicia sesion para ver tu progreso.'), cors);
   }
+  if (recurso === 'dia') return await diaPropio(ctx);
   try {
     const userId = await idDeUsuario(sql, identidad);
     // En paralelo: postgres.js encadena las consultas en la misma conexion sin esperar cada una.
@@ -74,5 +83,22 @@ export const miProgreso = async (ctx: Contexto): Promise<Response> => {
   } catch (error) {
     console.error('Mi progreso error:', error);
     return responder(rechazo(500, 'consulta', 'No se pudo consultar tu progreso.'), cors);
+  }
+};
+
+/** Detalle de un dia del propio estudiante. */
+const diaPropio = async (ctx: Contexto): Promise<Response> => {
+  const { url, sql, config, cors, identidad } = ctx;
+  const fecha = url.searchParams.get('fecha');
+  if (!fechaValida(fecha, dia(config.zonaHoraria))) {
+    return responder(rechazo(400, 'fecha', 'Elige un dia de los ultimos 12 meses.'), cors);
+  }
+  try {
+    const userId = await idDeUsuario(sql, identidad!);
+    const detalle = await detalleDeDia(sql, userId, config.zonaHoraria, fecha);
+    return responder({ status: 200, cuerpo: detalle }, cors);
+  } catch (error) {
+    console.error('Dia de actividad error:', error);
+    return responder(rechazo(500, 'consulta', 'No se pudo consultar ese dia.'), cors);
   }
 };

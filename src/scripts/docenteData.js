@@ -61,6 +61,11 @@ export const duracion = (segundos) => {
   return `${Math.floor(minutos / 60)} h ${minutos % 60} min`;
 };
 
+/** Fecha de un día YYYY-MM-DD en palabras: «sábado, 15 de noviembre de 2026». */
+export const fechaLarga = (dia) => new Date(`${dia}T12:00:00Z`).toLocaleDateString('es-CO', {
+  weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+});
+
 export const fecha = (valor) => (valor
   ? new Date(valor).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
   : '—');
