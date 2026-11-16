@@ -205,19 +205,20 @@ const LeccionPage = () => {
         <p className="nb-leccion-p">Problemas de este tema a tu altura. Si te atascas, pide las pistas por niveles.</p>
         {propuestos === null && <EsqFilas n={3} aviso="Cargando problemas…" />}
         {propuestos?.length > 0 && (
-          <ul className="nb-ruta-problemas">
+          <ul className="nb-leccion-problemas">
             {propuestos.map((p) => (
               <li key={p.numero}>
-                <Link to={`/dashboard/problemas/${tema}/${p.numero}`} className="nb-ruta-problema">
-                  <span className="nb-ruta-problema-num">#{p.numero}</span>
-                  <span className="nb-ruta-problema-titulo">{idioma === 'es' && p.tituloEs ? p.tituloEs : p.titulo}</span>
-                  <span className="nb-ruta-problema-nivel">{p.dificultadRating}</span>
+                <Link to={`/dashboard/problemas/${tema}/${p.numero}`} className="nb-leccion-problema">
+                  <span className="nb-leccion-problema-num">#{p.numero}</span>
+                  <span className="nb-leccion-problema-titulo">{idioma === 'es' && p.tituloEs ? p.tituloEs : p.titulo}</span>
+                  <span className="nb-leccion-problema-nivel">{p.dificultadRating}</span>
+                  <span className="nb-leccion-problema-ir" aria-hidden="true">→</span>
                 </Link>
               </li>
             ))}
           </ul>
         )}
-        {propuestos?.length === 0 && <Link to={`/dashboard/problemas/${tema}`} className="nb-ruta-mas">Ver todos los problemas de {categoria?.titulo ?? tema} →</Link>}
+        {propuestos?.length === 0 && <Link to={`/dashboard/problemas/${tema}`} className="nb-leccion-mas">Ver todos los problemas de {categoria?.titulo ?? tema} →</Link>}
       </Seccion>
     </div>
   );

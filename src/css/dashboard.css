@@ -1098,3 +1098,14 @@ a.nb-ruta-aprende:focus-visible { outline: 3px solid #000; outline-offset: 3px; 
 .nb-vista-pila-caja { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
 @media (max-width: 760px) { .nb-widget-dos { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) { .nb-widget { box-shadow: 3px 3px 0px #000; } }
+
+/* Práctica de la lección: filas propias sobre la tarjeta blanca (la Ruta usa texto blanco sobre color). */
+.nb-leccion-problemas { list-style: none; margin: 0; padding: 0; border-top: 1px solid #000; }
+.nb-leccion-problema { display: flex; align-items: center; gap: 12px; padding: 12px 8px; border-bottom: 1px solid #000; color: #000; text-decoration: none; transition: var(--nb-tr); }
+.nb-leccion-problema:hover { background: var(--nb-hover); color: var(--nb-blue); }
+.nb-leccion-problema:focus-visible { outline-offset: -3px; }
+.nb-leccion-problema-num { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); font-weight: 700; color: var(--nb-blue); }
+.nb-leccion-problema-titulo { flex: 1 1 auto; min-width: 0; font-weight: 600; font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nb-leccion-problema-nivel { flex: 0 0 auto; font-family: 'JetBrains Mono', monospace; font-size: var(--fs-xs); color: var(--nb-ink-soft); }
+.nb-leccion-problema-ir { flex: 0 0 auto; font-weight: 700; }
+.nb-leccion-mas { align-self: flex-start; font-weight: 700; color: var(--nb-blue); }

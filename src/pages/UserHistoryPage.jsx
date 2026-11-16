@@ -11,7 +11,7 @@ import HistorialSesiones from '../components/HistorialSesiones';
 import AvisarClase from '../components/AvisarClase';
 import { Plegable } from '../components/ExerciseBits';
 import { DownloadIcon, SearchIcon } from '../components/AppIcons';
-import { archivoDeClase, csvDeClase } from '../scripts/reporteClase';
+import { archivoDelReporte, datosDelReporte } from '../scripts/reporteClaseDatos';
 import { EsqFilas } from '../components/Esqueleto';
 
 const Alertas = ({ lista }) => (lista.length ? (
@@ -21,15 +21,19 @@ const Alertas = ({ lista }) => (lista.length ? (
 ) : null);
 
 /** Panel docente: la clase de un vistazo, cada estudiante y el historial de sesiones. */
-// Todos los estudiantes de la clase, no solo los que deja ver la búsqueda.
-const descargarReporte = (clase, estudiantes) => {
-  const csv = csvDeClase(estudiantes, { nombre: nombreVisible, alerta: (a) => ALERTAS[a] || a });
-  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+// Reporte de toda la clase (no solo lo que deja ver la búsqueda). Las librerías se cargan al pulsar.
+const descargarReporte = async (panel, docente, formato) => {
+  const datos = datosDelReporte(panel, { nombre: nombreVisible, alerta: (a) => ALERTAS[a] || a, docente });
+  const { generarPdf } = formato === 'pdf' ? await import('../scripts/reportePdf') : {};
+  const { generarExcel } = formato === 'xlsx' ? await import('../scripts/reporteExcel') : {};
+  const archivo = formato === 'pdf' ? await generarPdf(datos) : await generarExcel(datos);
+  const url = URL.createObjectURL(archivo);
   const enlace = document.createElement('a');
   enlace.href = url;
-  enlace.download = archivoDeClase(clase?.nombre);
+  enlace.download = archivoDelReporte(panel.clase?.nombre, formato);
   enlace.click();
-  setTimeout(() => URL.revokeObjectURL(url), 0);
+  // Unos segundos antes de soltarlo: algunos navegadores cortan la descarga si se revoca enseguida.
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 };
 
 const UserHistoryPage = () => {
@@ -40,6 +44,8 @@ const UserHistoryPage = () => {
   const [panel, setPanel] = useState(null);
   const [error, setError] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [generando, setGenerando] = useState('');
+  const [errorReporte, setErrorReporte] = useState('');
 
   useEffect(() => {
     if (user && !isAdmin) navigate('/dashboard', { replace: true });
@@ -155,11 +161,30 @@ const UserHistoryPage = () => {
                       <SearchIcon />
                       <input type="search" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} placeholder="Buscar por nombre o correo" aria-label="Buscar estudiante" />
                     </div>
-                    <button type="button" className="nb-dash-btn-claro nb-doc-csv" onClick={() => descargarReporte(datos.clase, estudiantes)}>
-                      <DownloadIcon /> Descargar CSV
-                    </button>
+                    {['pdf', 'xlsx'].map((formato) => (
+                      <button
+                        key={formato}
+                        type="button"
+                        className={`${formato === 'pdf' ? 'nb-ex-send' : 'nb-dash-btn-claro'} nb-doc-csv`}
+                        disabled={Boolean(generando)}
+                        onClick={async () => {
+                          setGenerando(formato);
+                          setErrorReporte('');
+                          try {
+                            await descargarReporte(datos, user?.displayName || '', formato);
+                          } catch {
+                            setErrorReporte('No se pudo generar el reporte. Inténtalo de nuevo.');
+                          } finally {
+                            setGenerando('');
+                          }
+                        }}
+                      >
+                        <DownloadIcon /> {generando === formato ? 'Generando…' : formato === 'pdf' ? 'Reporte PDF' : 'Excel'}
+                      </button>
+                    ))}
                   </div>
                 </div>
+                {errorReporte && <p className="nb-error" role="alert">{errorReporte}</p>}
                 <ul className="nb-doc-lista">
                   {filtrados.map((e, i) => (
                     <li key={e.id} className="nb-pb-row nb-doc-estudiante">
