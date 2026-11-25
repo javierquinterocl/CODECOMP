@@ -1,5 +1,6 @@
 // Comprueba que el front sigue clasificando bien con el payload nuevo.
-const B = 'https://avzbnvmesyhysxsdauaa.supabase.co/functions/v1/api';
+// La API publica (el Worker reenvia a la funcion); sin referencias al proyecto de Supabase.
+const B = 'https://api.codecomp.online';
 const t0 = performance.now();
 const r1 = await fetch(`${B}/problems`);
 const d = await r1.json();

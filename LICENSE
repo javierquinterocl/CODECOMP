@@ -1,0 +1,43 @@
+CODECOMP
+Copyright (c) 2026 Andrés Salas y Javier Quintero. Todos los derechos reservados.
+
+Este software, su código fuente, su diseño, su documentación y los demás archivos que lo
+acompañan (en adelante, "el Software") son propiedad de sus autores. El Software se
+desarrolló como proyecto de grado del programa de Ingeniería de Sistemas de la Universidad
+Francisco de Paula Santander Ocaña (UFPS Ocaña).
+
+1. Permiso de uso académico
+
+   Se concede a la UFPS Ocaña, a sus directores, evaluadores y jurados, y al personal de su
+   biblioteca o repositorio institucional, permiso para leer, ejecutar y evaluar el Software
+   con el único fin de revisar, calificar y archivar el proyecto de grado, y para conservar
+   una copia en el repositorio institucional con acceso de consulta.
+
+2. Lo que no está permitido sin autorización escrita de los autores
+
+   a. Copiar, modificar, adaptar, traducir o crear obras derivadas del Software, total o
+      parcialmente.
+   b. Publicar, distribuir, sublicenciar, vender o poner el Software a disposición de
+      terceros por cualquier medio.
+   c. Usar el Software, o partes de él, con fines comerciales o para ofrecer un servicio.
+   d. Retirar o alterar este aviso, los avisos de autoría o la firma digital de la entrega.
+
+3. Servicios y credenciales de terceros
+
+   El Software no incluye llaves, contraseñas ni datos de los servicios que usa el
+   despliegue de los autores. Este permiso no concede acceso a esos servicios ni a sus
+   datos. Quien ejecute el Software lo hace con sus propias cuentas y bajo su
+   responsabilidad. Los componentes de terceros (dependencias de npm, Judge0, PSeInt y
+   otros) conservan sus propias licencias.
+
+4. Sin garantía
+
+   El Software se entrega "tal cual", sin garantía de ningún tipo, expresa o implícita.
+   Los autores no responden por daños derivados de su uso.
+
+5. Ley aplicable
+
+   Esta licencia se rige por las leyes de la República de Colombia, en particular la
+   Ley 23 de 1982 sobre derechos de autor y la Decisión Andina 351 de 1993.
+
+Solicitudes de permiso: afsalasn@ufpso.edu.co

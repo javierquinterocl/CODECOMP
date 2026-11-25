@@ -1,122 +1,114 @@
 # CODECOMP
 
-Plataforma de programación competitiva para el grupo de maratón de Ingeniería de Sistemas — **Universidad Francisco de Paula Santander Ocaña**.
+Plataforma de programación competitiva del grupo de maratón de Ingeniería de Sistemas de la Universidad Francisco de Paula Santander Ocaña. Incluye catálogo de problemas, juez en línea, nivel adaptativo, tutor con IA, el módulo Fundamentos en PSeInt, vista docente, competencias y notificaciones.
 
-## 🌐 Enlace de producción
+Autores: Andrés Salas y Javier Quintero. Derechos reservados: lee `LICENSE` y `AVISO.md` antes de usar el código.
 
-**https://codecompc.web.app**
+## Componentes
 
-## Stack
-
-- React + Vite
-- Firebase (Auth, Firestore, Hosting)
-- Tailwind CSS
-- React Router DOM
+| Parte | Tecnología |
+|---|---|
+| Frontend | React 19, Vite, React Router 7 (JavaScript) |
+| Sesión y perfiles | Firebase Authentication y Firestore |
+| API | Una Supabase Edge Function (Deno, TypeScript): `supabase/functions/api` |
+| Base de datos | PostgreSQL de Supabase; migraciones en `database/` |
+| Juez de Problemas | Judge0 CE por RapidAPI |
+| Juez de PSeInt | AWS Lambda (`aws/pseint/`) |
+| Tutor | API compatible con OpenAI (DeepInfra) |
+| Correo | Resend |
+| Dominio y proxy de la API | Worker de Cloudflare (`cloudflare/api-proxy/`) |
+| Competencias | DOMjudge |
 
 ## Estructura
 
 ```
-src/
-├── main.jsx              punto de entrada
-├── App.jsx               rutas
-├── css/                  hojas de estilo (una por área)
-├── scripts/              lógica sin JSX: servicios, datos, hooks, config
-├── pages/                componentes principales — una página por ruta
-├── components/           componentes secundarios — piezas reutilizables
-├── context/              estado compartido (AuthContext)
-└── assets/               imágenes empaquetadas por Vite
+src/pages/        una página por ruta (las rutas están en src/App.jsx)
+src/components/   piezas que usan varias páginas
+src/scripts/      lógica sin JSX: clientes de la API, datos, hooks
+src/css/          una hoja de estilos por área
+supabase/functions/api/index.ts      entrada única de la API
+supabase/functions/_compartido/      lógica del backend; rutas/ tiene un archivo por endpoint
+supabase/tests/   pruebas de Deno
+database/         migraciones SQL numeradas
+scripts/          importador del catálogo y utilidades
+functions/        backend anterior en Firebase Functions (ya no se usa; se conserva como referencia)
 ```
 
-Regla para saber dónde va un archivo nuevo: si lo renderiza una ruta, va en
-`pages/`; si lo usa más de una página, va en `components/`; si no devuelve
-JSX, va en `scripts/`.
+## Qué no viene en este código
 
-## Desarrollo local
+Ninguna llave ni contraseña. Las credenciales de Judge0, DeepInfra, AWS, Resend, Supabase y la cuenta de servicio de Firebase se configuran como variables de entorno o secretos de Supabase y nunca se versionan. Tampoco vienen los datos de la base: catálogo cargado, casos de prueba ocultos, soluciones de referencia ni traducciones.
+
+Para ejecutar la plataforma necesitas tus propias cuentas y llaves. El código no da acceso a los servicios ni a los datos del despliegue original.
+
+## Requisitos
+
+- Node.js 20 o superior y npm
+- Deno 2
+- Supabase CLI
+- Un proyecto de Firebase con Authentication (correo y Google) y Firestore
+- Un proyecto de Supabase
+- Una llave de RapidAPI para Judge0 CE
+- Opcional: una llave de DeepInfra (tutor), una cuenta de AWS (PSeInt), Resend (correo) y DOMjudge (competencias)
+
+## Puesta en marcha local
+
+1. Instala las dependencias:
+
+   ```bash
+   npm install
+   ```
+
+2. Crea la base: aplica las migraciones de `database/` en orden numérico (o `database/esquema_completo.sql`, que las reúne) en tu proyecto de Supabase.
+
+3. Configura la API: copia `.env.example` a `supabase/.env` y llena como mínimo `DATABASE_URL`, `FIREBASE_PROJECT_ID`, `RAPIDAPI_KEY` y `ALLOWED_ORIGINS`. Las demás variables activan módulos opcionales; cada una está explicada en el archivo.
+
+4. Levanta la API:
+
+   ```bash
+   npx supabase functions serve api --env-file supabase/.env
+   ```
+
+5. Configura el frontend: copia `.env.example` a `.env` y llena las variables `VITE_FIREBASE_*` con la configuración web de tu proyecto de Firebase. Con `VITE_ENABLE_ADAPTIVE=true` el envío usa todos los casos de prueba y guarda el nivel.
+
+6. Levanta el frontend:
+
+   ```bash
+   npm run dev
+   ```
+
+   Vite sirve en `http://localhost:5173` y reenvía `/api/*` a la función local.
+
+7. Carga el catálogo de problemas con el importador:
+
+   ```bash
+   python -m pip install -r requirements-import.txt
+   python scripts/import_problems.py
+   ```
+
+   Usa las variables `PGHOST`, `PGDATABASE`, `PGUSER` y `PGPASSWORD` de tu base. Después vuelve a aplicar `database/010_saneamiento_catalogo.sql`.
+
+8. Define los administradores: cambia `ADMIN_EMAILS` en `src/scripts/config.js` y los correos de `firestore.rules` por los de tu equipo, y publica las reglas en tu proyecto de Firebase.
+
+## Pruebas y revisión
 
 ```bash
-npm install
-npm run dev
-```
-
-Las rutas `/api/problems`, `/api/progress` y `/api/recommendations` las sirven
-las Functions locales, así que para probarlas abre otra terminal y ejecuta:
-
-```powershell
-@'
-DATABASE_URL=postgresql://usuario:password@host:5432/codecomp?sslmode=require
-'@ | Set-Content functions/.secret.local
-npm run dev:functions
-```
-
-Reemplaza la URL de ejemplo por la conexión real de PostgreSQL. La primera
-terminal mantiene `npm run dev` y la segunda mantiene el emulador en el puerto
-`5001`. Antes de cargar problemas, aplica las migraciones de `database/` y
-ejecuta el importador si la tabla `problems` todavía está vacía.
-
-Para habilitar la evaluación de código, copia `.env.example` a `.env` y configura
-`RAPIDAPI_KEY` para el proxy local de Vite. El servicio usa Judge0 CE mediante
-`/submissions?wait=true` y expone el mapa `JUDGE0_LANGUAGE_IDS` junto con
-`evaluarCodigo` desde `src/scripts/judge0Service.js`.
-
-En producción, configura la clave como secreto de Firebase y despliega el proxy:
-
-```bash
-firebase functions:secrets:set RAPIDAPI_KEY
-npm --prefix functions install
+deno test --allow-env --allow-read=supabase/functions supabase/tests/
+deno check "supabase/functions/**/*.ts"
+npm run lint
 npm run build
-firebase deploy --only functions,hosting
 ```
 
-La ruta `/api/judge0` mantiene la clave de RapidAPI en Functions y nunca la
-envía al navegador.
+`supabase/tests/integracion_test.ts` solo corre si defines `DESTINO_DATABASE_URL` con una base de prueba.
 
-### PostgreSQL adaptativo
+## Despliegue
 
-El esquema ejecutable está en `database/001_adaptive_platform.sql`. Aplica las
-migraciones en orden:
+- Frontend: `npm run build` y `firebase deploy --only hosting --project <tu-proyecto>`.
+- API: `npx supabase functions deploy api --project-ref <tu-ref> --no-verify-jwt`, con las variables de `.env.example` como secretos del proyecto. Se despliega sin verificación de JWT de Supabase porque la sesión es de Firebase.
+- Juez de PSeInt: `aws/pseint/desplegar.sh` con tu propia cuenta de AWS.
+- Proxy y tareas programadas: `cloudflare/api-proxy/` con Wrangler, en tu propio dominio.
 
-```bash
-psql "$DATABASE_URL" -f database/001_adaptive_platform.sql
-psql "$DATABASE_URL" -f database/002_firebase_catalog_compatibility.sql
-psql "$DATABASE_URL" -f database/003_problem_import_compatibility.sql
-psql "$DATABASE_URL" -f database/004_codeforces_rating_range.sql
-```
+## Licencia y firma
 
-Para llenar `problems`, `tags`, `problem_tags` y `test_cases` desde el dataset
-`DenCT/codeforces-problems-7k`,
-instala las dependencias del importador y configura las variables de conexión:
+El código es propiedad de sus autores (ver `LICENSE`). Cada entrega va firmada: `AVISO.md` explica cómo comprobar que los archivos no fueron modificados.
 
-```bash
-python -m pip install -r requirements-import.txt
-$env:PGDATABASE="tu_base_de_datos"
-$env:PGUSER="postgres"
-$env:PGPASSWORD="tu_password"
-python scripts/import_problems.py
-```
-
-El importador es idempotente para problemas, etiquetas y casos de prueba, y
-confirma la transacción cada 50 problemas.
-
-Los servicios `functions/services/` exponen `saveProblem`,
-`getHiddenTestCases`, `processSubmissionResult` y
-`getRecommendedProblems`. Configura `DATABASE_URL` en el entorno de Functions
-antes de invocarlos; `pg` administra el pool de conexiones.
-
-Para activar el guardado adaptativo en el editor, configura
-`VITE_ENABLE_ADAPTIVE=true`. Primero debes importar los problemas actuales en
-PostgreSQL y agregar sus `problem_number` y casos de prueba. Con el valor
-`false`, el editor conserva la evaluación de ejemplo local mediante Judge0.
-
-En local, `npm run dev` usa automáticamente el proxy de Vite, por lo que no
-necesitas desplegar Functions para probar el editor.
-
-## Deploy
-
-```bash
-npm run build
-firebase deploy --only hosting
-```
-
-## Autor
-
-Javier Quintero — [jaquinterocl@ufpso.edu.co](mailto:jaquinterocl@ufpso.edu.co)
+Contacto: afsalasn@ufpso.edu.co
