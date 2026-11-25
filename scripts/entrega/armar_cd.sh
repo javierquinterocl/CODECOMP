@@ -37,8 +37,9 @@ PROHIBIDOS=$(cd "$SALIDA" && find . -type f \( -name '.env' -o -name '.env.*' -o
   -o -name '*.key' -o -name '.secret.local' -o -name 'codecomp_firma' -o -name 'id_*' \) ! -name '.env.example' | wc -l)
 [ "$PROHIBIDOS" -eq 0 ] || { echo "   archivos prohibidos: $PROHIBIDOS"; FALLOS=1; }
 PATRONES='AKIA[0-9A-Z]{16}|sk-[A-Za-z0-9]{20,}|re_[A-Za-z0-9]{20,}|-----BEGIN [A-Z ]*PRIVATE KEY|"private_key"[[:space:]]*:|postgres(ql)?://[^ <]*:[^ @<$*]{6,}@'
-CON_PATRON=$(grep -r -l -I -E "$PATRONES" "$SALIDA" --exclude=package-lock.json \
-  | grep -v -E '/supabase/tests/(enmascarar|pseint)_test\.ts$' | wc -l || true)
+# Los .env.example y dos tests llevan ejemplos inventados; igual pasan por la comparacion de valores reales.
+CON_PATRON=$({ grep -r -l -I -E "$PATRONES" "$SALIDA" --exclude=package-lock.json --exclude=.env.example || true; } \
+  | { grep -v -E '/supabase/tests/(enmascarar|pseint)_test\.ts$' || true; } | wc -l)
 [ "$CON_PATRON" -eq 0 ] || { echo "   archivos con forma de credencial: $CON_PATRON"; FALLOS=1; }
 # Valores reales de los .env locales (12+ caracteres) que no sean publicos; nunca se imprimen.
 VALORES="$(mktemp)"
@@ -53,7 +54,10 @@ for f in .env supabase/.env supabase/.env.produccion functions/.secret.local; do
   done < <(grep -E '^[A-Z_][A-Z0-9_]*=' "$f")
 done
 REVISADOS=$(wc -l < "$VALORES")
-CON_VALOR=$( [ "$REVISADOS" -gt 0 ] && grep -r -l -I -F -f "$VALORES" "$SALIDA" | wc -l || echo 0)
+CON_VALOR=0
+if [ "$REVISADOS" -gt 0 ]; then
+  CON_VALOR=$({ grep -r -l -I -F -f "$VALORES" "$SALIDA" || true; } | wc -l)
+fi
 [ "$CON_VALOR" -eq 0 ] || { echo "   archivos con un valor real de los .env: $CON_VALOR"; FALLOS=1; }
 echo "   $REVISADOS valores reales revisados; prohibidos=$PROHIBIDOS patrones=$CON_PATRON valores=$CON_VALOR"
 [ "$FALLOS" -eq 0 ] || { echo "Entrega detenida: revisa lo anterior"; rm -rf "$SALIDA"; exit 1; }
